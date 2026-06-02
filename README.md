@@ -5,9 +5,12 @@
 ![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)
 ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Stripe](https://img.shields.io/badge/Stripe-626CD9?style=for-the-badge&logo=Stripe&logoColor=white)
+![Vitest](https://img.shields.io/badge/Vitest-729B1B?style=for-the-badge&logo=vitest&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
 
 A comprehensive, real-world SaaS platform engineered for a psychological clinic. It automates the entire patient lifecycle—from scheduling and secure payments to automated reminders—while providing a highly secure, FinTech-grade administrative dashboard.
+
+## Screenshots
 
 ## Key Features: For Patients (Public App)
 
@@ -21,6 +24,13 @@ A comprehensive, real-world SaaS platform engineered for a psychological clinic.
 * **FinTech-Grade Security:** 2FA (Two-Factor Authentication) via Authenticator apps, IP/User-Agent anomaly detection with email alerts, and database-level Brute-Force protection.
 * **Automated CRON Jobs:** Sweeps and releases unpaid pending reservations after 30 minutes, dispatches 24-hour appointment reminders, and generates daily morning briefings.
 * **Full CMS & Financials:** Built-in blog engine, dynamic landing page builder, financial overviews, and detailed system logs.
+
+## Testing & Quality Assurance (QA)
+
+To ensure maximum reliability, the core business logic is covered by automated unit tests using **Vitest**.
+* **Calendar Engine Tests:** Simulates timezone behaviors and verifies that the `api/slots` engine successfully drops past times, honors vacation blocks, and strictly prevents overbooking.
+* **Security & Auth Tests:** Validates the robust parsing of incoming User-Agent strings and logical constraints for the 15-minute brute-force lockout window.
+* **Payment Endpoint Tests:** Mocks Prisma and Stripe SDK to ensure malicious payloads cannot manipulate service prices during the Stripe Checkout session generation.
 
 ## Architecture & Engineering Highlights
 

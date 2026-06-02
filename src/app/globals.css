@@ -1,0 +1,39 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-beige-light: #F7F5F0;
+  --color-beige-dark: #E8E3D9;
+  --color-graphite: #2D3436;
+  --color-sage: #8F9B8C;
+  --color-warm-brown: #B89F89;
+  --animate-shimmer: shimmer 1.5s infinite;
+
+  @keyframes shimmer {
+    100% { transform: translateX(100%); }
+  }
+}
+
+@layer base {
+  body {
+    background-color: var(--color-beige-light);
+    color: var(--color-graphite);
+  }
+}
+
+.image-tool__image-picture {
+  max-height: 400px !important;
+  width: auto !important;
+  margin: 0 auto !important;
+  border-radius: 0.5rem;
+}
+
+.image-tool__image {
+  background-color: transparent !important;
+}
+
+.ce-block--selected .ce-block__content {
+  background-color: #F5F5F0;
+  border-radius: 0.5rem;
+}

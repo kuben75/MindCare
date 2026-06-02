@@ -1,0 +1,78 @@
+import {NextResponse} from "next/server";
+import prisma from "@/infrastructure/prisma";
+import {sendCancellationEmail} from "@/utils/email-sender";
+import {stripe} from "@/infrastructure/stripe";
+
+export async function POST(req: Request) {
+    try {
+        const {token} = await req.json();
+
+        if(!token) {
+            return NextResponse.json({message: "Token is required"}, {status: 400});
+        }
+
+        const reservation = await prisma.reservation.findUnique({
+            where: {magicToken: token},
+            include: { service: true }
+        });
+        if(!reservation) {
+            return NextResponse.json({message: "Nie znaleziono rezerwacji"}, {status: 404});
+        }
+
+        if(reservation.status === 'COMPLETED' || reservation.status === 'CANCELLED') {
+            return NextResponse.json({message: "Nie można anulować tej rezerwacji"}, {status: 400});
+        }
+
+        let refundSuccessful = false;
+
+        if(reservation.status === 'PAID' && reservation.stripePaymentIntentId) {
+            try{
+                await stripe.refunds.create({
+                    payment_intent: reservation.stripePaymentIntentId,
+                    reason: 'requested_by_customer'
+                });
+                refundSuccessful = true;
+
+                await prisma.systemLog.create({
+                    data: {
+                        action: "ZWROT_ŚRODKÓW_STRIPE",
+                        details: `Pomyślnie zwrócono środki dla rezerwacji ${reservation.id} (${reservation.service.price} zł)`
+                    }
+                })
+            }catch (stripeError: any) {
+                await prisma.systemLog.create({
+                    data: {
+                        action: "BŁĄD_ZWROTU_STRIPE",
+                        details: `Nie udało się zwrócić środków dla ${reservation.id}. Błąd: ${stripeError.message}`
+                    }
+                });
+                return NextResponse.json({ message: "Błąd podczas procesowania zwrotu płatności. Skontaktuj się z gabinetem." }, { status: 500 });
+            }
+        }
+
+        const canceledRes = await prisma.reservation.update({
+            where: {id: reservation.id},
+            data: {status: 'CANCELLED'},
+                include: { service: true}
+        });
+
+        const cancellationReason = refundSuccessful
+            ? "Odwołano przez pacjenta. Środki zostały zwrócone na kartę."
+            : "Odwołano przez pacjenta";
+
+        await sendCancellationEmail({
+            email: canceledRes.email,
+            patientName: canceledRes.patientName,
+            date: canceledRes.date,
+            serviceName: canceledRes.service.name,
+            reason: cancellationReason
+        })
+
+
+
+        return NextResponse.json({success: true}, {status: 200});
+
+    }catch (e) {
+        return NextResponse.json({message: "Wystąpił błąd serwera. Spróbuj ponownie później."}, {status: 500});
+    }
+}

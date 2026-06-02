@@ -1,0 +1,26 @@
+import PatientsClient from "@/app/admin/dashboard/patients/PatientsClient";
+import { usePatientsPage } from "@/hooks/usePatientsPage";
+
+export const dynamic = 'force-dynamic';
+
+export default async function PatientsPage() {
+    const { patientList } = await usePatientsPage();
+
+    return (
+        <div className="space-y-8 md:space-y-10 animate-fade-in pb-12">
+            <header className="max-w-xl">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-sage dark:text-emerald-400 mb-2">
+                    Zarządzanie pacjentami
+                </p>
+                <h1 className="text-3xl lg:text-4xl font-serif text-graphite dark:text-white tracking-wide leading-tight transition-colors">
+                    Baza pacjentów
+                </h1>
+                <p className="text-graphite/60 dark:text-zinc-400 text-sm mt-3 leading-relaxed">
+                    Zarządzaj swoimi pacjentami, przeglądaj ich historię wizyt, notatki oraz statystyki.
+                </p>
+            </header>
+
+            <PatientsClient patients={patientList}/>
+        </div>
+    );
+}

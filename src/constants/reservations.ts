@@ -1,0 +1,1 @@
+export const TAB_LABELS = { upcoming: 'Nadchodzące', history: 'Historia', cancelled: 'Anulowane' };

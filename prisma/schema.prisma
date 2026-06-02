@@ -1,0 +1,156 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Waitlist {
+  id           String @id @default(cuid())
+  patientName  String
+  email        String
+  phone        String
+  serviceId    String
+  service      Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  notes        String? @db.Text
+  createdAt    DateTime @default(now())
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  name        String
+  duration    Int
+  price       Float
+  isActive    Boolean  @default(true)
+  reservations Reservation[]
+  waitlist    Waitlist[]
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  twoFactorEnabled Boolean  @default(false)
+  twoFactorSecret String?
+  recoveryCodes String @default("[]")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SystemLog {
+  id         String @id @default(cuid())
+  action     String
+  details    String?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+}
+
+model Reservation {
+  id          String   @id @default(cuid())
+  patientName String
+  email       String
+  phone       String
+  date        DateTime
+  status      ReservationStatus @default(PENDING)
+  serviceId   String
+  service     Service  @relation(fields: [serviceId], references: [id])
+  magicToken  String   @unique @default(uuid())
+  privateNotes String? @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  hasAcceptedTerms Boolean  @default(false)
+  rescheduleRequested Boolean  @default(false)
+  stripePaymentIntentId String?
+}
+
+enum ReservationStatus {
+  PENDING
+  PAID
+  CANCELLED
+  COMPLETED
+}
+
+model WeeklySchedule {
+  id        String  @id @default(cuid())
+  dayOfWeek Int     @unique
+  startTime String
+  endTime   String
+  isActive  Boolean @default(true)
+}
+
+model BlockedTime {
+  id        String   @id @default(cuid())
+  startDate DateTime
+  endDate   DateTime
+  reason    String?
+  isFullDay Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+
+model Post {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  content   Json
+  isPublished Boolean  @default(false)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model HeroTemplate {
+  id          String     @id @default(cuid())
+  title       String
+  subtitle    String     @db.Text
+  imageUrl    String?
+  layout      HeroLayout @default(TEXT_LEFT)
+  imageStyle  ImageStyle @default(HORIZONTAL)
+  showPrimaryButton Boolean @default(true)
+  primaryButtonText String  @default("Poznaj moje podejście")
+  primaryButtonLink String  @default("/#o-mnie")
+  showZnanyLekarz   Boolean @default(true)
+
+  isActive    Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+model DeviceSession {
+  id          String   @id @default(cuid())
+  adminEmail  String
+  ipAddress   String
+  userAgent   String
+  deviceInfo  String
+  createdAt   DateTime @default(now())
+  isValid     Boolean  @default(true)
+}
+model ClinicSettings {
+  id           String   @id @default("global")
+  clinicName   String   @default("Paulina Kawka-Mirek")
+  email        String   @default("paulinakmirek@gmail.com")
+  phone        String   @default("+44 7599 362770")
+  address      String   @default("")
+  bankAccount  String?
+  instagramUrl String? @default("https://www.instagram.com/psychologia_odbicia/")
+  facebookUrl  String? @default("https://www.facebook.com/profile.php?id=61586481414788")
+  znanyLekarzUrl String? @default("https://www.znanylekarz.pl/paulina-kawka-mirek/psycholog/wronki")
+  updatedAt    DateTime @updatedAt
+  linkedinUrl    String? @default("https://www.linkedin.com/in/paulina-kawka-mirek-3a2224253/")
+}
+
+enum HeroLayout {
+  TEXT_LEFT
+  TEXT_RIGHT
+}
+
+enum ImageStyle {
+  HORIZONTAL
+  VERTICAL
+  SQUARE
+}

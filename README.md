@@ -37,3 +37,7 @@ Follow these steps to safely configure and launch the platform on your local mac
 3. **Configure environment:** Copy the example template using `cp .env.example .env` and securely populate it with your Stripe, Resend, NextAuth, and Database keys.
 4. **Initialize database:** Ensure Docker is running your local PostgreSQL instance, then apply the Prisma schema by running `npx prisma db push`.
 5. **Start application:** Execute `npm run dev` to launch the development server on localhost port 3000.
+6. Navigate to `http://localhost:3000` to view the public application, or `http://localhost:3000/admin/login` for the dashboard.
+
+## License
+This project is proprietary software developed for a specific client. All rights reserved.

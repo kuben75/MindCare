@@ -39,7 +39,7 @@ export const useSettingsClient = (initialSettings: any) => {
                 router.refresh();
             } else {
                 const errorData = await res.json();
-                showToast(errorData || "Wystąpił błąd podczas zapisywania.", "error");
+                showToast(errorData.message || errorData.error || "Wystąpił błąd podczas zapisywania.", "error");
             }
         } catch (error) {
             showToast("Brak połączenia z serwerem.", "error");

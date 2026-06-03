@@ -38,7 +38,8 @@ export async function POST(req: Request) {
                 phone,
                 date: new Date(date),
                 serviceId,
-                status: status || "PAID"
+                status: status || "PAID",
+                isManual: true
             },
             include: {
                 service: true

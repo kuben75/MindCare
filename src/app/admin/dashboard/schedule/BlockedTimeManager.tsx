@@ -5,6 +5,7 @@ import { useBlockedTimeManager } from "@/hooks/useBlockedTimeManager";
 import { motion, AnimatePresence } from "framer-motion";
 import { Toast } from "@/components/ui/Toast";
 import { useToast } from "@/hooks/useToast";
+import InfoTooltip from "@/components/ui/InfoTooltip";
 
 export default function BlockedTimeManager() {
     const {
@@ -17,17 +18,25 @@ export default function BlockedTimeManager() {
             <Toast toast={toast} onClose={hideToast} />
         <div className="bg-white/60 dark:bg-zinc-900/40 backdrop-blur-xl border border-red-200/50 dark:border-red-900/30 rounded-3xl p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative">
 
-            <div className="mb-8 border-b border-red-100 dark:border-red-900/30 pb-4 flex items-center gap-3">
+            <div className="relative z-20 mb-8 border-b border-red-100 dark:border-red-900/30 pb-4 flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl bg-red-50 text-red-500 dark:bg-red-900/30 dark:text-red-400 flex items-center justify-center shrink-0">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                 </div>
                 <div>
                     <h2 className="text-xl font-serif text-graphite dark:text-zinc-100 tracking-tight">Wyjątki i Urlopy</h2>
+
+                    <div className="flex items-center gap-1 justify-between">
                     <p className="text-sm text-graphite/60 dark:text-zinc-400 mt-1 font-medium">Zablokuj wybrane dni lub godziny, aby pacjenci nie mogli się zapisać.</p>
+                    <InfoTooltip
+                        title="Szybkie blokowanie terminów"
+                        description="Wprowadź jednorazowe wyjątki lub urlopy (np. nagły wyjazd czy święta). Podobnie jak stały grafik, te blokady działają w strefie czasowej Polski (Europe/Warsaw) i natychmiastowo zamykają wybrane godziny przed pacjentami."
+                        images={["/screenshots/blocked-time.png", "/screenshots/blocked-time-1.png"]}
+                    />
+                    </div>
                 </div>
             </div>
 
-            <form onSubmit={handleAddBlock} className="flex flex-col lg:flex-row gap-4 mb-8 bg-red-50/50 dark:bg-red-950/10 p-5 rounded-2xl border border-red-100/50 dark:border-red-900/30">
+            <form onSubmit={handleAddBlock} className="relative z-10 flex flex-col lg:flex-row gap-4 mb-8 bg-red-50/50 dark:bg-red-950/10 p-5 rounded-2xl border border-red-100/50 dark:border-red-900/30">
                 <div className="flex-1 relative">
                     <label className="absolute -top-2.5 left-3 bg-red-50 dark:bg-[#2b1f1f] px-1 text-[9px] font-bold uppercase tracking-widest text-red-600 dark:text-red-400 z-10">Dzień urlopu</label>
                     <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-red-200/50 dark:border-red-900/50 rounded-xl text-sm font-bold text-graphite dark:text-zinc-200 focus:ring-2 focus:ring-red-400 outline-none transition-all"/>

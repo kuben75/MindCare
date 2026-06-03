@@ -2,6 +2,7 @@ import {STATUS_BADGE} from "@/constants/ActionBadges";
 import {ReservationStatus} from "@prisma/client";
 import ReservationActionMenu from "@/app/admin/dashboard/reservations/ReservationActionMenu";
 import React from "react";
+import InfoTooltip from "@/components/ui/InfoTooltip";
 
 export const ReservationCard = ({ reservation, isExpanded, onToggleDrawer }: any) => {
     const isCompleted = reservation.status === 'COMPLETED';
@@ -44,9 +45,15 @@ export const ReservationCard = ({ reservation, isExpanded, onToggleDrawer }: any
                     <div className="flex items-center gap-3 mb-1.5">
                         <h3 className="font-serif font-bold text-lg text-graphite dark:text-zinc-100 truncate">{reservation.patientName}</h3>
                         {reservation.rescheduleRequested && (
+                            <div className="flex items-center gap-1.5">
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest bg-red-100 text-red-700 border border-red-200 shadow-sm">
                                 Prośba o zmianę
                             </span>
+                                <InfoTooltip
+                                    title="Pacjent prosi o nowy termin"
+                                    description="Pacjent kliknął link w swoim mailu z potwierdzeniem, prosząc o przełożenie wizyty. Użyj przycisku akcji po prawej stronie (ikona trzech kropek) i wybierz 'Przełóż wizytę', aby ustalić z nim nową datę."
+                                />
+                            </div>
                         )}
                     </div>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs font-medium text-graphite/60 dark:text-zinc-400">

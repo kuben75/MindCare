@@ -1,10 +1,10 @@
 import {useState} from "react";
 import {useRouter} from "next/navigation";
 import {useToast} from "@/hooks/useToast";
-import {Post} from "@/types/post";
+import {TPost} from "@/types/post";
 
 
-export const useBlogListClient = ({ initialPosts }: { initialPosts: Post[] }) => {
+export const useBlogListClient = ({ initialPosts }: { initialPosts: TPost[] }) => {
 
     const [posts, setPosts] = useState(initialPosts);
     const [isSaving, setIsSaving] = useState(false);
@@ -39,7 +39,7 @@ export const useBlogListClient = ({ initialPosts }: { initialPosts: Post[] }) =>
                 router.refresh();
             }else {
                 const errorData = await response.json();
-                showToast(errorData.message || "Nie udało się zapisać kolejności. Spróbuj ponownie.", "error");
+                showToast(errorData.message || errorData.error || "Nie udało się zapisać kolejności. Spróbuj ponownie.", "error");
             }
         } catch (error) {
             console.error(error);

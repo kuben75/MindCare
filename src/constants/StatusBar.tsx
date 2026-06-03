@@ -1,6 +1,6 @@
-import {StatusColor} from "@/types/finances";
+import {TStatusColor} from "@/types/finances";
 
-export const STATUS_STYLES: Record<StatusColor, { bar: string; num: string; bg: string }> = {
+export const STATUS_STYLES: Record<TStatusColor, { bar: string; num: string; bg: string }> = {
     emerald: {
         bar: "bg-sage dark:bg-emerald-500",
         num: "text-sage dark:text-emerald-400",

@@ -1,11 +1,9 @@
 "use client";
 
 import { useCalendarLogic } from "@/hooks/useCalendarLogic";
-import { useRef } from "react";
 import CalendarHeader from "@/components/calendar/CalendarHeader";
 import DaysCarousel from "@/components/calendar/DaysCarousel";
 import BookingBar from "@/components/calendar/BookingBar";
-import {DAYS_PER_VIEW_DESKTOP, DAYS_PER_VIEW_MOBILE} from "@/constants/calendar";
 import WaitlistForm from "@/components/calendar/waitlist/WaitlistForm";
 
 
@@ -22,42 +20,14 @@ export const Calendar = () => {
         error,
         activeTab,
         setActiveTab,
-        services
+        services,
+        carouselRef,
+        handleMove,
+        jumpToDate,
+        handleScroll
     } = useCalendarLogic();
 
-    const carouselRef = useRef<HTMLDivElement>(null);
 
-    const handleMove = (direction: 1 | -1) => {
-        if (carouselRef.current) {
-            const scrollAmount = carouselRef.current.clientWidth;
-            carouselRef.current.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
-        }
-    };
-
-    const jumpToDate = (dateString: string) => {
-        const newDate = new Date(dateString);
-        newDate.setHours(0, 0, 0, 0);
-
-        const element = document.getElementById(`day-${newDate.getTime()}`);
-        if (element && carouselRef.current) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
-            setHeaderDate(newDate);
-        }
-    };
-
-    const handleScroll = () => {
-        if (!carouselRef.current || calendarData.length === 0) return;
-
-        const scrollLeft = carouselRef.current.scrollLeft;
-        const isMobile = window.innerWidth < 768;
-        const dayWidth = carouselRef.current.clientWidth / (isMobile ? DAYS_PER_VIEW_MOBILE : DAYS_PER_VIEW_DESKTOP);
-
-        const visibleIndex = Math.round(scrollLeft / dayWidth);
-
-        if (calendarData[visibleIndex]) {
-            setHeaderDate(calendarData[visibleIndex].date);
-        }
-    };
 
     return (
         <section id="kalendarz" className="w-full py-24 bg-beige-light border-t border-beige-dark/10 overflow-hidden relative transition-colors duration-500 dark:bg-[#1f1f1f] dark:border-zinc-800">

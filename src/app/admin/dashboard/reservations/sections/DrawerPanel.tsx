@@ -1,5 +1,6 @@
 import {AnimatePresence, motion} from "framer-motion";
 import React from "react";
+import InfoTooltip from "@/components/ui/InfoTooltip";
 
 export const DrawerPanel = ({
                          reservation, activeNoteTab, setActiveNoteTab, activeNotesText, setActiveNotesText,
@@ -15,7 +16,7 @@ export const DrawerPanel = ({
             <div className="p-4 sm:p-6 lg:px-8">
                 <div className="flex gap-1 mb-6 border-b border-sage/20 dark:border-emerald-500/20 overflow-x-auto hide-scrollbar pb-px">
                     <button onClick={() => setActiveNoteTab('PRIVATE')} className={`px-5 py-2.5 text-xs font-bold uppercase tracking-widest transition-all border-b-2 whitespace-nowrap ${activeNoteTab === 'PRIVATE' ? 'border-sage text-sage dark:border-emerald-400 dark:text-emerald-400' : 'border-transparent text-graphite/40 hover:text-graphite dark:text-zinc-500 dark:hover:text-zinc-300'}`}>
-                        Notatki Poufne
+                        Notatki (tylko dla Ciebie)
                     </button>
                     {isCompleted && (
                         <button onClick={() => setActiveNoteTab('EMAIL')} className={`px-5 py-2.5 text-xs font-bold uppercase tracking-widest transition-all border-b-2 whitespace-nowrap flex items-center gap-2 ${activeNoteTab === 'EMAIL' ? 'border-sage text-sage dark:border-emerald-400 dark:text-emerald-400' : 'border-transparent text-graphite/40 hover:text-graphite dark:text-zinc-500 dark:hover:text-zinc-300'}`}>
@@ -43,6 +44,10 @@ export const DrawerPanel = ({
                         <div className="flex justify-between items-start mb-4 pl-2">
                             <div>
                                 <h4 className="text-sm font-bold text-amber-900 dark:text-amber-500">Wyślij podsumowanie</h4>
+                                <InfoTooltip
+                                    title="Bezpośrednia komunikacja"
+                                    description="System wygeneruje profesjonalnie sformatowaną wiadomość e-mail z logo gabinetu i wyśle ją na adres pacjenta. Idealne do przesyłania zaleceń lub materiałów do pracy własnej po zakończonej sesji."
+                                />
                                 <p className="text-xs text-amber-700/70 dark:text-amber-500/70 mt-1 max-w-md">Pacjent {reservation.patientName.split(' ')[0]} otrzyma ten tekst bezpośrednio na swojego e-maila jako ładnie sformatowaną wiadomość.</p>
                             </div>
                             <button onClick={() => handleSendFollowUp(reservation.id)} disabled={isSendingEmail || !emailMessage.trim() || emailSuccess} className="px-5 py-2 bg-amber-500 text-white text-xs font-bold rounded-xl shadow-md shadow-amber-500/20 disabled:opacity-50 hover:bg-amber-600 transition-colors flex items-center gap-2 active:scale-95">

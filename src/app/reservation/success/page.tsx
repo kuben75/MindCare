@@ -98,7 +98,7 @@ export default async function SuccessReservationPage({ searchParams }: { searchP
                         </div>
                     </div>
 
-                    <PatientActions token={token} status={reservation.status} isRescheduleRequested={reservation.rescheduleRequested} />
+                    <PatientActions token={token} status={reservation.status} isRescheduleRequested={reservation.rescheduleRequested} reservationDate={reservation.date}/>
 
                     <div className="flex justify-center">
                         <Link href="/" className="text-sm text-graphite/50 hover:text-sage transition-colors flex items-center justify-center gap-2">

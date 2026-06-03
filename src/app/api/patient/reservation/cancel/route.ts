@@ -3,6 +3,7 @@ import prisma from "@/infrastructure/prisma";
 import {sendCancellationEmail} from "@/utils/email-sender";
 import {stripe} from "@/infrastructure/stripe";
 
+
 export async function POST(req: Request) {
     try {
         const {token} = await req.json();
@@ -23,9 +24,15 @@ export async function POST(req: Request) {
             return NextResponse.json({message: "Nie można anulować tej rezerwacji"}, {status: 400});
         }
 
+        const now = new Date();
+        const reservationDate = new Date(reservation.date);
+        const timeDiff = reservationDate.getTime() - now.getTime();
+        const hoursDiff = timeDiff / (1000 * 60 * 60);
+
+        const isEligibleForRefund = hoursDiff >= 24;
         let refundSuccessful = false;
 
-        if(reservation.status === 'PAID' && reservation.stripePaymentIntentId) {
+        if(reservation.status === 'PAID' && reservation.stripePaymentIntentId && isEligibleForRefund) {
             try{
                 await stripe.refunds.create({
                     payment_intent: reservation.stripePaymentIntentId,
@@ -49,7 +56,14 @@ export async function POST(req: Request) {
                 return NextResponse.json({ message: "Błąd podczas procesowania zwrotu płatności. Skontaktuj się z gabinetem." }, { status: 500 });
             }
         }
-
+        if (reservation.status === 'PAID' && !isEligibleForRefund) {
+            await prisma.systemLog.create({
+                data: {
+                    action: "ANULOWANIE_BEZ_ZWROTU",
+                    details: `Pacjent odwołał rezerwację ${reservation.id} poniżej 24h przed terminem (${hoursDiff.toFixed(1)}h). Środki zatrzymane.`
+                }
+            });
+        }
         const canceledRes = await prisma.reservation.update({
             where: {id: reservation.id},
             data: {status: 'CANCELLED'},
@@ -58,7 +72,9 @@ export async function POST(req: Request) {
 
         const cancellationReason = refundSuccessful
             ? "Odwołano przez pacjenta. Środki zostały zwrócone na kartę."
-            : "Odwołano przez pacjenta";
+            : reservation.status === 'PAID'
+                ? "Odwołano przez pacjenta na mniej niż 24h przed terminem. Zgodnie z regulaminem środki nie podlegają zwrotowi."
+                : "Odwołano przez pacjenta";
 
         await sendCancellationEmail({
             email: canceledRes.email,

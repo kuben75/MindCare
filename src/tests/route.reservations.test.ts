@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { POST } from './route';
 import prisma from '@/infrastructure/prisma';
 import { stripe } from '@/infrastructure/stripe';
+import {POST} from "@/app/api/waitlist/route";
 
 vi.mock('@/infrastructure/prisma', () => ({
     default: {

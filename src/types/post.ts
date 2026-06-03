@@ -1,5 +1,5 @@
 
-export type Post = {
+export type TPost = {
     id: string;
     title: string;
     isPublished: boolean;

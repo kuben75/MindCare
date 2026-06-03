@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generateRecoveryCodes, getFifteenMinutesAgo, parseUserAgent } from './auth-helpers';
+import {generateRecoveryCodes, getFifteenMinutesAgo, parseUserAgent} from "@/utils/auth-helpers";
 
 describe('Security Functions (auth-helpers.ts)', () => {
 

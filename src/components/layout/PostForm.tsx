@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { IInitialData } from "@/types/editor";
+import { TInitialData } from "@/types/editor";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/hooks/useToast";
@@ -20,7 +20,7 @@ const BlockEditor = dynamic(() => import("@/components/layout/BlockEditor"), {
     )
 });
 
-export default function PostForm({ initialData }: { initialData?: IInitialData }) {
+export default function PostForm({ initialData }: { initialData?: TInitialData }) {
     const {
         title,
         setTitle,

@@ -88,7 +88,7 @@ export const useReservationManager = ({ initialReservations, services }: { initi
                 router.refresh();
             } else {
                 const errorData = await res.json();
-                showToast(errorData.message || "Nie udało się dodać rezerwacji.", "error");
+                showToast(errorData.message || errorData.error || "Nie udało się dodać rezerwacji.", "error");
             }
         } catch (e) {
             showToast("Wystąpił błąd podczas dodawania rezerwacji.", "error");
@@ -112,7 +112,7 @@ export const useReservationManager = ({ initialReservations, services }: { initi
                 setExpandedReservationId(null);
             } else {
                 const errorData = await res.json();
-                showToast( errorData || "Nie udało się zapisać notatek.", "error");
+                showToast( errorData.message || "Nie udało się zapisać notatek.", "error");
             }
         } catch (e) {
             showToast("Błąd połączenia z serwerem.", "error");
@@ -155,7 +155,7 @@ export const useReservationManager = ({ initialReservations, services }: { initi
                 setTimeout(() => setEmailSuccess(false), 3000);
             } else {
                 const errorData = await res.json();
-                showToast(errorData || "Nie udało się wysłać wiadomości.", "error");
+                showToast(errorData.message || errorData.error || "Nie udało się wysłać wiadomości.", "error");
             }
         } catch (error) {
             showToast("Błąd podczas wysyłania e-maila.", "error");

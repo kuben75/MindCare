@@ -6,24 +6,13 @@ import { containerVariants, itemVariants } from "@/framer-motion/animation-logs"
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import {ISystemLogsViewerProps} from "@/types/logs";
+import {useSystemLogsViewer} from "@/hooks/useSystemLogsViewer";
 
 export default function SystemLogsViewer({ logs, currentPage, totalPages, totalCount }: ISystemLogsViewerProps) {
-    const router = useRouter();
-    const pathname = usePathname();
-    const searchParams = useSearchParams();
-    const [isPending, startTransition] = useTransition();
-
-    const handlePageChange = (newPage: number) => {
-        if (newPage < 1 || newPage > totalPages) return;
-
-        const params = new URLSearchParams(searchParams.toString());
-        params.set('page', newPage.toString());
-
-        startTransition(() => {
-            router.push(`${pathname}?${params.toString()}`);
-        });
-    };
-
+ const {
+     isPending,
+     handlePageChange,
+ } = useSystemLogsViewer({totalPages});
     return (
         <div className="flex flex-col gap-6">
             <div className={`bg-white dark:bg-[#262626] border border-beige-dark/20 dark:border-zinc-700 rounded-[24px] shadow-sm transition-all duration-300 overflow-hidden ${isPending ? 'opacity-70 pointer-events-none blur-[1px]' : ''}`}>

@@ -2,10 +2,10 @@ import {useRouter} from "next/navigation";
 import {useToast} from "@/hooks/useToast";
 import {useConfirm} from "@/hooks/useConfirm";
 import {useEffect, useRef, useState} from "react";
-import {IInitialData} from "@/types/editor";
+import {TInitialData} from "@/types/editor";
 
 
-export const usePostForm = ({ initialData }: { initialData?: IInitialData }) => {
+export const usePostForm = ({ initialData }: { initialData?: TInitialData }) => {
     const router = useRouter();
     const { toast, showToast, hideToast } = useToast();
     const confirm = useConfirm();
@@ -108,7 +108,7 @@ export const usePostForm = ({ initialData }: { initialData?: IInitialData }) => 
                 }, 1000);
             } else {
                 const errorData = await response.json();
-                showToast( errorData || "Wystąpił błąd podczas zapisywania.", "error");
+                showToast(errorData.message || errorData.error || "Wystąpił błąd podczas zapisywania.", "error");
             }
         } finally {
             setIsLoading(false);

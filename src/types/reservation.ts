@@ -14,6 +14,7 @@ export interface IPatientActionsProps {
     token: string;
     status: string;
     isRescheduleRequested?: boolean;
+    reservationDate: string | Date
 }
 
 export type TReservationWithService = Reservation & {

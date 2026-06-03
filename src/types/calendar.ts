@@ -38,3 +38,11 @@ export interface ICalendarHeaderProps {
 
 export type TViewType = 'day' | 'week' | 'month';
 
+export interface IMonthViewProps {
+    getDaysInMonth: (date: Date) => any[];
+    currentDate: Date;
+    visibleReservations: any[];
+    setSelectedRes: (res: any) => void;
+    setCurrentDate: (date: Date) => void;
+    setView: (view: 'day' | 'week' | 'month') => void;
+}

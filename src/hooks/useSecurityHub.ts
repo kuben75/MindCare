@@ -151,7 +151,7 @@ export const useSecurityHub = ({ is2FAEnabled }: { is2FAEnabled: boolean }) => {
                 router.refresh();
             } else {
                 const errorData = await res.json();
-                showToast(errorData || "Nie udało się wyłączyć 2FA.", "error");
+                showToast(errorData.message || errorData.error || "Nie udało się wyłączyć 2FA.", "error");
             }
         } catch (e) {
             showToast("Błąd połączenia z serwerem.", "error");

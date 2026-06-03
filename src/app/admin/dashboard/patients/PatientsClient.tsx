@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { formatDate, formatTime, getStatusBadge } from "@/utils/reservation-utils";
 import { IPatient } from "@/types/patient";
 import { motion, AnimatePresence } from "framer-motion";
+import {Avatar} from "@/app/admin/dashboard/patients/sections/Avatar";
+import {StatItem} from "@/app/admin/dashboard/patients/sections/StatItem";
 
 export default function PatientsClient({ patients }: { patients: IPatient[] }) {
     const [searchQuery, setSearchQuery] = useState("");
@@ -209,31 +211,3 @@ export default function PatientsClient({ patients }: { patients: IPatient[] }) {
     );
 }
 
-const Avatar = ({ name }: { name: string }) => {
-    const initials = name
-        .split(" ")
-        .map(n => n[0])
-        .join("")
-        .substring(0, 2)
-        .toUpperCase();
-
-    return (
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-beige-light to-beige-dark/40 dark:from-zinc-800 dark:to-zinc-700 flex items-center justify-center shrink-0 shadow-inner border border-white/50 dark:border-zinc-600/50">
-            <span className="text-sm font-bold text-graphite/80 dark:text-zinc-200 tracking-wider">
-                {initials}
-            </span>
-        </div>
-    );
-};
-
-const StatItem = ({ label, value, dotColor }: { label: string, value: number, dotColor: string }) => (
-    <div className="flex flex-col lg:items-center justify-center gap-1">
-        <span className="text-[10px] font-bold text-graphite/40 dark:text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
-            <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
-            {label}
-        </span>
-        <span className="text-lg font-serif font-bold text-graphite dark:text-zinc-100 tabular-nums lg:pl-0 pl-3">
-            {value}
-        </span>
-    </div>
-);

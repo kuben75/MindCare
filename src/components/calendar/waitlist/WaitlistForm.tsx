@@ -1,43 +1,18 @@
 "use client";
 
 import {IWaitlistFormData} from "@/types/waitlist";
-import React, {useState} from "react";
+import React from "react";
+import {useWaitlistForm} from "@/hooks/useWaitlistForm";
 
 export default function WaitlistForm({services}: IWaitlistFormData) {
-    const [formData, setFormData] = useState( {
-        patientName: "",
-        email: "",
-        phone: "",
-        serviceId: services[0]?.id || "",
-        notes: ""
-    });
-
-    const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-    const [errorMessage, setErrorMessage] = useState("");
-
-    const handleSubmit = async (e: React.SyntheticEvent) => {
-        e.preventDefault();
-        setStatus('loading');
-        setErrorMessage("");
-
-        try {
-            const res = await fetch('/api/waitlist', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json',},
-                body: JSON.stringify(formData),
-            });
-            const data = await res.json();
-            if(res.ok) {
-                setStatus('success');
-            } else {
-                setStatus('error');
-                setErrorMessage(data.error || "Nie udało się zapisać na listę oczekujących. Spróbuj ponownie później.");
-            }
-        }catch (e) {
-            setStatus('error');
-            setErrorMessage("Wystąpił błąd podczas zapisywania. Sprawdź połączenie z internetem i spróbuj ponownie.");
-        }
-    }
+    const {
+        formData,
+        setFormData,
+        status,
+        errorMessage,
+        handleSubmit,
+        setStatus
+    } = useWaitlistForm({services});
     if (status === 'success') {
         return (
             <div className="bg-sage/10  border border-sage/30  rounded-2xl p-8 text-center animate-fade-in h-full flex flex-col justify-center items-center min-h-[400px]">

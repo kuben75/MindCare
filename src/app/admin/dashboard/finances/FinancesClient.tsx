@@ -7,6 +7,7 @@ import { formatPLN } from "@/utils/calendar-utils";
 import { KpiCard } from "@/app/admin/dashboard/finances/section/KpiCard";
 import { StatusBar } from "@/app/admin/dashboard/finances/section/StatusBar";
 import { useFinanceClient } from "@/hooks/useFinanceClient";
+import InfoTooltip from "@/components/ui/InfoTooltip";
 
 export default function FinancesClient({
                                            totalRevenue,
@@ -124,6 +125,8 @@ export default function FinancesClient({
                     label="Całkowity przychód"
                     value={`${formatPLN(totalRevenue)} zł`}
                     sub="Suma opłaconych wizyt"
+                    tooltipTitle="Metodologia obliczeń"
+                    tooltipDesc="Ta kwota uwzględnia wyłącznie wizyty o statusie 'Opłacona' oraz 'Zakończona'. Rezerwacje w toku (oczekujące na płatność) i anulowane nie są wliczane do całkowitego przychodu."
                     icon={
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -150,20 +153,26 @@ export default function FinancesClient({
             </section>
 
             <section className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                <div className="lg:col-span-3 bg-white dark:bg-[#262626] border border-beige-dark/20 dark:border-zinc-700 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col">
+                <div
+                    className="lg:col-span-3 bg-white dark:bg-[#262626] border border-beige-dark/20 dark:border-zinc-700 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col">
                     <header className="flex items-center justify-between mb-8">
-                        <h3 className="font-serif font-bold text-graphite dark:text-zinc-100 text-lg">
-                            Przychody miesięczne
-                        </h3>
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-graphite/40 dark:text-zinc-500">
-                            Ostatnie 6 mies.
-                        </span>
+                        <div className="flex items-center">
+                            <h3 className="font-serif font-bold text-graphite dark:text-zinc-100 text-lg">
+                                Przychody miesięczne
+                            </h3>
+                        </div>
+                        <span
+                            className="text-[10px] font-bold uppercase tracking-widest text-graphite/40 dark:text-zinc-500">
+        Ostatnie 6 mies.
+    </span>
                     </header>
 
                     <div className="relative h-[240px] flex items-end gap-2 sm:gap-4 mt-auto">
-                        <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-7" aria-hidden="true">
+                        <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-7"
+                             aria-hidden="true">
                             {[0, 1, 2, 3, 4].map(i => (
-                                <div key={i} className="w-full border-t border-dashed border-beige-dark/20 dark:border-zinc-800" />
+                                <div key={i}
+                                     className="w-full border-t border-dashed border-beige-dark/20 dark:border-zinc-800"/>
                             ))}
                         </div>
 
@@ -183,10 +192,10 @@ export default function FinancesClient({
                                     <AnimatePresence>
                                         {isHovered && (
                                             <motion.div
-                                                initial={{ opacity: 0, y: 5, scale: 0.95 }}
-                                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                exit={{ opacity: 0, scale: 0.95 }}
-                                                transition={{ duration: 0.15, ease: "easeOut" }}
+                                                initial={{opacity: 0, y: 5, scale: 0.95}}
+                                                animate={{opacity: 1, y: 0, scale: 1}}
+                                                exit={{opacity: 0, scale: 0.95}}
+                                                transition={{duration: 0.15, ease: "easeOut"}}
                                                 className="absolute bottom-full mb-3 bg-graphite dark:bg-zinc-800 text-white text-[11px] font-bold py-2 px-3 rounded-xl whitespace-nowrap pointer-events-none shadow-xl border border-white/10 z-20"
                                             >
                                                 {formatPLN(data.revenue)} zł
@@ -196,10 +205,10 @@ export default function FinancesClient({
                                     </AnimatePresence>
 
                                     <motion.div
-                                        initial={{ height: 0 }}
-                                        animate={{ height: `${hPct}%` }}
-                                        transition={{ duration: 0.7, delay: index * 0.05, ease: [0.25, 1, 0.5, 1] }}
-                                        style={{ minHeight: data.revenue > 0 ? '4px' : '0px' }}
+                                        initial={{height: 0}}
+                                        animate={{height: `${hPct}%`}}
+                                        transition={{duration: 0.7, delay: index * 0.05, ease: [0.25, 1, 0.5, 1]}}
+                                        style={{minHeight: data.revenue > 0 ? '4px' : '0px'}}
                                         className={`
                                             w-full rounded-t-xl transition-colors duration-300
                                             ${isCurrentMonth
@@ -223,19 +232,31 @@ export default function FinancesClient({
                     </div>
                 </div>
 
-                <div className="lg:col-span-2 bg-white dark:bg-[#262626] border border-beige-dark/20 dark:border-zinc-700 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col">
+                <div
+                    className="lg:col-span-2 bg-white dark:bg-[#262626] border border-beige-dark/20 dark:border-zinc-700 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col">
                     <header className="flex items-center justify-between mb-7">
-                        <h3 className="font-serif font-bold text-graphite dark:text-zinc-100 text-lg">
-                            Top Usługi
-                        </h3>
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-graphite/40 dark:text-zinc-500">
-                            Wg przychodu
-                        </span>
+                        <div className="flex items-center">
+                            <h3 className="font-serif font-bold text-graphite dark:text-zinc-100 text-lg">
+                                Top Usługi
+                            </h3>
+                            <InfoTooltip
+                                title="Ranking rentowności"
+                                description="Usługi są sortowane według sumy wygenerowanego przychodu (nie ilości wizyt). Pozwala to łatwo zidentyfikować najbardziej opłacalne formy terapii."
+                            />
+                        </div>
+                        <span
+                            className="text-[10px] font-bold uppercase tracking-widest text-graphite/40 dark:text-zinc-500">
+        Wg przychodu
+    </span>
                     </header>
 
                     {topServices.length === 0 ? (
-                        <div className="flex-1 flex flex-col items-center justify-center text-graphite/30 dark:text-zinc-600 space-y-2">
-                            <svg className="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        <div
+                            className="flex-1 flex flex-col items-center justify-center text-graphite/30 dark:text-zinc-600 space-y-2">
+                            <svg className="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                                      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                            </svg>
                             <span className="text-sm italic">Brak danych do analizy</span>
                         </div>
                     ) : (
@@ -245,32 +266,42 @@ export default function FinancesClient({
                                 const isTop = index === 0;
 
                                 return (
-                                    <div key={index} className={`space-y-2.5 transition-opacity ${index > 2 ? 'opacity-60 hover:opacity-100' : ''}`}>
+                                    <div key={index}
+                                         className={`space-y-2.5 transition-opacity ${index > 2 ? 'opacity-60 hover:opacity-100' : ''}`}>
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="flex items-center gap-3 min-w-0">
-                                                <span className={`text-[11px] font-bold tabular-nums w-4 shrink-0 flex justify-center ${isTop ? 'text-sage dark:text-emerald-400' : 'text-graphite/30 dark:text-zinc-600'}`}>
+                                                <span
+                                                    className={`text-[11px] font-bold tabular-nums w-4 shrink-0 flex justify-center ${isTop ? 'text-sage dark:text-emerald-400' : 'text-graphite/30 dark:text-zinc-600'}`}>
                                                     {index + 1}
                                                 </span>
-                                                <span className="text-sm font-semibold text-graphite dark:text-zinc-200 truncate">
+                                                <span
+                                                    className="text-sm font-semibold text-graphite dark:text-zinc-200 truncate">
                                                     {service.name}
                                                 </span>
                                             </div>
-                                            <span className="text-sm font-bold text-graphite dark:text-zinc-100 tabular-nums shrink-0">
+                                            <span
+                                                className="text-sm font-bold text-graphite dark:text-zinc-100 tabular-nums shrink-0">
                                                 {formatPLN(service.revenue)} zł
                                             </span>
                                         </div>
 
                                         <div className="flex items-center gap-4">
-                                            <div className="flex-1 h-1.5 bg-beige-dark/15 dark:bg-zinc-800 rounded-full overflow-hidden">
+                                            <div
+                                                className="flex-1 h-1.5 bg-beige-dark/15 dark:bg-zinc-800 rounded-full overflow-hidden">
                                                 <motion.div
-                                                    initial={{ width: 0 }}
-                                                    animate={{ width: `${pct}%` }}
-                                                    transition={{ duration: 0.8, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                                                    initial={{width: 0}}
+                                                    animate={{width: `${pct}%`}}
+                                                    transition={{
+                                                        duration: 0.8,
+                                                        delay: index * 0.1,
+                                                        ease: [0.16, 1, 0.3, 1]
+                                                    }}
                                                     className={`h-full rounded-full ${isTop ? "bg-sage dark:bg-emerald-500" : "bg-graphite/30 dark:bg-zinc-500"}`}
                                                 />
                                             </div>
                                             <div className="flex items-center gap-2 shrink-0 tabular-nums text-[10px]">
-                                                <span className="font-bold text-graphite/50 dark:text-zinc-400 w-7 text-right">
+                                                <span
+                                                    className="font-bold text-graphite/50 dark:text-zinc-400 w-7 text-right">
                                                     {pct}%
                                                 </span>
                                                 <span className="font-medium text-graphite/30 dark:text-zinc-600">
@@ -286,8 +317,10 @@ export default function FinancesClient({
                 </div>
             </section>
 
-            <section className="bg-white dark:bg-[#262626] border border-beige-dark/20 dark:border-zinc-700 rounded-3xl overflow-hidden shadow-sm">
-                <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 py-5 border-b border-beige-dark/10 dark:border-zinc-800 bg-beige-light/20 dark:bg-zinc-800/30">
+            <section
+                className="bg-white dark:bg-[#262626] border border-beige-dark/20 dark:border-zinc-700 rounded-3xl overflow-hidden shadow-sm">
+                <header
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 py-5 border-b border-beige-dark/10 dark:border-zinc-800 bg-beige-light/20 dark:bg-zinc-800/30">
                     <div>
                         <h3 className="font-serif font-bold text-graphite dark:text-zinc-100 text-lg">
                             Ostatnie transakcje

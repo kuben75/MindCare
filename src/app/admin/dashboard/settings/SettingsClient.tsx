@@ -5,6 +5,7 @@ import { Toast } from "@/components/ui/Toast";
 import { useSettingsClient } from "@/hooks/useSettingsClient";
 import { motion } from "framer-motion";
 import { containerVariants, itemVariants } from "@/framer-motion/animation-logs";
+import InfoTooltip from "@/components/ui/InfoTooltip";
 
 const labelClass = "block text-[11px] font-bold uppercase tracking-widest text-graphite/50 dark:text-zinc-500 mb-2.5 ml-1";
 const inputClass = "w-full px-4 py-3.5 bg-beige-light/40 dark:bg-zinc-800/50 border border-beige-dark/30 dark:border-zinc-700/60 rounded-xl focus:bg-white dark:focus:bg-[#202020] focus:ring-4 focus:ring-sage/15 dark:focus:ring-emerald-500/10 focus:border-sage dark:focus:border-emerald-500/50 transition-all duration-300 text-[14px] font-medium text-graphite dark:text-zinc-200 placeholder:text-graphite/30 dark:placeholder:text-zinc-600 outline-none shadow-sm hover:border-beige-dark/60 dark:hover:border-zinc-600";
@@ -42,13 +43,20 @@ export default function SettingsClient({ initialSettings }: { initialSettings: a
                 </p>
             </motion.div>
 
-            <motion.div variants={itemVariants} className="bg-white/80 dark:bg-[#262626]/80 backdrop-blur-xl border border-beige-dark/20 dark:border-zinc-700/80 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] p-6 sm:p-8 lg:p-10 transition-all hover:shadow-[0_8px_40px_rgb(0,0,0,0.08)]">
+            <motion.div variants={itemVariants} className="relative z-10 hover:z-[100] bg-white/80 dark:bg-[#262626]/80 backdrop-blur-xl border border-beige-dark/20 dark:border-zinc-700/80 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] p-6 sm:p-8 lg:p-10 transition-all hover:shadow-[0_8px_40px_rgb(0,0,0,0.08)]">
                 <div className="flex items-center gap-4 mb-8">
                     <div className="w-12 h-12 rounded-2xl bg-sage/10 dark:bg-emerald-500/10 flex items-center justify-center shrink-0 text-sage dark:text-emerald-400 border border-sage/20 dark:border-emerald-500/20">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" /></svg>
                     </div>
                     <div>
-                        <h2 className="text-xl font-serif font-bold text-graphite dark:text-zinc-100 tracking-tight">Dane kontaktowe</h2>
+                        <div className="flex items-center">
+                            <h2 className="text-xl font-serif font-bold text-graphite dark:text-zinc-100 tracking-tight">Dane kontaktowe</h2>
+                            <InfoTooltip
+                                title="Globalna synchronizacja"
+                                description="Zmieniony tu e-mail i telefon automatycznie zaktualizują się w stopce strony, w formularzach kontaktowych oraz w wiadomościach wysyłanych do pacjentów."
+                                images={["/screenshots/tooltip-contact.png", "/screenshots/tooltip-contact-2.png"]}
+                            />
+                        </div>
                         <p className="text-xs font-medium text-graphite/50 dark:text-zinc-400 mt-1">Podstawowe informacje o Twoim gabinecie</p>
                     </div>
                 </div>
@@ -73,13 +81,20 @@ export default function SettingsClient({ initialSettings }: { initialSettings: a
                 </div>
             </motion.div>
 
-            <motion.div variants={itemVariants} className="bg-white/80 dark:bg-[#262626]/80 backdrop-blur-xl border border-beige-dark/20 dark:border-zinc-700/80 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] p-6 sm:p-8 lg:p-10 transition-all hover:shadow-[0_8px_40px_rgb(0,0,0,0.08)]">
+            <motion.div variants={itemVariants} className="relative z-10 hover:z-[100] bg-white/80 dark:bg-[#262626]/80 backdrop-blur-xl border border-beige-dark/20 dark:border-zinc-700/80 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] p-6 sm:p-8 lg:p-10 transition-all hover:shadow-[0_8px_40px_rgb(0,0,0,0.08)]">
                 <div className="flex items-center gap-4 mb-8">
                     <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center shrink-0 text-amber-600 dark:text-amber-400 border border-amber-200/50 dark:border-amber-500/20">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
                     </div>
                     <div>
-                        <h2 className="text-xl font-serif font-bold text-graphite dark:text-zinc-100 tracking-tight">Finanse i rozliczenia</h2>
+                        <div className="flex items-center">
+                            <h2 className="text-xl font-serif font-bold text-graphite dark:text-zinc-100 tracking-tight">Finanse i rozliczenia</h2>
+                            <InfoTooltip
+                                title="Przelewy tradycyjne"
+                                description="Numer konta jest dołączany do maila z potwierdzeniem tylko wtedy, gdy ręcznie dodasz wizytę dla pacjenta w panelu (np. po rezerwacji telefonicznej). Informuje to pacjenta, że musi opłacić wizytę przelewem, pomijając system Stripe."
+                                images={[ "/screenshots/tooltip-iban-2.png", "/screenshots/tooltip-iban.png"]}
+                            />
+                        </div>
                         <p className="text-xs font-medium text-graphite/50 dark:text-zinc-400 mt-1">Konto bankowe do przelewów tradycyjnych</p>
                     </div>
                 </div>
@@ -89,13 +104,19 @@ export default function SettingsClient({ initialSettings }: { initialSettings: a
                 </div>
             </motion.div>
 
-            <motion.div variants={itemVariants} className="bg-white/80 dark:bg-[#262626]/80 backdrop-blur-xl border border-beige-dark/20 dark:border-zinc-700/80 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] p-6 sm:p-8 lg:p-10 transition-all hover:shadow-[0_8px_40px_rgb(0,0,0,0.08)]">
+            <motion.div variants={itemVariants} className="relative z-10 hover:z-[100] bg-white/80 dark:bg-[#262626]/80 backdrop-blur-xl border border-beige-dark/20 dark:border-zinc-700/80 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] p-6 sm:p-8 lg:p-10 transition-all hover:shadow-[0_8px_40px_rgb(0,0,0,0.08)]">
                 <div className="flex items-center gap-4 mb-8">
                     <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shrink-0 text-blue-500 dark:text-blue-400 border border-blue-200/50 dark:border-blue-500/20">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
                     </div>
                     <div>
-                        <h2 className="text-xl font-serif font-bold text-graphite dark:text-zinc-100 tracking-tight">Profile zewnętrzne</h2>
+                        <div className="flex items-center">
+                            <h2 className="text-xl font-serif font-bold text-graphite dark:text-zinc-100 tracking-tight">Profile zewnętrzne</h2>
+                            <InfoTooltip
+                                title="Dynamiczne ikony social media"
+                                description="Wklejenie linku w którekolwiek z tych miejsc natychmiast aktywuje odpowiednią ikonę (np. logo Instagrama) w stopce głównej strony."
+                            />
+                        </div>
                         <p className="text-xs font-medium text-graphite/50 dark:text-zinc-400 mt-1">Odnośniki widoczne w stopce i na stronie powitalnej</p>
                     </div>
                 </div>

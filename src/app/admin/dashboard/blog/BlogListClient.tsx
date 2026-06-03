@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import {Post} from "@/types/post";
+import {TPost} from "@/types/post";
 import {Toast} from "@/components/ui/Toast";
 import {motion, AnimatePresence} from "framer-motion";
 import {useBlogListClient} from "@/hooks/useBlogListClient";
 
-export default function BlogListClient({initialPosts}: { initialPosts: Post[] }) {
+export default function BlogListClient({initialPosts}: { initialPosts: TPost[] }) {
     const {
         posts,
         isSaving,

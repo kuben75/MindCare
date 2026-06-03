@@ -5,6 +5,7 @@ import { IActionMenuProps } from "@/types/reservation";
 import { useActionMenu } from "@/hooks/useActionMenu";
 import { motion, AnimatePresence } from "framer-motion";
 import {Toast} from "@/components/ui/Toast";
+import { createPortal } from "react-dom";
 
 export default function ReservationActionMenu({ reservationId, currentStatus }: IActionMenuProps) {
     const {
@@ -20,7 +21,7 @@ export default function ReservationActionMenu({ reservationId, currentStatus }: 
         setEditForm,
         handleSaveNewDate,
         isSavingDate,
-        setIsEditModalOpen, toast, hideToast
+        setIsEditModalOpen, toast, hideToast, mounted
     } = useActionMenu({ reservationId, currentStatus });
 
     if (currentStatus === 'CANCELLED') {
@@ -34,6 +35,8 @@ export default function ReservationActionMenu({ reservationId, currentStatus }: 
 
     return (
         <>
+            <Toast toast={toast} onClose={hideToast} />
+
             <div className={`relative inline-block text-left ${isOpen ? 'z-[60]' : 'z-10'}`} ref={menuRef}>
                 <button
                     onClick={toggleMenuDirection}
@@ -103,64 +106,73 @@ export default function ReservationActionMenu({ reservationId, currentStatus }: 
                     )}
                 </AnimatePresence>
             </div>
-
-            <AnimatePresence>
-                {isEditModalOpen && (
-                    <motion.div
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-graphite/40 dark:bg-black/60 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-4 text-left"
-                    >
+            {mounted && createPortal(
+                <AnimatePresence>
+                    {isEditModalOpen && (
                         <motion.div
-                            initial={{ y: "100%", opacity: 0, scale: 0.95 }}
-                            animate={{ y: 0, opacity: 1, scale: 1 }}
-                            exit={{ y: "100%", opacity: 0, scale: 0.95 }}
-                            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                            className="bg-white/95 dark:bg-[#262626]/95 backdrop-blur-2xl border border-white/20 dark:border-zinc-700 w-full max-w-sm rounded-[2rem] shadow-2xl overflow-hidden"
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-graphite/40 dark:bg-black/60 backdrop-blur-sm z-[99999] flex items-end sm:items-center justify-center p-4 text-left"
                         >
-                            <div className="flex justify-between items-center px-6 py-5 border-b border-black/5 dark:border-white/5 bg-beige-light/30 dark:bg-zinc-800/50">
-                                <h2 className="text-xl font-serif font-bold text-graphite dark:text-white flex items-center gap-2">
-                                    <span className="w-8 h-8 rounded-full bg-sage/10 text-sage dark:bg-emerald-500/10 dark:text-emerald-400 flex items-center justify-center">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                    </span>
-                                    Nowy termin
-                                </h2>
-                                <button onClick={() => setIsEditModalOpen(false)} className="p-2 bg-white dark:bg-zinc-700 shadow-sm rounded-full text-graphite/40 dark:text-zinc-400 hover:text-graphite dark:hover:text-white transition-colors active:scale-95">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
-                                </button>
-                            </div>
+                            {/* Wymuszenie blokady scrolla na body podczas działania modala */}
+                            <style jsx global>{`
+                    body {
+                        overflow: hidden;
+                    }
+                `}</style>
 
-                            <form onSubmit={handleSaveNewDate} className="p-6">
-                                <p className="text-xs text-graphite/60 dark:text-zinc-400 mb-6 leading-relaxed">
-                                    System zapisze nową datę, a pacjent otrzyma powiadomienie. Upewnij się, że termin został wcześniej z nim ustalony.
-                                </p>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-[10px] font-bold uppercase tracking-widest text-graphite/40 dark:text-zinc-500 mb-1.5 pl-1">Data</label>
-                                        <input type="date" required value={editForm.date} onChange={(e) => setEditForm({...editForm, date: e.target.value})} className="w-full px-4 py-3 rounded-2xl border border-beige-dark/30 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-medium focus:ring-2 focus:ring-sage/50 focus:border-sage focus:outline-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.02)]"/>
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] font-bold uppercase tracking-widest text-graphite/40 dark:text-zinc-500 mb-1.5 pl-1">Godzina</label>
-                                        <input type="time" required value={editForm.time} onChange={(e) => setEditForm({...editForm, time: e.target.value})} className="w-full px-4 py-3 rounded-2xl border border-beige-dark/30 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-medium focus:ring-2 focus:ring-sage/50 focus:border-sage focus:outline-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.02)]"/>
-                                    </div>
-                                </div>
-
-                                <div className="pt-8 flex gap-3">
-                                    <button type="button" onClick={() => setIsEditModalOpen(false)} disabled={isSavingDate} className="flex-1 py-3.5 bg-white dark:bg-zinc-800 border border-beige-dark/30 dark:border-zinc-700 rounded-2xl text-sm font-bold hover:bg-beige-light/50 dark:hover:bg-zinc-700 transition-colors active:scale-95 text-graphite dark:text-zinc-300">
-                                        Anuluj
-                                    </button>
-                                    <button type="submit" disabled={isSavingDate} className="flex-1 py-3.5 bg-sage hover:bg-[#8ea38a] text-white rounded-2xl text-sm font-bold shadow-[0_8px_20px_rgb(164,185,160,0.3)] transition-all disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95">
-                                        {isSavingDate ? (
-                                            <span className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full"></span>
-                                        ) : "Zapisz"}
+                            <motion.div
+                                initial={{ y: "100%", opacity: 0, scale: 0.95 }}
+                                animate={{ y: 0, opacity: 1, scale: 1 }}
+                                exit={{ y: "100%", opacity: 0, scale: 0.95 }}
+                                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                                className="bg-white/95 dark:bg-[#262626]/95 backdrop-blur-2xl border border-white/20 dark:border-zinc-700 w-full max-w-sm rounded-[2rem] shadow-2xl overflow-hidden"
+                                onClick={(e) => e.stopPropagation()} // Zapobiega zamknięciu przy kliknięciu w sam modal
+                            >
+                                <div className="flex justify-between items-center px-6 py-5 border-b border-black/5 dark:border-white/5 bg-beige-light/30 dark:bg-zinc-800/50">
+                                    <h2 className="text-xl font-serif font-bold text-graphite dark:text-white flex items-center gap-2">
+                            <span className="w-8 h-8 rounded-full bg-sage/10 text-sage dark:bg-emerald-500/10 dark:text-emerald-400 flex items-center justify-center">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            </span>
+                                        Nowy termin
+                                    </h2>
+                                    <button onClick={() => setIsEditModalOpen(false)} className="p-2 bg-white dark:bg-zinc-700 shadow-sm rounded-full text-graphite/40 dark:text-zinc-400 hover:text-graphite dark:hover:text-white transition-colors active:scale-95">
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
                                     </button>
                                 </div>
-                            </form>
+
+                                <form onSubmit={handleSaveNewDate} className="p-6">
+                                    <p className="text-xs text-graphite/60 dark:text-zinc-400 mb-6 leading-relaxed">
+                                        System zapisze nową datę, a pacjent otrzyma powiadomienie. Upewnij się, że termin został wcześniej z nim ustalony.
+                                    </p>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-[10px] font-bold uppercase tracking-widest text-graphite/40 dark:text-zinc-500 mb-1.5 pl-1">Data</label>
+                                            <input type="date" required value={editForm.date} onChange={(e) => setEditForm({...editForm, date: e.target.value})} className="w-full px-4 py-3 rounded-2xl border border-beige-dark/30 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-medium focus:ring-2 focus:ring-sage/50 focus:border-sage focus:outline-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.02)]"/>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-bold uppercase tracking-widest text-graphite/40 dark:text-zinc-500 mb-1.5 pl-1">Godzina</label>
+                                            <input type="time" required value={editForm.time} onChange={(e) => setEditForm({...editForm, time: e.target.value})} className="w-full px-4 py-3 rounded-2xl border border-beige-dark/30 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-medium focus:ring-2 focus:ring-sage/50 focus:border-sage focus:outline-none transition-all shadow-[0_2px_10px_rgb(0,0,0,0.02)]"/>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-8 flex gap-3">
+                                        <button type="button" onClick={() => setIsEditModalOpen(false)} disabled={isSavingDate} className="flex-1 py-3.5 bg-white dark:bg-zinc-800 border border-beige-dark/30 dark:border-zinc-700 rounded-2xl text-sm font-bold hover:bg-beige-light/50 dark:hover:bg-zinc-700 transition-colors active:scale-95 text-graphite dark:text-zinc-300">
+                                            Anuluj
+                                        </button>
+                                        <button type="submit" disabled={isSavingDate} className="flex-1 py-3.5 bg-sage hover:bg-[#8ea38a] text-white rounded-2xl text-sm font-bold shadow-[0_8px_20px_rgb(164,185,160,0.3)] transition-all disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95">
+                                            {isSavingDate ? (
+                                                <span className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full"></span>
+                                            ) : "Zapisz"}
+                                        </button>
+                                    </div>
+                                </form>
+                            </motion.div>
                         </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-            <Toast toast={toast} onClose={hideToast} />
+                    )}
+                </AnimatePresence>,
+                document.body
+            )}
         </>
     );
 }

@@ -1,8 +1,9 @@
 import {STATUS_STYLES, WEEKDAYS} from "@/constants/calendar";
 import {ReservationStatus} from "@prisma/client";
 import React from "react";
+import {IMonthViewProps} from "@/types/calendar";
 
-export const MonthView = ({ getDaysInMonth, currentDate, visibleReservations, setSelectedRes, setCurrentDate, setView }: any) => (
+export const MonthView = ({ getDaysInMonth, currentDate, visibleReservations, setSelectedRes, setCurrentDate, setView }: IMonthViewProps) => (
     <div className="bg-white/60 dark:bg-zinc-900/40 backdrop-blur-xl border border-beige-dark/20 dark:border-zinc-800 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden p-2 sm:p-4">
         <div className="grid grid-cols-7 text-center pb-2 pt-2 text-[10px] sm:text-xs font-bold text-graphite/40 dark:text-zinc-500 uppercase tracking-widest">
             {WEEKDAYS.map(w => <div key={w} className="hidden sm:block">{w}</div>)}

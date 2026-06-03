@@ -9,6 +9,7 @@ import {TAB_LABELS} from "@/constants/reservations";
 import {ReservationCard} from "@/app/admin/dashboard/reservations/sections/ReservationCard";
 import {DrawerPanel} from "@/app/admin/dashboard/reservations/sections/DrawerPanel";
 import {Toast} from "@/components/ui/Toast";
+import InfoTooltip from "@/components/ui/InfoTooltip";
 
 export default function ReservationsManager({ initialReservations, services }: { initialReservations: TReservationWithService[], services: Service[] }) {
     const {
@@ -122,10 +123,16 @@ export default function ReservationsManager({ initialReservations, services }: {
                             animate={{ y: 0, opacity: 1, scale: 1 }}
                             exit={{ y: "100%", opacity: 0, scale: 0.95 }}
                             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                            className="bg-white/95 dark:bg-[#262626]/95 backdrop-blur-2xl border border-white/20 dark:border-zinc-700 w-full max-w-lg rounded-[2rem] shadow-2xl overflow-hidden"
+                            className="bg-white/95 dark:bg-[#262626]/95 backdrop-blur-2xl border border-white/20 dark:border-zinc-700 w-full max-w-lg rounded-[2rem] shadow-2xl overflow-visible"
                         >
-                            <div className="flex justify-between items-center px-8 py-6 border-b border-black/5 dark:border-white/5 bg-beige-light/30 dark:bg-zinc-800/50">
+                            <div className="flex justify-between items-center px-8 py-6 border-b border-black/5 dark:border-white/5 bg-beige-light/30 dark:bg-zinc-800/50 rounded-t-[2rem]">
+                                <div className="flex items-center gap-3">
                                 <h2 className="text-2xl font-serif font-bold text-graphite dark:text-white">Nowa wizyta</h2>
+                                <InfoTooltip
+                                    title="Ręczne dodawanie rezerwacji"
+                                    description="Wizyta dodana z tego poziomu omija system płatności Stripe. Jeśli nadasz jej status 'Oczekuje na wpłatę', pacjent natychmiast otrzyma e-mail z Twoim numerem konta (IBAN) z prośbą o tradycyjny przelew."
+                                />
+                                </div>
                                 <button onClick={() => setIsOpenModal(false)} className="p-2 bg-white dark:bg-zinc-700 shadow-sm rounded-full text-graphite/40 dark:text-zinc-400 hover:text-graphite dark:hover:text-white transition-colors active:scale-95">
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
                                 </button>

@@ -1,9 +1,18 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {IToastProps} from "@/types/toast";
+import { createPortal } from "react-dom";
+import { IToastProps } from "@/types/toast";
 
 export const Toast = ({ toast, onClose }: IToastProps) => {
-    return (
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted) return null;
+
+    return createPortal(
         <AnimatePresence>
             {toast && (
                 <motion.div
@@ -11,7 +20,7 @@ export const Toast = ({ toast, onClose }: IToastProps) => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -20, scale: 0.95 }}
                     transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                    className="fixed top-6 left-1/2 -translate-x-1/2 z-[999] w-max max-w-[90vw]"
+                    className="fixed top-5 left-1/2 -translate-x-1/2 z-[99999] w-max max-w-[90vw]"
                 >
                     <div className={`flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-xl border cursor-pointer transition-transform hover:scale-105 active:scale-95 ${
                         toast.type === "success"
@@ -37,6 +46,7 @@ export const Toast = ({ toast, onClose }: IToastProps) => {
                     </div>
                 </motion.div>
             )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
 };

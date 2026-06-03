@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import {Toast} from "@/components/ui/Toast";
 import React from "react";
 import {containerVariants, itemVariants} from "@/framer-motion/animation-logs";
+import InfoTooltip from "@/components/ui/InfoTooltip";
 
 export default function ScheduleForm({ initialSchedules }: { initialSchedules: WeeklySchedule[] }) {
     const { schedules, isLoading, handleToggleDay, handleTimeChange, handleSave, toast, hideToast } = useScheduleForm({ initialSchedules });
@@ -16,17 +17,25 @@ export default function ScheduleForm({ initialSchedules }: { initialSchedules: W
             <Toast toast={toast} onClose={hideToast} />
         <motion.div className="bg-white/60 dark:bg-zinc-900/40 backdrop-blur-xl border border-beige-dark/20 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-10" variants={containerVariants} initial="hidden" animate="visible">
 
-            <motion.div className="mb-8 border-b border-beige-dark/20 dark:border-zinc-800 pb-4" variants={itemVariants}>
+            <motion.div className="relative z-20 mb-8 border-b border-beige-dark/20 dark:border-zinc-800 pb-4" variants={itemVariants}>
                 <h2 className="text-xl font-serif text-graphite dark:text-zinc-100 tracking-tight flex items-center gap-3">
                     <div className="w-8 h-8 rounded-xl bg-sage/10 text-sage dark:bg-emerald-500/10 dark:text-emerald-400 flex items-center justify-center">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     </div>
-                    Stały tydzień pracy
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-xl font-serif text-graphite dark:text-zinc-100 tracking-tight">Stały tydzień pracy</h2>
+                    </div>
                 </h2>
+                <div className="flex items-center gap-1 justify-between">
                 <p className="text-sm text-graphite/60 dark:text-zinc-400 mt-2 font-medium">Ustal w jakich godzinach jesteś dostępna dla pacjentów w poszczególne dni.</p>
+                    <InfoTooltip
+                        title="Czas obowiązujący w gabinecie"
+                        description="Twój grafik jest synchronizowany w czasie polskim (Europe/Warsaw). Niezależnie od Twojej bieżącej lokalizacji, ustawiaj godziny zgodnie z czasem obowiązującym w Polsce."
+                    />
+                </div>
             </motion.div>
 
-            <motion.div className="space-y-4" variants={itemVariants}>
+            <motion.div className="relative z-10 space-y-4" variants={itemVariants}>
                 {schedules.map((schedule) => (
                     <motion.div
                         key={schedule.dayOfWeek}

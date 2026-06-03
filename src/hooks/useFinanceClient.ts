@@ -1,7 +1,7 @@
 import {useMemo, useState} from "react";
-import {IFinancesCardProps} from "@/types/finances";
+import {TFinancesCardProps} from "@/types/finances";
 
-export const useFinanceClient = ({chartData, currentMonthTransactions}: IFinancesCardProps) => {
+export const useFinanceClient = ({chartData, currentMonthTransactions}: TFinancesCardProps) => {
     const [hoveredBar, setHoveredBar] = useState<number | null>(null);
     const [txSearch, setTxSearch] = useState("");
 

@@ -15,7 +15,11 @@ export const useActionMenu = ({ reservationId, currentStatus }: IActionMenuProps
     const router = useRouter();
     const menuRef = useRef<HTMLDivElement>(null);
     const { toast, showToast, hideToast } = useToast();
+    const [mounted, setMounted] = useState(false);
 
+    useEffect(() => {
+        setMounted(true);
+    }, []);
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             if(menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -87,7 +91,7 @@ export const useActionMenu = ({ reservationId, currentStatus }: IActionMenuProps
                 router.refresh();
             } else {
                 const errorData = await res.json();
-                showToast(errorData || 'Nie można zaktualizować daty rezerwacji.', "error");
+                showToast(errorData.message || errorData.error || 'Nie można zaktualizować daty rezerwacji.', "error");
             }
         } catch (e) {
             showToast('Wystąpił błąd podczas aktualizacji daty.', "error");
@@ -100,6 +104,6 @@ export const useActionMenu = ({ reservationId, currentStatus }: IActionMenuProps
         isOpen, isLoading, menuRef, openDirection, toggleMenuDirection,
         updateStatus, isEditModalOpen, handleEditClick, editForm,
         setEditForm, handleSaveNewDate, isSavingDate, setIsEditModalOpen,
-        toast, hideToast
+        toast, hideToast, mounted
     };
 };

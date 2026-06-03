@@ -48,6 +48,44 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Istnieje już blokada pokrywająca ten czas" }, { status: 409 });
         }
 
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const daysReservations = await prisma.reservation.findMany({
+            where: {
+                date: {
+                    gte: startOfDay,
+                    lte: endOfDay
+                },
+                status: {
+                    not: "CANCELLED"
+                }
+            },
+            include: {
+                service: true
+            }
+        })
+
+        const conflictingReservation = daysReservations.find(res => {
+            const resStart = res.date.getTime();
+            const resEnd = resStart + (res.service.duration * 60 * 1000);
+            const blockStart = startDateTime.getTime();
+            const blockEnd = endDateTime.getTime();
+
+            return resStart < blockEnd && resEnd > blockStart;
+        });
+
+        if (conflictingReservation) {
+            const conflictTime = new Date(conflictingReservation.date).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+            return NextResponse.json({
+                error: `Kolizja! Pacjent ${conflictingReservation.patientName} ma wizytę o ${conflictTime}. Przełóż lub anuluj tę wizytę przed zablokowaniem terminu.`
+            }, { status: 409 });
+        }
+
+
         const newBlock = await prisma.blockedTime.create({
             data: {
                 startDate: startDateTime,

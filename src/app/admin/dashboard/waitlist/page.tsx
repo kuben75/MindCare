@@ -3,6 +3,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
 import prisma from "@/infrastructure/prisma";
 import WaitlistManager from "@/app/admin/dashboard/waitlist/WaitlistManager";
+import InfoTooltip from "@/components/ui/InfoTooltip";
 
 export const dynamic = "force-dynamic";
 
@@ -25,9 +26,15 @@ export default async function WaitlistPage() {
                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-sage dark:text-emerald-400 mb-2">
                         Lista rezerwowa
                     </p>
+                    <div className="flex items-center justify-between gap-2">
                     <h1 className="text-3xl font-serif text-graphite dark:text-zinc-100 tracking-tight">
                         Lista rezerwowa
                     </h1>
+                    <InfoTooltip
+                        title="Jak działa ta lista?"
+                        description="Gdy w Twoim kalendarzu brakuje miejsc, pacjenci mogą zapisać się tutaj na oczekiwanie. Jeśli zwolni się termin, skontaktuj się z wybraną osobą telefonicznie lub mailowo, aby umówić wizytę ręcznie w kalendarzu. Kliknięcie 'Zrobione' po prostu usuwa wpis, nie wysyłając żadnych automatycznych wiadomości."
+                    />
+                    </div>
                     <p className="text-graphite/60 dark:text-zinc-400 text-sm mt-1.5 font-medium">
                         Kolejka pacjentów oczekujących na wolny termin w gabinecie.
                     </p>

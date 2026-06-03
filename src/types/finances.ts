@@ -1,6 +1,6 @@
 import React from "react";
 
-export interface Transaction {
+export interface ITransaction {
     id: string;
     date: string;
     patientName: string;
@@ -9,13 +9,13 @@ export interface Transaction {
     status: string;
 }
 
-export interface ServiceStat {
+export interface IServiceStat {
     name: string;
     count: number;
     revenue: number;
 }
 
-export interface ChartPoint {
+export interface IChartPoint {
     month: string;
     revenue: number;
 }
@@ -30,12 +30,12 @@ export interface IFinancesProps {
     pendingCount: number;
     paidCount: number;
     avgPerVisit: number;
-    topServices: ServiceStat[];
-    chartData: ChartPoint[];
-    currentMonthTransactions: Transaction[];
+    topServices: IServiceStat[];
+    chartData: IChartPoint[];
+    currentMonthTransactions: ITransaction[];
 }
 
-export type IFinancesCardProps = Pick<
+export type TFinancesCardProps = Pick<
     IFinancesProps,
     'chartData' | 'currentMonthTransactions'
 >;
@@ -46,11 +46,11 @@ export interface KpiCardProps {
     sub: string;
     icon: React.ReactNode;
 }
-export type StatusColor = "emerald" | "blue" | "red";
+export type TStatusColor = "emerald" | "blue" | "red";
 
 export interface StatusBarProps {
     label: string;
     count: number;
     total: number;
-    color: StatusColor;
+    color: TStatusColor;
 }

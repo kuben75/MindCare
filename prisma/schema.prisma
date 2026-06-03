@@ -67,6 +67,7 @@ model Reservation {
   hasAcceptedTerms Boolean  @default(false)
   rescheduleRequested Boolean  @default(false)
   stripePaymentIntentId String?
+  isManual Boolean @default(false)
 }
 
 enum ReservationStatus {

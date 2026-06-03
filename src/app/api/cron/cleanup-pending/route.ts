@@ -15,6 +15,7 @@ export async function GET(req: Request) {
         const result = await prisma.reservation.updateMany({
             where: {
                 status: "PENDING",
+                isManual: false,
                 createdAt: {
                     lt: thirtyMinutesAgo
                 }

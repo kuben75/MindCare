@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import {useCalendarLogic} from "@/hooks/useCalendarLogic";
+import { useCalendarLogic } from "@/hooks/useCalendarLogic";
 import React from "react";
-
 
 global.fetch = vi.fn();
 
@@ -18,10 +17,10 @@ describe('useCalendarLogic hook', () => {
             { date: new Date('2026-06-03T00:00:00.000Z').toISOString(), slots: [] }
         ];
 
-        (global.fetch as any).mockResolvedValueOnce({
+        vi.mocked(fetch).mockResolvedValueOnce({
             ok: true,
             json: async () => ({ days: mockDays })
-        });
+        } as unknown as Response);
 
         const { result } = renderHook(() => useCalendarLogic());
 
@@ -33,13 +32,13 @@ describe('useCalendarLogic hook', () => {
             expect(result.current.isLoading).toBe(false);
         });
 
-        expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/slots?startDate='));
+        expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/api/slots?startDate='));
         expect(result.current.calendarData).toHaveLength(1);
         expect(result.current.calendarData[0].date).toBeInstanceOf(Date);
     });
 
     it('should handle fetch errors gracefully', async () => {
-        (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
+        vi.mocked(fetch).mockRejectedValueOnce(new Error('Network error'));
 
         const { result } = renderHook(() => useCalendarLogic());
 
@@ -52,18 +51,19 @@ describe('useCalendarLogic hook', () => {
     });
 
     it('should fetch services when activeTab changes to waitlist', async () => {
-        (global.fetch as any).mockResolvedValueOnce({
+        vi.mocked(fetch).mockResolvedValueOnce({
             ok: true,
             json: async () => ({ days: [] })
-        });
+        } as unknown as Response);
 
         const { result } = renderHook(() => useCalendarLogic());
 
         const mockServices = [{ id: '1', name: 'Konsultacja' }];
-        (global.fetch as any).mockResolvedValueOnce({
+
+        vi.mocked(fetch).mockResolvedValueOnce({
             ok: true,
             json: async () => mockServices
-        });
+        } as unknown as Response);
 
         act(() => {
             result.current.setActiveTab('waitlist');
@@ -74,7 +74,7 @@ describe('useCalendarLogic hook', () => {
             expect(result.current.services[0].name).toBe('Konsultacja');
         });
 
-        expect(global.fetch).toHaveBeenCalledWith('/api/services');
+        expect(fetch).toHaveBeenCalledWith('/api/services');
     });
 
     it('should handle carousel movement (handleMove)', () => {

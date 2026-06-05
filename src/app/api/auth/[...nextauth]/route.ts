@@ -1,10 +1,25 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
+import NextAuth, {NextAuthOptions} from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import prisma from "@/infrastructure/prisma";
 import {verify} from "otplib";
 import {getFifteenMinutesAgo, parseUserAgent} from "@/utils/auth-helpers";
 import {sendNewDeviceAlertEmail} from "@/utils/email-sender";
+
+declare module "next-auth" {
+    interface Session {
+        sessionId?: string;
+    }
+    interface User {
+        sessionId?: string;
+    }
+}
+
+declare module "next-auth/jwt" {
+    interface JWT {
+        sessionId?: string;
+    }
+}
 
 export const authOptions: NextAuthOptions = {
     providers: [
@@ -148,25 +163,26 @@ export const authOptions: NextAuthOptions = {
         })
     ],
     callbacks: {
-        async jwt({token, user}) {
+        async jwt({ token, user }) {
+
             if(user) {
-                token.sessionId = (user as any).sessionId;
+                token.sessionId = user.sessionId;
             }
 
             if(token.sessionId) {
                 const dbSession = await prisma.deviceSession.findUnique({
-                    where: {id: token.sessionId as string}
+                    where: { id: token.sessionId }
                 });
 
-                if(!dbSession || !dbSession.isValid) {
+                if (!dbSession || !dbSession.isValid) {
                     return {};
                 }
             }
             return token;
         },
-        async session({session, token}) {
-            if(token.sessionId) {
-                (session as any).sessionId = token.sessionId;
+        async session({ session, token }) {
+            if (token.sessionId) {
+                session.sessionId = token.sessionId;
             }
             return session;
         }

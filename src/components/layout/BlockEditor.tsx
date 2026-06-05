@@ -2,9 +2,10 @@
 
 import React, { useEffect, useRef } from "react";
 import { IBlockEditorProps } from "@/types/editor";
+import EditorJS, { OutputData} from "@editorjs/editorjs";
 
 export default function BlockEditor({ data, onChange }: IBlockEditorProps) {
-    const editorRef = useRef<any>(null);
+    const editorRef = useRef<EditorJS | null>(null);
     const isReady = useRef(false);
 
     useEffect(() => {
@@ -30,7 +31,7 @@ export default function BlockEditor({ data, onChange }: IBlockEditorProps) {
         // @ts-expect-error
         const Embed = (await import("@editorjs/embed")).default;
 
-        let parsedData: any = {blocks: []};
+        let parsedData: OutputData = {blocks: []};
         if (data) {
             try {
                 parsedData = typeof data === 'string' ? JSON.parse(data) : data;

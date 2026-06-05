@@ -46,11 +46,13 @@ export async function POST(req: Request) {
                         details: `Pomyślnie zwrócono środki dla rezerwacji ${reservation.id} (${reservation.service.price} zł)`
                     }
                 })
-            }catch (stripeError: any) {
+            }catch (stripeError) {
+                const error = stripeError instanceof Error ? stripeError.message : "Nieznany błąd";
+
                 await prisma.systemLog.create({
                     data: {
                         action: "BŁĄD_ZWROTU_STRIPE",
-                        details: `Nie udało się zwrócić środków dla ${reservation.id}. Błąd: ${stripeError.message}`
+                        details: `Nie udało się zwrócić środków dla ${reservation.id}. Błąd: ${error}`
                     }
                 });
                 return NextResponse.json({ message: "Błąd podczas procesowania zwrotu płatności. Skontaktuj się z gabinetem." }, { status: 500 });
@@ -83,8 +85,6 @@ export async function POST(req: Request) {
             serviceName: canceledRes.service.name,
             reason: cancellationReason
         })
-
-
 
         return NextResponse.json({success: true}, {status: 200});
 

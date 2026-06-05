@@ -1,35 +1,24 @@
 "use client";
 
 import {useState} from "react";
-import {ICalendarHeaderProps} from "@/types/calendar";
+import {IPublicCalendarHeaderProps} from "@/types/calendar";
 import {MINI_CAL_DAYS, POLISH_MONTHS} from "@/constants/calendar";
+import {usePublicCalendarHeader} from "@/hooks/usePublicCalendarHeader";
 
-export default function CalendarHeader({ startDate, today, maxDate, handleMove, jumpToDate }: ICalendarHeaderProps) {
-    const [isMiniCalOpen, setIsMiniCalOpen] = useState(false);
-    const [miniCalMonth, setMiniCalMonth] = useState(new Date(startDate));
-
-    const isPrevDisabled = startDate <= today;
-    const isNextDisabled = startDate >= maxDate;
-
-    const daysInMonth = new Date(miniCalMonth.getFullYear(), miniCalMonth.getMonth() + 1, 0).getDate();
-    const firstDayOfMonth = new Date(miniCalMonth.getFullYear(), miniCalMonth.getMonth(), 1).getDay();
-    const emptyDaysCount = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
-
-    const handleMiniCalPrev = () => setMiniCalMonth(new Date(miniCalMonth.getFullYear(), miniCalMonth.getMonth() - 1, 1));
-    const handleMiniCalNext = () => setMiniCalMonth(new Date(miniCalMonth.getFullYear(), miniCalMonth.getMonth() + 1, 1));
-
-    const handleSelectDate = (day: number) => {
-        const newDate = new Date(miniCalMonth.getFullYear(), miniCalMonth.getMonth(), day);
-        if (newDate < today || newDate > maxDate) return;
-
-        const yyyy = newDate.getFullYear();
-        const mm = String(newDate.getMonth() + 1).padStart(2, '0');
-        const dd = String(day).padStart(2, '0');
-
-        jumpToDate(`${yyyy}-${mm}-${dd}`);
-        setIsMiniCalOpen(false);
-    };
-
+export default function CalendarHeader({ startDate, today, maxDate, handleMove, jumpToDate }: IPublicCalendarHeaderProps) {
+const {
+    isMiniCalOpen,
+    setIsMiniCalOpen,
+    miniCalMonth,
+    setMiniCalMonth,
+    isPrevDisabled,
+    isNextDisabled,
+    daysInMonth,
+    emptyDaysCount,
+    handleMiniCalPrev,
+    handleMiniCalNext,
+    handleSelectDate
+} = usePublicCalendarHeader({ startDate, today, maxDate, jumpToDate });
     return (
         <div className="bg-white border-b border-beige-dark/10 p-5 lg:p-6 flex flex-col md:flex-row justify-between items-center gap-4 relative z-20">
             <h3 className="text-2xl font-serif text-graphite capitalize">

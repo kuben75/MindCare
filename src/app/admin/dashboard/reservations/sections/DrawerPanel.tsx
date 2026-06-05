@@ -1,11 +1,12 @@
 import {AnimatePresence, motion} from "framer-motion";
 import React from "react";
 import InfoTooltip from "@/components/ui/InfoTooltip";
+import {IDrawerPanelProps} from "@/types/reservation";
 
 export const DrawerPanel = ({
                          reservation, activeNoteTab, setActiveNoteTab, activeNotesText, setActiveNotesText,
                          handleSaveNotes, isSavingNotes, emailMessage, setEmailMessage, handleSendFollowUp, isSendingEmail, emailSuccess
-                     }: any) => {
+                     }: IDrawerPanelProps) => {
     const isCompleted = reservation.status === 'COMPLETED';
 
     return (

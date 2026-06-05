@@ -1,10 +1,10 @@
-import {ICalendarHeaderProps, TViewType} from "@/types/calendar";
+import {IAdminCalendarHeaderProps, TViewType} from "@/types/calendar";
 import {motion} from "framer-motion";
 import {VIEW_LABELS} from "@/constants/calendar";
 import React from "react";
 
 
-export const CalendarHeader = ({ handleToday, handleNavigate, formatHeaderDate, view, setView }: ICalendarHeaderProps) => (
+export const CalendarHeader = ({ handleToday, handleNavigate, formatHeaderDate, view, setView }: IAdminCalendarHeaderProps) => (
     <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 mb-8">
         <div className="flex items-center gap-4">
             <button

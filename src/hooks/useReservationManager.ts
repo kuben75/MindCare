@@ -129,7 +129,7 @@ export const useReservationManager = ({ initialReservations, services }: { initi
             setActiveNotesText(reservation.privateNotes || "");
         }
     };
-    const handleToggleDrawer = (reservation: any) => {
+    const handleToggleDrawer = (reservation: TReservationWithService) => {
         toggleNotes(reservation);
         setActiveNoteTab('PRIVATE');
         setEmailMessage("");

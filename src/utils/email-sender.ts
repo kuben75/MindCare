@@ -7,6 +7,7 @@ import MagicLinkEmail from "@/emails/MagicLink";
 import CancelAppointmentEmail from "@/emails/CancelAppointmentEmail";
 import NewDeviceAlertEmail from "@/emails/NewDeviceAlertEmail";
 import UniversalEmail from "@/emails/UniversalEmail";
+import {Reservation } from "@prisma/client";
 
 async function sendEmailBase(to: string, subject: string, reactComponent: React.ReactElement, from = "Gabinet Paulina Kawka-Mirek <onboarding@resend.dev>") {
     if (!process.env.RESEND_API_KEY) return false;
@@ -161,7 +162,7 @@ export async function sendPatientReminderEmail({ email, patientName, date, servi
     );
 }
 
-export async function sendAdminDailyReportEmail({ adminEmail, appointmentsCount, firstAppointment, date }: { adminEmail: string, appointmentsCount: number, firstAppointment: any, date: Date }) {
+export async function sendAdminDailyReportEmail({ adminEmail, appointmentsCount, firstAppointment, date }: { adminEmail: string, appointmentsCount: number, firstAppointment?: Reservation, date: Date }) {
     const { formattedDate } = formatDateTime(date);
 
     let message = `Masz dzisiaj zaplanowanych wizyt: ${appointmentsCount}.\n\n`;

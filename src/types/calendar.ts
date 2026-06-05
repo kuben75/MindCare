@@ -29,7 +29,7 @@ export interface IDaysCarouselProps {
     onScroll: () => void;
 }
 
-export interface ICalendarHeaderProps {
+export interface IPublicCalendarHeaderProps {
     startDate: Date;
     today: Date;
     maxDate: Date;
@@ -39,13 +39,18 @@ export interface ICalendarHeaderProps {
 
 export type TViewType = 'day' | 'week' | 'month';
 
+export interface IMonthDay {
+    date: Date;
+    isCurrentMonth: boolean;
+}
+
 export interface IMonthViewProps {
-    getDaysInMonth: (date: Date) => any[];
+    getDaysInMonth: (date: Date) => IMonthDay[];
     currentDate: Date;
-    visibleReservations: any[];
-    setSelectedRes: (res: any) => void;
+    visibleReservations: TReservationWithService[];
+    setSelectedRes: React.Dispatch<React.SetStateAction<TReservationWithService | null>>;
     setCurrentDate: (date: Date) => void;
-    setView: (view: 'day' | 'week' | 'month') => void;
+    setView: (view: TViewType) => void;
 }
 
 export interface IDayViewProps {
@@ -58,10 +63,21 @@ export interface IEventCardProps {
     onClick: () => void;
 }
 
-export interface ICalendarHeaderProps {
+export interface IAdminCalendarHeaderProps {
     handleToday: () => void;
     handleNavigate: (direction: 'prev' | 'next') => void;
     formatHeaderDate: () => string;
     view: TViewType;
     setView: (view: TViewType) => void;
+}
+
+export type TPublicCalendarParams = Pick<IPublicCalendarHeaderProps, 'startDate' | 'today' | 'maxDate' | 'jumpToDate'>
+
+export type TRawDaySchedule = Omit<IDaySchedule, 'date'> & { date: string };
+
+export interface IWeekViewMobileProps {
+    currentDate: Date;
+    getDaysOfWeek: (date: Date) => Date[];
+    visibleReservations: TReservationWithService[];
+    setSelectedRes: React.Dispatch<React.SetStateAction<TReservationWithService | null>>;
 }

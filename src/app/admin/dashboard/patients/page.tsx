@@ -1,11 +1,11 @@
 import PatientsClient from "@/app/admin/dashboard/patients/PatientsClient";
-import { usePatientsPage } from "@/hooks/usePatientsPage";
+import { getPatientsData } from "@/hooks/getPatientsData";
 import InfoTooltip from "@/components/ui/InfoTooltip";
 
 export const dynamic = 'force-dynamic';
 
 export default async function PatientsPage() {
-    const { patientList } = await usePatientsPage();
+    const { patientList } = await getPatientsData();
 
     return (
         <div className="space-y-8 md:space-y-10 animate-fade-in pb-12">

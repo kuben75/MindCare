@@ -1,5 +1,8 @@
+import {TReservationWithService} from "@/types/reservation";
+import React from "react";
+
 export interface IDashboardData {
-    todaysAppointments: any[];
+    todaysAppointments: TReservationWithService[];
     todayVisitsCount: number;
     tomorrowVisitsCount: number;
     pendingVisitsCount: number;
@@ -10,6 +13,6 @@ export interface IDashboardData {
 export interface IWeekViewDesktopProps {
     currentDate: Date;
     getDaysOfWeek: (date: Date) => Date[];
-    visibleReservations: any[];
-    setSelectedRes: (res: any) => void;
+    visibleReservations: TReservationWithService[];
+    setSelectedRes: React.Dispatch<React.SetStateAction<TReservationWithService | null>>;
 }

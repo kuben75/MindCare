@@ -61,7 +61,7 @@ export default function PatientsClient({ patients }: { patients: IPatient[] }) {
                             </svg>
                         </div>
                         <p className="text-base font-semibold text-graphite/70 dark:text-zinc-300">Brak wyników</p>
-                        <p className="text-sm text-graphite/40 dark:text-zinc-500 mt-1 max-w-sm">Nie znaleźliśmy pacjenta pasującego do zapytania "{searchQuery}".</p>
+                        <p className="text-sm text-graphite/40 dark:text-zinc-500 mt-1 max-w-sm">{`Nie znaleźliśmy pacjenta pasującego do zapytania "${searchQuery}".`}</p>
                     </div>
                 ) : (
                     <AnimatePresence mode="popLayout">
@@ -189,7 +189,7 @@ export default function PatientsClient({ patients }: { patients: IPatient[] }) {
                                                                                 {visit.price} zł
                                                                             </div>
                                                                             <div className="scale-90 origin-right">
-                                                                                {getStatusBadge(visit.status as any)}
+                                                                                {getStatusBadge(visit.status as string)}
                                                                             </div>
                                                                         </div>
                                                                     </div>

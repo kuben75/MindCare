@@ -3,6 +3,7 @@ import {motion} from "framer-motion";
 import {ReservationStatus} from "@prisma/client";
 import React from "react";
 import {IWeekViewDesktopProps} from "@/types/dashboard";
+import {TReservationWithService} from "@/types/reservation";
 
 
 export const WeekViewDesktop = ({ currentDate, getDaysOfWeek, visibleReservations, setSelectedRes }: IWeekViewDesktopProps) => (
@@ -30,7 +31,7 @@ export const WeekViewDesktop = ({ currentDate, getDaysOfWeek, visibleReservation
                     </div>
                     {getDaysOfWeek(currentDate).map((day: Date, idx: number) => {
                         const isToday = day.toDateString() === new Date().toDateString();
-                        const match = visibleReservations.find((res: any) => new Date(res.date).toDateString() === day.toDateString() && `${String(new Date(res.date).getHours()).padStart(2, '0')}:00` === hour);
+                        const match = visibleReservations.find((res: TReservationWithService) => new Date(res.date).toDateString() === day.toDateString() && `${String(new Date(res.date).getHours()).padStart(2, '0')}:00` === hour);
                         return (
                             <div key={idx} className={`border-r border-beige-dark/10 dark:border-zinc-800/50 last:border-0 relative ${isToday ? 'bg-sage/[0.02] dark:bg-emerald-900/[0.02]' : ''}`}>
                                 {match && (

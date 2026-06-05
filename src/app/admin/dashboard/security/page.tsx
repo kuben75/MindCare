@@ -19,7 +19,7 @@ export default async function SecurityPage() {
         redirect("/admin/login");
     }
 
-    const currentSessionId = (session as any).sessionId || null;
+    const currentSessionId = session.sessionId || null;
 
     return (
         <div className="max-w-[1200px] mx-auto w-full px-2 sm:px-4 pb-16">

@@ -56,12 +56,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
                         details: `Admin anulował wizytę ${currentReservation.id}. Pomyślnie zwrócono środki (${currentReservation.service.price} zł)`
                     }
                 });
-            } catch (stripeError: any) {
-                console.error("Błąd zwrotu Stripe przez Admina:", stripeError);
+            } catch (stripeError) {
+                const error = stripeError instanceof Error ? stripeError.message : "Nieznany błąd";
                 await prisma.systemLog.create({
                     data: {
                         action: "BŁĄD_ZWROTU_ADMIN",
-                        details: `Admin anulował wizytę, ale zwrot środków na Stripe zawiódł. ID: ${currentReservation.id}. Błąd: ${stripeError.message}`
+                        details: `Admin anulował wizytę, ale zwrot środków na Stripe zawiódł. ID: ${currentReservation.id}. Błąd: ${error}`
                     }
                 });
                 return NextResponse.json({ error: "Nie można wykonać zwrotu na Stripe. Status nie został zmieniony." }, { status: 500 });

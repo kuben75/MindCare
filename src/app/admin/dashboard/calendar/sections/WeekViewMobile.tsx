@@ -2,13 +2,15 @@ import {motion} from "framer-motion";
 import {STATUS_STYLES, WEEKDAYS} from "@/constants/calendar";
 import {ReservationStatus} from "@prisma/client";
 import React from "react";
+import {TReservationWithService} from "@/types/reservation";
+import {IWeekViewMobileProps} from "@/types/calendar";
 
-export const WeekViewMobile = ({ currentDate, getDaysOfWeek, visibleReservations, setSelectedRes }: any) => {
+export const WeekViewMobile = ({ currentDate, getDaysOfWeek, visibleReservations, setSelectedRes }: IWeekViewMobileProps) => {
     const days = getDaysOfWeek(currentDate);
     return (
         <div className="lg:hidden space-y-6">
             {days.map((day: Date, idx: number) => {
-                const dayReservations = visibleReservations.filter((res: any) => new Date(res.date).toDateString() === day.toDateString());
+                const dayReservations = visibleReservations.filter((res: TReservationWithService) => new Date(res.date).toDateString() === day.toDateString());
                 const isToday = day.toDateString() === new Date().toDateString();
                 if (dayReservations.length === 0 && !isToday) return null;
 
@@ -26,7 +28,7 @@ export const WeekViewMobile = ({ currentDate, getDaysOfWeek, visibleReservations
                             {dayReservations.length === 0 ? (
                                 <p className="text-sm font-medium text-graphite/30 dark:text-zinc-600 text-center py-6">Masz wolne</p>
                             ) : (
-                                dayReservations.map((res: any) => (
+                                dayReservations.map((res: TReservationWithService) => (
                                     <div key={res.id} onClick={() => setSelectedRes(res)} className={`p-4 rounded-2xl border flex items-center justify-between cursor-pointer active:scale-95 transition-transform ${STATUS_STYLES[res.status as ReservationStatus].bg} ${STATUS_STYLES[res.status as ReservationStatus].border}`}>
                                         <div>
                                             <div className={`font-bold text-sm ${STATUS_STYLES[res.status as ReservationStatus].text}`}>{res.patientName}</div>

@@ -1,6 +1,6 @@
 import {useState, useEffect, useRef} from "react";
 import {DAYS_PER_VIEW_DESKTOP, DAYS_PER_VIEW_MOBILE, MAX_DAYS_AHEAD} from "@/constants/calendar";
-import { IDaySchedule } from "@/types/calendar";
+import {IDaySchedule, TRawDaySchedule} from "@/types/calendar";
 import {Service} from "@prisma/client";
 
 export const useCalendarLogic = () => {
@@ -38,7 +38,7 @@ export const useCalendarLogic = () => {
                 const response = await fetch(`/api/slots?startDate=${today.toISOString()}`);
                 if (response.ok) {
                     const data = await response.json();
-                    const parsedDays: IDaySchedule[] = data.days.map((day: any) => ({
+                    const parsedDays: IDaySchedule[] = data.days.map((day: TRawDaySchedule) => ({
                         ...day,
                         date: new Date(day.date)
                     }));

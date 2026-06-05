@@ -6,11 +6,13 @@ import { useSettingsClient } from "@/hooks/useSettingsClient";
 import { motion } from "framer-motion";
 import { containerVariants, itemVariants } from "@/framer-motion/animation-logs";
 import InfoTooltip from "@/components/ui/InfoTooltip";
+import {IInitialSettings} from "@/types/settings";
 
 const labelClass = "block text-[11px] font-bold uppercase tracking-widest text-graphite/50 dark:text-zinc-500 mb-2.5 ml-1";
 const inputClass = "w-full px-4 py-3.5 bg-beige-light/40 dark:bg-zinc-800/50 border border-beige-dark/30 dark:border-zinc-700/60 rounded-xl focus:bg-white dark:focus:bg-[#202020] focus:ring-4 focus:ring-sage/15 dark:focus:ring-emerald-500/10 focus:border-sage dark:focus:border-emerald-500/50 transition-all duration-300 text-[14px] font-medium text-graphite dark:text-zinc-200 placeholder:text-graphite/30 dark:placeholder:text-zinc-600 outline-none shadow-sm hover:border-beige-dark/60 dark:hover:border-zinc-600";
 
-export default function SettingsClient({ initialSettings }: { initialSettings: any }) {
+
+export default function SettingsClient({ initialSettings }: IInitialSettings ) {
     const {
         formData,
         isLoading,

@@ -1,26 +1,30 @@
-export const extractFirstImage = (contentStr: string) => {
+import {IEditorContent} from "@/types/editor";
+
+export const extractFirstImage = (contentStr: string): string | null => {
     try {
         const parsed = JSON.parse(contentStr);
-        if(!parsed.blocks) {
+        if (!parsed.blocks || !Array.isArray(parsed.blocks)) {
             return null;
         }
-        const imageBlock = parsed.blocks.find((b: any) => b.type === 'image');
-        return imageBlock ? imageBlock.data.file.url : null;
+        const imageBlock = parsed.blocks.find((b: IEditorContent) => b.type === 'image');
+
+        return imageBlock?.data?.file?.url || null;
     }catch(e) {
         return null;
     }
 }
 
-export const extractExcerpt = (contentStr: string) => {
+export const extractExcerpt = (contentStr: string): string => {
     try {
         const parsed = JSON.parse(contentStr);
-        if(!parsed.blocks) {
+        if(!parsed.blocks || !Array.isArray(parsed.blocks)) {
             return "";
         }
-        const paragraphBlock = parsed.blocks.find((b: any) => b.type === 'paragraph')
-        if (paragraphBlock) {
+        const paragraphBlock = parsed.blocks.find((b: IEditorContent) => b.type === 'paragraph');
+
+        if (paragraphBlock && paragraphBlock.data?.text) {
             const cleanText = paragraphBlock.data.text.replace(/<[^>]*>?/gm, '');
-            return cleanText.length > 120 ? cleanText.substring(0,120) + "..." : cleanText;
+            return cleanText.length > 120 ? cleanText.substring(0, 120) + "..." : cleanText;
         }
     }
     catch (e) {

@@ -1,7 +1,7 @@
 import prisma from "@/infrastructure/prisma";
 
 
-export const usePatientsPage = async () => {
+export const getPatientsData = async () => {
     const allReservations = await prisma.reservation.findMany({
         include: {service: true},
         orderBy: {date: 'desc'}

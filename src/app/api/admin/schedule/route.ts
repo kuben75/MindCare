@@ -2,6 +2,7 @@ import {getServerSession} from "next-auth";
 import {authOptions} from "@/app/api/auth/[...nextauth]/route";
 import {NextResponse} from "next/server";
 import prisma from "@/infrastructure/prisma";
+import {ISchedulePayload} from "@/types/reservation";
 
 export async function PUT(req: Request) {
     try{
@@ -17,7 +18,7 @@ export async function PUT(req: Request) {
         }
 
         await prisma.$transaction(
-            schedules.map((schedule: any) =>
+            schedules.map((schedule: ISchedulePayload) =>
             prisma.weeklySchedule.upsert({
                 where: {dayOfWeek: schedule.dayOfWeek},
                 update: {

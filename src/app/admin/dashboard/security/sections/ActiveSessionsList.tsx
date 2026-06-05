@@ -2,13 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-
-export interface IActiveSessionsListProps {
-    activeSessions: any[];
-    isSessionsLoading: boolean;
-    currentSessionId: string | null;
-    handleRevokeSession: (id: string) => void;
-}
+import {IActiveSessionsListProps} from "@/types/security";
 
 export default function ActiveSessionsList({
                                                activeSessions,

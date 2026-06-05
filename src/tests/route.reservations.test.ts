@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import prisma from '@/infrastructure/prisma';
 import { stripe } from '@/infrastructure/stripe';
-import {POST} from "@/app/api/waitlist/route";
+import { POST } from "@/app/api/waitlist/route";
+import { Reservation } from "@prisma/client";
 
 vi.mock('@/infrastructure/prisma', () => ({
     default: {
@@ -22,7 +23,7 @@ describe('Endpoint POST /api/reservations', () => {
 
     it('Should prevent a reservation and return 409 Conflict if the selected time slot is already booked (Overbooking Protection)', async () => {
 
-        vi.mocked(prisma.reservation.findFirst).mockResolvedValue({ id: 'istniejaca_rezerwacja' } as any);
+        vi.mocked(prisma.reservation.findFirst).mockResolvedValue({ id: 'istniejaca_rezerwacja' } as unknown as Reservation);
 
         const req = new Request('http://localhost/api/reservations', {
             method: 'POST',
@@ -43,13 +44,12 @@ describe('Endpoint POST /api/reservations', () => {
 
         vi.mocked(prisma.reservation.findFirst).mockResolvedValue(null);
 
-
         vi.mocked(prisma.reservation.create).mockResolvedValue({
             id: 'nowa_rezerwacja', email: 'jan@test.pl',
             service: { name: 'Konsultacja', price: 250 }
-        } as any);
+        } as unknown as Reservation);
 
-        vi.mocked(stripe.checkout.sessions.create).mockResolvedValue({ url: 'https://stripe.com/pay' } as any);
+        vi.mocked(stripe.checkout.sessions.create).mockResolvedValue({ url: 'https://stripe.com/pay' } as never);
 
         const req = new Request('http://localhost/api/reservations', {
             method: 'POST',

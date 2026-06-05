@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import prisma from '@/infrastructure/prisma';
-import {GET} from "@/app/api/slots/route";
+import { GET } from "@/app/api/slots/route";
+import { Reservation, BlockedTime } from "@prisma/client";
+import {ITestSlot} from "@/types/test";
 
 vi.mock('@/infrastructure/prisma', () => ({
     default: {
@@ -9,6 +11,7 @@ vi.mock('@/infrastructure/prisma', () => ({
         weeklySchedule: { findMany: vi.fn() }
     }
 }));
+
 
 describe('Calendar Engine (GET /api/slots)', () => {
     const MOCK_TODAY = new Date(2026, 5, 1, 10, 0, 0);
@@ -48,14 +51,14 @@ describe('Calendar Engine (GET /api/slots)', () => {
         const firstDay = data.days[0];
         expect(firstDay.slots).toHaveLength(3);
 
-        const slot17 = firstDay.slots.find((s: any) => s.time === '17:00');
-        expect(slot17.available).toBe(true);
+        const slot17 = firstDay.slots.find((s: ITestSlot) => s.time === '17:00');
+        expect(slot17?.available).toBe(true);
     });
 
     it('Overbooking protection: should block a slot if an already paid reservation exists.', async () => {
         const bookedDate = new Date(2026, 5, 1, 18, 0, 0);
         vi.mocked(prisma.reservation.findMany).mockResolvedValue([
-            { date: bookedDate, status: 'PAID' } as any
+            { date: bookedDate, status: 'PAID' } as unknown as Reservation
         ]);
         vi.mocked(prisma.blockedTime.findMany).mockResolvedValue([]);
         vi.mocked(prisma.weeklySchedule.findMany).mockResolvedValue([]);
@@ -65,11 +68,12 @@ describe('Calendar Engine (GET /api/slots)', () => {
         const data = await res.json();
 
         const firstDay = data.days[0];
-        const slot17 = firstDay.slots.find((s: any) => s.time === '17:00');
-        const slot18 = firstDay.slots.find((s: any) => s.time === '18:00');
 
-        expect(slot17.available).toBe(true);
-        expect(slot18.available).toBe(false);
+        const slot17 = firstDay.slots.find((s: ITestSlot) => s.time === '17:00');
+        const slot18 = firstDay.slots.find((s: ITestSlot) => s.time === '18:00');
+
+        expect(slot17?.available).toBe(true);
+        expect(slot18?.available).toBe(false);
     });
 
     it('Overbooking protection: should block slots that overlap with vacation blocks (BlockedTime).', async () => {
@@ -78,8 +82,9 @@ describe('Calendar Engine (GET /api/slots)', () => {
 
         const blockStart = new Date(2026, 5, 1, 16, 30, 0);
         const blockEnd = new Date(2026, 5, 1, 18, 30, 0);
+
         vi.mocked(prisma.blockedTime.findMany).mockResolvedValue([
-            { startDate: blockStart, endDate: blockEnd } as any
+            { startDate: blockStart, endDate: blockEnd } as unknown as BlockedTime
         ]);
 
         const req = new Request('http://localhost/api/slots?startDate=2026-06-01');
@@ -88,9 +93,8 @@ describe('Calendar Engine (GET /api/slots)', () => {
 
         const firstDay = data.days[0];
 
-
-        expect(firstDay.slots.find((s: any) => s.time === '17:00').available).toBe(false);
-        expect(firstDay.slots.find((s: any) => s.time === '18:00').available).toBe(false);
-        expect(firstDay.slots.find((s: any) => s.time === '19:00').available).toBe(true);
+        expect(firstDay.slots.find((s: ITestSlot) => s.time === '17:00')?.available).toBe(false);
+        expect(firstDay.slots.find((s: ITestSlot) => s.time === '18:00')?.available).toBe(false);
+        expect(firstDay.slots.find((s: ITestSlot) => s.time === '19:00')?.available).toBe(true);
     });
 });

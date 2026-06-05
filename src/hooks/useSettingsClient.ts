@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
+import {ClinicSettings} from "@prisma/client";
 
-export const useSettingsClient = (initialSettings: any) => {
+export const useSettingsClient = (initialSettings: ClinicSettings) => {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const { toast, showToast, hideToast } = useToast();

@@ -3,8 +3,10 @@ import {ReservationStatus} from "@prisma/client";
 import ReservationActionMenu from "@/app/admin/dashboard/reservations/ReservationActionMenu";
 import React from "react";
 import InfoTooltip from "@/components/ui/InfoTooltip";
+import {IReservationCardProps} from "@/types/reservation";
 
-export const ReservationCard = ({ reservation, isExpanded, onToggleDrawer }: any) => {
+
+export const ReservationCard = ({ reservation, isExpanded, onToggleDrawer }: IReservationCardProps) => {
     const isCompleted = reservation.status === 'COMPLETED';
     const style = STATUS_BADGE[reservation.status as ReservationStatus];
 

@@ -1,6 +1,7 @@
 import React from "react";
+import {TReservationWithService} from "@/types/reservation";
 
-export const AgendaCard = ({ appointment }: { appointment: any }) => {
+export const AgendaCard = ({ appointment }: { appointment: TReservationWithService }) => {
     const time = new Date(appointment.date).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
     const isCompleted = appointment.status === 'COMPLETED';
 

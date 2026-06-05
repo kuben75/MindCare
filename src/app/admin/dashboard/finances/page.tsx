@@ -1,5 +1,6 @@
 import prisma from "@/infrastructure/prisma";
 import FinancesClient from "./FinancesClient";
+import {ITransaction} from "@/types/transaction";
 
 export const dynamic = 'force-dynamic';
 
@@ -50,7 +51,7 @@ export default async function FinancesPage() {
     let prevMonthRevenue = 0;
     const serviceStats: Record<string, { count: number; revenue: number }> = {};
     const monthlyRevenue: Record<string, number> = {};
-    const currentMonthTransactions: any[] = [];
+    const currentMonthTransactions: ITransaction[] = [];
 
     for (let i = 5; i >= 0; i--) {
         const d = new Date(currentYear, currentMonth - i, 1);

@@ -1,4 +1,5 @@
 import {Reservation, ReservationStatus, Service} from "@prisma/client";
+import React from "react";
 
 export interface IReservationFormProps {
     initialDate?: string;
@@ -20,3 +21,8 @@ export interface IPatientActionsProps {
 export type TReservationWithService = Reservation & {
     service: Service;
 };
+
+export interface IReservationModalProps {
+    selectedRes: TReservationWithService;
+    setSelectedRes: React.Dispatch<React.SetStateAction<TReservationWithService | null>>;
+}

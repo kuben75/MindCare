@@ -2,8 +2,10 @@ import {STATUS_STYLES} from "@/constants/calendar";
 import {ReservationStatus} from "@prisma/client";
 import {AnimatePresence, motion} from "framer-motion";
 import React from "react";
+import {IReservationModalProps} from "@/types/reservation";
 
-export const ReservationModal = ({ selectedRes, setSelectedRes }: any) => {
+
+export const ReservationModal = ({ selectedRes, setSelectedRes }: IReservationModalProps) => {
     const style = STATUS_STYLES[selectedRes.status as ReservationStatus];
     return (
         <AnimatePresence>

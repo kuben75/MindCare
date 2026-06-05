@@ -2,8 +2,10 @@ import {HOURS, STATUS_STYLES, WEEKDAYS} from "@/constants/calendar";
 import {motion} from "framer-motion";
 import {ReservationStatus} from "@prisma/client";
 import React from "react";
+import {IWeekViewDesktopProps} from "@/types/dashboard";
 
-export const WeekViewDesktop = ({ currentDate, getDaysOfWeek, visibleReservations, setSelectedRes }: any) => (
+
+export const WeekViewDesktop = ({ currentDate, getDaysOfWeek, visibleReservations, setSelectedRes }: IWeekViewDesktopProps) => (
     <div className="hidden lg:block bg-white/60 dark:bg-zinc-900/40 backdrop-blur-xl border border-beige-dark/20 dark:border-zinc-800 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
 
         <div className="grid grid-cols-8 border-b border-beige-dark/20 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50">

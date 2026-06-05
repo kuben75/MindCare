@@ -1,4 +1,5 @@
 import React from "react";
+import {TReservationWithService} from "@/types/reservation";
 
 export type TVisitType = "online" | "gabinet";
 
@@ -45,4 +46,22 @@ export interface IMonthViewProps {
     setSelectedRes: (res: any) => void;
     setCurrentDate: (date: Date) => void;
     setView: (view: 'day' | 'week' | 'month') => void;
+}
+
+export interface IDayViewProps {
+    visibleReservations: TReservationWithService[];
+    setSelectedRes: React.Dispatch<React.SetStateAction<TReservationWithService | null>>;
+}
+
+export interface IEventCardProps {
+    match: TReservationWithService;
+    onClick: () => void;
+}
+
+export interface ICalendarHeaderProps {
+    handleToday: () => void;
+    handleNavigate: (direction: 'prev' | 'next') => void;
+    formatHeaderDate: () => string;
+    view: TViewType;
+    setView: (view: TViewType) => void;
 }

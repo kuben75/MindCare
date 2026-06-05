@@ -2,12 +2,15 @@ import {HOURS, STATUS_STYLES} from "@/constants/calendar";
 import React from "react";
 import {ReservationStatus} from "@prisma/client";
 import {motion} from "framer-motion";
+import {TReservationWithService} from "@/types/reservation";
+import {IDayViewProps, IEventCardProps} from "@/types/calendar";
 
-export const DayView = ({ visibleReservations, setSelectedRes }: any) => (
+
+export const DayView = ({ visibleReservations, setSelectedRes }: IDayViewProps) => (
     <div className="bg-white/60 dark:bg-zinc-900/40 backdrop-blur-xl border border-beige-dark/20 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
         <div className="relative">
             {HOURS.map((hour, i) => {
-                const match = visibleReservations.find((res: any) => `${String(new Date(res.date).getHours()).padStart(2, '0')}:00` === hour);
+                const match = visibleReservations.find((res: TReservationWithService) => `${String(new Date(res.date).getHours()).padStart(2, '0')}:00` === hour);
                 return (
                     <div key={hour} className="flex min-h-[90px] relative group">
 
@@ -26,7 +29,7 @@ export const DayView = ({ visibleReservations, setSelectedRes }: any) => (
 );
 
 
-const EventCard = ({ match, onClick }: { match: any, onClick: () => void }) => {
+const EventCard = ({ match, onClick }: IEventCardProps ) => {
     const style = STATUS_STYLES[match.status as ReservationStatus];
     return (
         <motion.div

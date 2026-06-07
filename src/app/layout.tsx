@@ -27,7 +27,7 @@ export default async function RootLayout({children,}: Readonly<{ children: React
         where: { id: "global" },
     })
     return (
-        <html lang="pl" suppressHydrationWarning>
+        <html lang="pl" suppressHydrationWarning className="scroll-smooth">
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <SettingsProvider initialSettings={settings}>
         <Navbar />

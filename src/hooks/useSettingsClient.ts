@@ -18,6 +18,7 @@ export const useSettingsClient = (initialSettings: ClinicSettings) => {
         facebookUrl: initialSettings?.facebookUrl || "",
         linkedinUrl: initialSettings?.linkedinUrl || "",
         znanyLekarzUrl: initialSettings?.znanyLekarzUrl || "",
+        nipNumber: initialSettings?.nipNumber || "",
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

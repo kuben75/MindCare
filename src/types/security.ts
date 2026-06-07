@@ -10,3 +10,22 @@ export interface IActiveSessionsListProps {
     handleRevokeSession: (id: string) => void;
 }
 
+export interface ISecurityTutorialModalProps {
+    activeTutorial: string | null;
+    tutorialStep: number;
+    closeTutorial: () => void;
+    mobileOS: 'ios' | 'android';
+    setMobileOS: (os: 'ios' | 'android') => void;
+    qrCodeData: string | null;
+    errorMessage: string | null;
+    verificationCode: string;
+    setVerificationCode: (code: string) => void;
+    recoveryCodes: string[];
+    isCopied: boolean;
+    handleCopyCodes: () => void;
+    handlePrev: () => void;
+    handleNext: () => void;
+    handleVerifyAndEnable: () => void;
+    isLoading: boolean;
+}
+

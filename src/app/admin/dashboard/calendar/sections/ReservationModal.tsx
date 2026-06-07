@@ -1,28 +1,38 @@
-import {STATUS_STYLES} from "@/constants/calendar";
-import {ReservationStatus} from "@prisma/client";
-import {AnimatePresence, motion} from "framer-motion";
-import React from "react";
-import {IReservationModalProps} from "@/types/reservation";
-
+import { STATUS_STYLES } from "@/constants/calendar";
+import { ReservationStatus } from "@prisma/client";
+import { AnimatePresence, motion } from "framer-motion";
+import { createPortal } from "react-dom";
+import React, {useEffect, useState} from "react";
+import { IReservationModalProps } from "@/types/reservation";
 
 export const ReservationModal = ({ selectedRes, setSelectedRes }: IReservationModalProps) => {
+    const [mounted, setMounted] = useState(false);
     const style = STATUS_STYLES[selectedRes.status as ReservationStatus];
-    return (
+
+    useEffect( () => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+
+    if(!mounted) return null;
+
+    return createPortal (
         <AnimatePresence>
             <motion.div
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 sm:p-6"
+                className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center p-4 sm:p-6"
             >
-
-                <div className="absolute inset-0 bg-graphite/20 dark:bg-black/40 backdrop-blur-md" onClick={() => setSelectedRes(null)} />
-
+                <div
+                    className="absolute inset-0 bg-graphite/50 dark:bg-black/70 backdrop-blur-sm"
+                    onClick={() => setSelectedRes(null)}
+                />
 
                 <motion.div
                     initial={{ y: "100%", opacity: 0, scale: 0.95 }}
                     animate={{ y: 0, opacity: 1, scale: 1 }}
                     exit={{ y: "100%", opacity: 0, scale: 0.95 }}
                     transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                    className="relative w-full max-w-lg bg-white/90 dark:bg-[#262626]/90 backdrop-blur-2xl border border-white/20 dark:border-zinc-700 rounded-[2rem] shadow-2xl overflow-hidden"
+                    className="relative z-10 w-full max-w-lg bg-white/90 dark:bg-[#262626]/90 backdrop-blur-2xl border border-white/20 dark:border-zinc-700 rounded-[2rem] shadow-2xl overflow-hidden"
                 >
                     <div className={`px-8 py-6 border-b border-black/5 dark:border-white/5 ${style.bg}`}>
                         <div className="flex justify-between items-start">
@@ -80,6 +90,7 @@ export const ReservationModal = ({ selectedRes, setSelectedRes }: IReservationMo
                     </div>
                 </motion.div>
             </motion.div>
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
 };

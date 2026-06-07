@@ -9,7 +9,7 @@ import {IDayViewProps, IEventCardProps} from "@/types/calendar";
 export const DayView = ({ visibleReservations, setSelectedRes }: IDayViewProps) => (
     <div className="bg-white/60 dark:bg-zinc-900/40 backdrop-blur-xl border border-beige-dark/20 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
         <div className="relative">
-            {HOURS.map((hour, i) => {
+            {HOURS.map((hour) => {
                 const match = visibleReservations.find((res: TReservationWithService) => `${String(new Date(res.date).getHours()).padStart(2, '0')}:00` === hour);
                 return (
                     <div key={hour} className="flex min-h-[90px] relative group">

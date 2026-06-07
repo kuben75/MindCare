@@ -4,7 +4,6 @@ import React from "react";
 import { useBlockedTimeManager } from "@/hooks/useBlockedTimeManager";
 import { motion, AnimatePresence } from "framer-motion";
 import { Toast } from "@/components/ui/Toast";
-import { useToast } from "@/hooks/useToast";
 import InfoTooltip from "@/components/ui/InfoTooltip";
 
 export default function BlockedTimeManager() {

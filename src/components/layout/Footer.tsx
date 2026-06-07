@@ -22,7 +22,7 @@ export const Footer = () => {
                             <Image src="/logo-full.png" alt="Logo" fill className="object-contain object-left" />
                         </div>
                         <p className="text-graphite/70 text-sm leading-relaxed -mt-2">
-                            "Prawdziwa zmiana zaczyna się od zrozumienia, nie od oceniania."
+                            &quot;Prawdziwa zmiana zaczyna się od zrozumienia, nie od oceniania.&quot;
                         </p>
                         <div className="mt-2 inline-block px-3 py-1 bg-beige-light border border-graphite/10 rounded-full text-xs text-graphite/80 font-medium w-max">
                             Członek APA
@@ -95,7 +95,9 @@ export const Footer = () => {
                             )}
                         </div>
                         <div className="mt-4 text-graphite/50 text-xs font-light space-y-1">
-                            <p>NIP: 0000000000</p>
+                            {settings?.nipNumber && (
+                                <p>NIP: <span className="font-mono">{settings.nipNumber}</span></p>
+                            )}
                             {settings?.bankAccount && (
                                 <p>Nr konta: <span className="font-mono">{settings.bankAccount}</span></p>
                             )}

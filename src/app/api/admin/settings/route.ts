@@ -12,8 +12,13 @@ export async function GET() {
                 id: "global",
                 clinicName: "Paulina Kawka-Mirek",
                 email: "paulinakmirek@gmail.com",
-                phone: "",
+                phone: "+44 7599 362770",
                 address: "",
+                znanyLekarzUrl: "https://www.znanylekarz.pl/paulina-kawka-mirek/psycholog/wronki",
+                linkedinUrl: "https://www.linkedin.com/in/paulina-kawka-mirek-3a2224253/",
+                instagramUrl: "https://www.instagram.com/psychologia_odbicia/",
+                facebookUrl: "https://www.facebook.com/profile.php?id=61586481414788",
+                nipNumber: ""
             }
         });
         return NextResponse.json(settings, { status: 200 });
@@ -33,7 +38,7 @@ export async function PUT(req: Request) {
 
         const {
             clinicName, email, phone, address, bankAccount,
-            instagramUrl, facebookUrl, linkedinUrl, znanyLekarzUrl
+            instagramUrl, facebookUrl, linkedinUrl, znanyLekarzUrl, nipNumber
         } = body;
 
         const updatedSettings = await prisma.clinicSettings.update({
@@ -47,7 +52,8 @@ export async function PUT(req: Request) {
                 instagramUrl,
                 facebookUrl,
                 linkedinUrl,
-                znanyLekarzUrl
+                znanyLekarzUrl,
+                nipNumber
             }
         });
 
@@ -60,6 +66,8 @@ export async function PUT(req: Request) {
 
         return NextResponse.json(updatedSettings, { status: 200 });
     } catch (e) {
-        return NextResponse.json({ message: "Błąd podczas zapisywania ustawień" }, { status: 500 });
+        console.log(e)
+        return NextResponse.json({ message: "Błąd podczas zapisywania ustawień" + e }, { status: 500 });
+
     }
 }

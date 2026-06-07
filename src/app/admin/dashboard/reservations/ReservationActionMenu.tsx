@@ -113,7 +113,6 @@ export default function ReservationActionMenu({ reservationId, currentStatus }: 
                             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                             className="fixed inset-0 bg-graphite/40 dark:bg-black/60 backdrop-blur-sm z-[99999] flex items-end sm:items-center justify-center p-4 text-left"
                         >
-                            {/* Wymuszenie blokady scrolla na body podczas działania modala */}
                             <style jsx global>{`
                     body {
                         overflow: hidden;
@@ -126,7 +125,7 @@ export default function ReservationActionMenu({ reservationId, currentStatus }: 
                                 exit={{ y: "100%", opacity: 0, scale: 0.95 }}
                                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
                                 className="bg-white/95 dark:bg-[#262626]/95 backdrop-blur-2xl border border-white/20 dark:border-zinc-700 w-full max-w-sm rounded-[2rem] shadow-2xl overflow-hidden"
-                                onClick={(e) => e.stopPropagation()} // Zapobiega zamknięciu przy kliknięciu w sam modal
+                                onClick={(e) => e.stopPropagation()}
                             >
                                 <div className="flex justify-between items-center px-6 py-5 border-b border-black/5 dark:border-white/5 bg-beige-light/30 dark:bg-zinc-800/50">
                                     <h2 className="text-xl font-serif font-bold text-graphite dark:text-white flex items-center gap-2">

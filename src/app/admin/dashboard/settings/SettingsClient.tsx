@@ -100,13 +100,21 @@ export default function SettingsClient({ initialSettings }: IInitialSettings ) {
                         <p className="text-xs font-medium text-graphite/50 dark:text-zinc-400 mt-1">Konto bankowe do przelewów tradycyjnych</p>
                     </div>
                 </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-7">
                 <div>
                     <label className={labelClass}>Numer konta bankowego (IBAN)</label>
-                    <input type="text" name="bankAccount" value={formData.bankAccount} onChange={handleChange} placeholder="PL 00 0000 0000 0000 0000 0000 0000" className={`${inputClass} font-mono tracking-wider`} />
+                    <input type="text" name="bankAccount" value={formData.bankAccount} onChange={handleChange} className={`${inputClass} font-mono tracking-wider`} />
+                </div>
+                <div>
+                    <label className={labelClass}>NIP</label>
+                    <input type="text" name="nipNumber" value={formData.nipNumber} onChange={handleChange}
+                           className={`${inputClass} font-mono tracking-wider`}/>
+                </div>
                 </div>
             </motion.div>
 
-            <motion.div variants={itemVariants} className="relative z-10 hover:z-[100] bg-white/80 dark:bg-[#262626]/80 backdrop-blur-xl border border-beige-dark/20 dark:border-zinc-700/80 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] p-6 sm:p-8 lg:p-10 transition-all hover:shadow-[0_8px_40px_rgb(0,0,0,0.08)]">
+            <motion.div variants={itemVariants}
+                        className="relative z-10 hover:z-[100] bg-white/80 dark:bg-[#262626]/80 backdrop-blur-xl border border-beige-dark/20 dark:border-zinc-700/80 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] p-6 sm:p-8 lg:p-10 transition-all hover:shadow-[0_8px_40px_rgb(0,0,0,0.08)]">
                 <div className="flex items-center gap-4 mb-8">
                     <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shrink-0 text-blue-500 dark:text-blue-400 border border-blue-200/50 dark:border-blue-500/20">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>

@@ -24,7 +24,7 @@ export const WeekViewDesktop = ({ currentDate, getDaysOfWeek, visibleReservation
         </div>
 
         <div className="relative">
-            {HOURS.map((hour, i) => (
+            {HOURS.map((hour) => (
                 <div key={hour} className="grid grid-cols-8 min-h-[90px] border-b border-dashed border-beige-dark/20 dark:border-zinc-800/50 last:border-0">
                     <div className="font-mono text-xs font-bold text-graphite/30 dark:text-zinc-600 text-center pt-2 border-r border-beige-dark/10 dark:border-zinc-800/50">
                         {hour}

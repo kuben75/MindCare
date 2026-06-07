@@ -1,4 +1,4 @@
-# MindCare-SaaS | Clinic Management & Booking SaaS
+# MindCare | Custom Clinic Management Platform
 
 ![Next JS](https://img.shields.io/badge/Next-black?style=for-the-badge&logo=next.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
@@ -9,14 +9,32 @@
 ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
 ![Framer Motion](https://img.shields.io/badge/Framer_Motion-black?style=for-the-badge&logo=framer&logoColor=blue)
 
-A comprehensive, real-world SaaS platform engineered for a psychological clinic. It automates the entire patient lifecycle—from scheduling and secure payments to automated reminders—while providing a highly secure, FinTech-grade administrative dashboard.
+A comprehensive, bespoke B2B platform engineered specifically for a private psychological clinic. It automates the entire patient lifecycle—from smart scheduling and secure payments to automated reminders—while providing a highly secure, FinTech-grade administrative dashboard and built-in CMS.
+
+## Business Value & Real-World Application
+
+This platform was not built just as a technical showcase; it was engineered to solve high-cost business problems in the medical and therapeutic industry.
+
+* **Eliminating "No-Shows" & Revenue Loss:** By enforcing upfront payments via Stripe (Card, BLIK, Przelewy24) and utilizing background CRON jobs to clear unpaid 30-minute holds, the clinic's calendar is protected from empty, unpaid slots. Automated 24h reminders further maximize attendance.
+* **Medical-Grade Data Protection (GDPR/RODO Ready):** Patient data is highly sensitive. The application goes beyond standard authentication by implementing FinTech-style security: Two-Factor Authentication (2FA), remote session termination, detailed audit logs (IPs, User-Agents), and Brute-Force lockout mechanisms.
+* **Operational Independence:** The built-in CMS (Blog) and customizable landing page builder eliminate the need for third-party tools like WordPress. The clinic owner can manage their entire digital presence, financials, and schedule from a single, secure dashboard.
+* **Scalable Architecture:** Using a modern Next.js + Prisma stack ensures the platform is extremely fast, SEO-friendly, and easy to maintain or expand with new features in the future.
 
 ## Screenshots
-<img width="1862" height="928" alt="image" src="https://github.com/user-attachments/assets/2711caba-dbe7-41a3-9863-b9ca79cae88f" />
 
-<img width="1878" height="928" alt="image" src="https://github.com/user-attachments/assets/f3d9cbfe-fbdb-481c-a34d-a78e4d34dbd1" />
+<img width="2505" height="1291" alt="image" src="https://github.com/user-attachments/assets/f8fd15f0-3a00-41f7-9ba8-c64ffa2bf783" />
 
-<img width="1871" height="925" alt="image" src="https://github.com/user-attachments/assets/97000b7e-41fd-4441-83b2-e15e5dfb4fca" />
+<img width="2517" height="1292" alt="image" src="https://github.com/user-attachments/assets/43db934b-3ea2-4306-9d3f-84a2a706b368" />
+
+<img width="2514" height="1287" alt="image" src="https://github.com/user-attachments/assets/7041f6ae-47dc-4995-b478-abf2924b58dd" />
+
+<img width="2521" height="1287" alt="image" src="https://github.com/user-attachments/assets/7a02d150-6863-4566-b084-73b0830310a9" />
+
+<img width="2517" height="1291" alt="image" src="https://github.com/user-attachments/assets/878d0f74-b331-40f8-b0fd-8e48dbcdbe00" />
+
+<img width="394" height="848" alt="image" src="https://github.com/user-attachments/assets/2078be34-e56e-47c0-86f1-9614d4529c50" />
+
+<img width="2508" height="1289" alt="image" src="https://github.com/user-attachments/assets/b50a8559-2f43-46d3-8c81-7a2c212664d8" />
 
 ## Key Features: For Patients (Public App)
 
@@ -52,12 +70,9 @@ To ensure maximum reliability, the core business logic is covered by automated u
 
 Follow these steps to safely configure and launch the platform on your local machine:
 
-1. **Clone the repository:** Execute `git clone https://github.com/username/MindCare-SaaS.git` and navigate into the folder using `cd MindCare-SaaS`.
+1. **Clone the repository:** Execute `git clone https://github.com/username/MindCare.git` and navigate into the folder using `cd MindCare`.
 2. **Install dependencies:** Run `npm install` to download all necessary packages.
 3. **Configure environment:** Copy the example template using `cp .env.example .env` and securely populate it with your Stripe, Resend, NextAuth, and Database keys.
 4. **Initialize database:** Ensure Docker is running your local PostgreSQL instance, then apply the Prisma schema by running `npx prisma db push`.
 5. **Start application:** Execute `npm run dev` to launch the development server on localhost port 3000.
 6. Navigate to `http://localhost:3000` to view the public application, or `http://localhost:3000/admin/login` for the dashboard.
-
-## License
-This project is proprietary software developed for a specific client. All rights reserved.

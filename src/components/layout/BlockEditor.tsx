@@ -28,7 +28,7 @@ export default function BlockEditor({ data, onChange }: IBlockEditorProps) {
         const Header = (await import("@editorjs/header")).default;
         const List = (await import("@editorjs/list")).default;
         const ImageTool = (await import("@editorjs/image")).default;
-        // @ts-expect-error
+        // @ts-expect-error  - no types for embed tool
         const Embed = (await import("@editorjs/embed")).default;
 
         let parsedData: OutputData = {blocks: []};

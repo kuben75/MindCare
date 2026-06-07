@@ -59,7 +59,7 @@ export default function PrivacyPolicyPage() {
 
                     <section>
                         <h2 className="text-xl font-serif text-graphite dark:text-zinc-100 mb-3">5. Twoje prawa</h2>
-                        <p>Masz pełne prawo do wglądu w swoje dane, ich poprawiania, ograniczenia przetwarzania oraz przenoszenia. Prawo do całkowitego usunięcia danych ("prawo do bycia zapomnianym") może zostać ograniczone wyłącznie w zakresie, w jakim administrator jest prawnie zobowiązany do archiwizacji dokumentacji medycznej lub podatkowej.</p>
+                        <p>Masz pełne prawo do wglądu w swoje dane, ich poprawiania, ograniczenia przetwarzania oraz przenoszenia. Prawo do całkowitego usunięcia danych (&quot;prawo do bycia zapomnianym&quot;) może zostać ograniczone wyłącznie w zakresie, w jakim administrator jest prawnie zobowiązany do archiwizacji dokumentacji medycznej lub podatkowej.</p>
                     </section>
 
                 </div>

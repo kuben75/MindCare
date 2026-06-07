@@ -111,7 +111,7 @@ const  {
                                                 className="bg-white/50 dark:bg-zinc-900/50 p-3 rounded-2xl border border-beige-dark/20 dark:border-zinc-800 text-xs text-graphite/70 dark:text-zinc-300 italic relative overflow-hidden">
                                                 <div
                                                     className="absolute left-0 top-0 bottom-0 w-1 bg-sage/30 dark:bg-emerald-500/30"/>
-                                                "{entry.notes}"
+                                                &quot;{entry.notes}&quot;
                                             </div>
                                         ) : (
                                             <div

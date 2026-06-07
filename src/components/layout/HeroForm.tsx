@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { HeroPreview } from "@/components/layout/HeroPreview";
 import { THeroProps } from "@/types/hero";
@@ -157,7 +157,7 @@ const  {
                             <div className="flex items-center justify-between cursor-pointer group" onClick={() => setShowPrimaryButton(!showPrimaryButton)}>
                                 <div>
                                     <span className="text-sm font-bold text-graphite dark:text-zinc-200">Przycisk główny (CTA)</span>
-                                    <p className="text-[11px] font-medium text-graphite/50 dark:text-zinc-500 mt-0.5">Zachęca do akcji np. "Zarezerwuj wizytę"</p>
+                                    <p className="text-[11px] font-medium text-graphite/50 dark:text-zinc-500 mt-0.5">Zachęca do akcji np. &quot;Zarezerwuj wizytę&quot;</p>
                                 </div>
                                 <div className={`relative w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none shrink-0 ${showPrimaryButton ? 'bg-sage dark:bg-emerald-500' : 'bg-graphite/20 dark:bg-zinc-700'}`}>
                                     <motion.div animate={{ x: showPrimaryButton ? 24 : 0 }} transition={{ type: "spring", stiffness: 500, damping: 30 }} className="absolute top-0.5 left-0.5 w-5 h-5 bg-white shadow-sm rounded-full" />

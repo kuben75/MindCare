@@ -83,7 +83,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                         prose-headings:font-serif prose-headings:text-graphite dark:prose-headings:text-zinc-100
                         prose-a:text-sage dark:prose-a:text-emerald-400 max-w-none text-graphite/80 dark:text-zinc-300 leading-relaxed
 
-                        /* Obrazki na komputerze maksymalnie do 500px szerokości, na mobile i tak złapie 100% z globali */
+
                         prose-img:max-w-[500px]
                         prose-img:shadow-xl
 

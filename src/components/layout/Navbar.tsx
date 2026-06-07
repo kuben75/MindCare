@@ -1,36 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import {usePathname} from "next/navigation";
-import {useSettings} from "@/context/SettingsContext";
+import {useNavbar} from "@/hooks/useNavbar";
 
 export const Navbar = () => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [scrolled, setScrolled] = useState(false);
-    const pathname = usePathname();
-    const settings = useSettings();
 
-    if (pathname?.startsWith("/admin")) {
+const {
+    isOpen,
+    setIsOpen,
+    scrolled,
+    settings,
+    isAdmin
+} = useNavbar();
+    if(isAdmin) {
         return null;
     }
-
-    useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = "hidden";
-        } else {
-            document.body.style.overflow = "unset";
-        }
-    }, [isOpen]);
-
-    useEffect(() => {
-        const handleScroll = () => {
-            setScrolled(window.scrollY > 20);
-        };
-        window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
 
     return (
         <>

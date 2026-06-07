@@ -10,8 +10,8 @@ export async function POST(req: Request) {
 
     if(!session) {
         return NextResponse.json({error: "Unauthorized"}, {status: 401})
-
     }
+
     try {
         const body = await req.json()
         const {title, content, isPublished} = body;
@@ -33,7 +33,6 @@ export async function POST(req: Request) {
         })
         return NextResponse.json(post, {status: 201})
     } catch (error) {
-        console.error("Błąd podczas tworzenia posta: ", error)
-        return NextResponse.json({error: "Błąd serwera"}, {status: 500})
+        return NextResponse.json({error: "Błąd serwera" + error}, {status: 500})
     }
 }

@@ -60,7 +60,6 @@ export const usePostForm = ({ initialData }: { initialData?: TInitialData }) => 
                     const data = await response.json();
                     if (isNew && data.id) {
                         setPostId(data.id);
-                        window.history.replaceState(null, '', `/admin/dashboard/blog/edit/${data.id}`);
                     }
                     prevTitle.current = title;
                     prevContent.current = content;

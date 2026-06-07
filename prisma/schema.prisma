@@ -143,6 +143,7 @@ model ClinicSettings {
   znanyLekarzUrl String? @default("https://www.znanylekarz.pl/paulina-kawka-mirek/psycholog/wronki")
   updatedAt    DateTime @updatedAt
   linkedinUrl    String? @default("https://www.linkedin.com/in/paulina-kawka-mirek-3a2224253/")
+  nipNumber       String? @default("")
 }
 
 enum HeroLayout {

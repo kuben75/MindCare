@@ -3,8 +3,7 @@
 import { getActionBadge } from "@/constants/ActionBadges";
 import { motion, AnimatePresence } from "framer-motion";
 import { containerVariants, itemVariants } from "@/framer-motion/animation-logs";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { useTransition } from "react";
+
 import {ISystemLogsViewerProps} from "@/types/logs";
 import {useSystemLogsViewer} from "@/hooks/useSystemLogsViewer";
 

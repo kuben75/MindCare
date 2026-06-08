@@ -108,8 +108,7 @@ export async function GET(req: Request) {
         }
 
         return NextResponse.json({ days }, { status: 200 });
-    }catch (e) {
-        console.error(e);
+    }catch  {
         return NextResponse.json({error: 'Nie można pobrać dostępnych slotów'}, {status: 500});
     }
 }

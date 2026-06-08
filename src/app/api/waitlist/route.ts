@@ -35,7 +35,7 @@ export async function POST(req: Request) {
             }
         });
         return NextResponse.json({success: true, data: newWaitlistEntry}, {status: 201});
-    }catch (e) {
+    }catch {
         return NextResponse.json({error: "Wystąpił błąd podczas dodawania do listy oczekujących"}, {status: 500});
     }
 }

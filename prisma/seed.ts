@@ -22,8 +22,7 @@ async function main() {
     }
     const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
-    // ts-ignore - PrismaClient doesn't recognize the custom adapter's types, but it should work at runtime
-    const admin = await prisma.admin.create({
+     await prisma.admin.create({
         data: {
             email: adminEmail,
             password: hashedPassword

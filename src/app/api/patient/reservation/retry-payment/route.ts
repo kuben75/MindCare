@@ -53,7 +53,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ url: stripeSession.url }, { status: 200 });
 
-    } catch (e) {
+    } catch  {
         return NextResponse.json({ message: "Wystąpił błąd serwera. Spróbuj ponownie później." }, { status: 500 });
     }
 }

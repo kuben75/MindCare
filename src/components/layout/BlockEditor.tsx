@@ -35,7 +35,7 @@ export default function BlockEditor({ data, onChange }: IBlockEditorProps) {
         if (data) {
             try {
                 parsedData = typeof data === 'string' ? JSON.parse(data) : data;
-            } catch (e) {
+            } catch  {
                 parsedData = { blocks: [{ type: "paragraph", data: { text: data } }] };
             }
         }

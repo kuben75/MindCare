@@ -4,7 +4,6 @@ import { Service } from "@prisma/client";
 import { useServiceManager } from "@/hooks/useServiceManager";
 import { motion, AnimatePresence } from "framer-motion";
 import { Toast } from "@/components/ui/Toast";
-import { useToast } from "@/hooks/useToast";
 import {containerVariants} from "@/framer-motion/animation-logs";
 
 export default function ServiceManager({ initialServices }: { initialServices: Service[] }) {

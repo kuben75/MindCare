@@ -88,7 +88,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({success: true}, {status: 200});
 
-    }catch (e) {
+    }catch  {
         return NextResponse.json({message: "Wystąpił błąd serwera. Spróbuj ponownie później."}, {status: 500});
     }
 }

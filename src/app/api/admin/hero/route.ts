@@ -10,8 +10,7 @@ export async function GET() {
             orderBy: {createdAt: 'desc'}
         });
         return NextResponse.json(template);
-    }catch (e) {
-        console.error(e);
+    }catch  {
         return NextResponse.json({error: "Nie można pobrać danych"}, {status: 500});
     }
 }
@@ -40,8 +39,7 @@ export async function POST(req: Request) {
             }
     });
         return NextResponse.json(template);
-    }catch (e) {
-        console.error(e);
+    }catch {
         return NextResponse.json({error: "Nie można utworzyć szablonu"}, {status: 500});
     }
 }

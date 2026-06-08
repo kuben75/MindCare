@@ -31,7 +31,7 @@ function FailedContent() {
                 const data = await res.json();
                 setError(data.message || "Twój termin prawdopodobnie wygasł. Wybierz go ponownie na stronie głównej.");
             }
-        } catch (e) {
+        } catch {
             setError("Błąd połączenia z serwerem.");
         } finally {
             setIsLoadingRetry(false);
@@ -49,7 +49,7 @@ function FailedContent() {
                 body: JSON.stringify({ token })
             });
             router.push('/');
-        } catch (e) {
+        } catch  {
             router.push('/');
         }
     };

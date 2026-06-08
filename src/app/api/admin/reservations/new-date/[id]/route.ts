@@ -53,7 +53,7 @@ export async function PATCH(req: Request, {params}: {params: Promise<{id: string
 
         return NextResponse.json({success: true, reservation: updatedReservation})
     }
-    catch (e) {
-        return NextResponse.json({message: "Wystąpił błąd serwera. Spróbuj ponownie później. " + e}, {status: 500});
+    catch  {
+        return NextResponse.json({message: "Wystąpił błąd serwera. Spróbuj ponownie później. "}, {status: 500});
     }
 }

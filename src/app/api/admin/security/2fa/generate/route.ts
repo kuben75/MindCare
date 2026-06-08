@@ -44,7 +44,7 @@ export async function POST() {
 
         return NextResponse.json({qrCodeUrl, recoveryCodes});
         
-    }catch (e) {
+    }catch  {
         return NextResponse.json({error: "Wystąpił błąd"}, {status: 500})
     }
 }

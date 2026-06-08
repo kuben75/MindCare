@@ -22,7 +22,7 @@ export async function GET() {
             }
         });
         return NextResponse.json(settings, { status: 200 });
-    } catch (e) {
+    } catch  {
         return NextResponse.json({ error: "Nie można pobrać ustawień" }, { status: 500 });
     }
 }
@@ -65,9 +65,8 @@ export async function PUT(req: Request) {
         });
 
         return NextResponse.json(updatedSettings, { status: 200 });
-    } catch (e) {
-        console.log(e)
-        return NextResponse.json({ message: "Błąd podczas zapisywania ustawień" + e }, { status: 500 });
+    } catch  {
+        return NextResponse.json({ message: "Błąd podczas zapisywania ustawień" }, { status: 500 });
 
     }
 }

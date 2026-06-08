@@ -61,7 +61,7 @@ export async function POST(req: Request) {
         });
 
         return NextResponse.json({success: true, reservation: newReservation}, {status: 201});
-    } catch (e) {
+    } catch  {
         return NextResponse.json({message: "Błąd serwera"}, {status: 500});
     }
 

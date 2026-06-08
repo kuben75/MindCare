@@ -9,7 +9,7 @@ export async function GET() {
             orderBy: {name: "asc"}
         });
         return NextResponse.json(services, {status: 200});
-    } catch (e) {
+    } catch  {
         return NextResponse.json({error: "Internal Server Error"}, {status: 500});
     }
 }

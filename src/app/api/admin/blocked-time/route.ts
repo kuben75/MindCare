@@ -17,7 +17,7 @@ export async function GET() {
         });
 
         return NextResponse.json(blockedTimes, { status: 200 });
-    } catch (e) {
+    } catch {
         return NextResponse.json({ error: "Wystąpił błąd serwera" }, { status: 500 });
     }
 }
@@ -96,8 +96,7 @@ export async function POST(req: Request) {
         });
 
         return NextResponse.json(newBlock, { status: 201 });
-    } catch (e) {
-        console.error("Błąd zapisu okienka:", e);
+    } catch {
         return NextResponse.json({ error: "Wystąpił błąd zapisu" }, { status: 500 });
     }
 }

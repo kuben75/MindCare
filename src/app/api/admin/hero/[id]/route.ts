@@ -27,8 +27,7 @@ export async function PUT(req: Request, {params}: {params: Promise<{id: string}>
             }
         });
         return NextResponse.json(updatedTemplate);
-    }catch (e) {
-        console.error(e);
+    }catch  {
         return NextResponse.json({message: "Error updating template"}, {status: 500});
     }
 }
@@ -46,8 +45,7 @@ export async function DELETE(req: Request, {params}: {params: Promise<{id: strin
         await prisma.heroTemplate.delete({where: {id}});
 
         return NextResponse.json({success: true});
-    }catch (e) {
-        console.error(e);
+    }catch  {
         return NextResponse.json({message: "Error deleting template"}, {status: 500});
     }
 }

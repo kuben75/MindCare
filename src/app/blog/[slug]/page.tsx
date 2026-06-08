@@ -21,7 +21,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         const jsonContent = typeof post.content === 'string' ? JSON.parse(post.content) : post.content;
         const parsed = edjsParser.parse(jsonContent);
         parsedContent = Array.isArray(parsed) ? parsed : [parsed as unknown as string];
-    } catch (e) {
+    } catch  {
         parsedContent = [`<p>${typeof post.content === 'string' ? post.content : "Błąd ładowania."}</p>`];
     }
 

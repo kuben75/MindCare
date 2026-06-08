@@ -19,7 +19,7 @@ export async function GET() {
             orderBy: {createdAt: "desc"}
         });
         return NextResponse.json({sessions: activeSessions});
-    }catch (e) {
+    }catch {
         return NextResponse.json({error: "Wystąpił błąd"}, {status: 500})
     }
 }
@@ -44,7 +44,7 @@ export async function PATCH(req:Request) {
 
         return NextResponse.json({success: true});
 
-    }catch (e) {
+    }catch  {
         return NextResponse.json({error: "Wystąpił błąd"}, {status: 500})
     }
 }

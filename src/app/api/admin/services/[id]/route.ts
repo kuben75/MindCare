@@ -24,7 +24,7 @@ export async function PATCH(req: Request, {params}: {params: Promise<{id: string
             }
         });
         return NextResponse.json(updatedService, {status: 200});
-    }catch (e) {
+    }catch  {
         return NextResponse.json({error: "Internal server error"}, {status: 500});
     }
 }
@@ -51,7 +51,7 @@ export async function DELETE(req: Request, {params}: {params: Promise<{id: strin
         });
         return NextResponse.json({message: "Usługa została usunięta"}, {status: 200});
 
-    }catch (e) {
+    }catch {
 
     }
 }

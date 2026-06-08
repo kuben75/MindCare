@@ -32,7 +32,7 @@ export async function POST(req: Request) {
             }
         })
         return NextResponse.json(post, {status: 201})
-    } catch (error) {
-        return NextResponse.json({error: "Błąd serwera" + error}, {status: 500})
+    } catch {
+        return NextResponse.json({error: "Błąd serwera"}, {status: 500})
     }
 }

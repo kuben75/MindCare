@@ -90,7 +90,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
         return NextResponse.json(updatedReservation, { status: 200 });
 
-    } catch (e) {
+    } catch  {
         return NextResponse.json({ error: 'Nie można zaktualizować rezerwacji' }, { status: 500 });
     }
 }

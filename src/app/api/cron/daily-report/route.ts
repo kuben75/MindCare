@@ -45,7 +45,7 @@ export async function GET(req: Request) {
             });
         }
         return NextResponse.json({success: true, count: todayAppointments.length})
-    }catch (e) {
+    }catch  {
         return NextResponse.json({message: "Wystąpił błąd serwera. Spróbuj ponownie później."}, {status: 500});
     }
 }

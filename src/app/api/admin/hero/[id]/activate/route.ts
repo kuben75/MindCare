@@ -20,8 +20,7 @@ export async function PATCH(req: Request, {params}: {params: Promise<{id: string
             })
         ]);
         return NextResponse.json({ message: "Szablon został pomyślnie aktywowany na stronie głównej." });
-    }catch (e) {
-        console.error(e);
+    }catch {
         return NextResponse.json({error: "Nie można aktywować szablonu"}, {status: 500});
     }
 }

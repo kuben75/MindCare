@@ -28,7 +28,7 @@ export const useBlockedTimeManager = () => {
             } else {
                 setBlockedTimes([]);
             }
-        } catch (e) {
+        } catch  {
             setBlockedTimes([]);
         } finally {
             setIsLoading(false);
@@ -58,7 +58,7 @@ export const useBlockedTimeManager = () => {
                 const errorData = await res.json();
                 showToast(errorData.message || errorData.error || "Nie można zablokować tego terminu.", "error");
             }
-        } catch (e) {
+        } catch  {
             showToast("Błąd serwera przy dodawaniu wyjątku.", "error");
         } finally {
             setIsSubmitting(false);
@@ -85,8 +85,7 @@ export const useBlockedTimeManager = () => {
                 const errorData = await res.json();
                 showToast(errorData.message || errorData.error || "Wystąpił błąd podczas usuwania.", "error");
             }
-        } catch (e) {
-            console.error("Error deleting blocked time:", e);
+        } catch  {
             showToast("Błąd połączenia z serwerem.", "error");
         }
     };

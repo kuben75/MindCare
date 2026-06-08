@@ -36,8 +36,7 @@ export async function GET(req: Request) {
 
         return NextResponse.json({ success: true, freedSlots: result.count });
 
-    } catch (error) {
-        console.error("Błąd podczas czyszczenia koszyków:", error);
+    } catch  {
         return NextResponse.json({ error: "Wystąpił błąd serwera" }, { status: 500 });
     }
 }

@@ -62,7 +62,7 @@ export const useActionMenu = ({ reservationId, currentStatus }: IActionMenuProps
                 const errorData = await response.json();
                 showToast(errorData.error || 'Nie można zaktualizować statusu rezerwacji.', "error");
             }
-        } catch (e) {
+        } catch  {
             showToast("Wystąpił błąd połączenia z serwerem.", "error");
         } finally {
             setIsLoading(false);
@@ -93,7 +93,7 @@ export const useActionMenu = ({ reservationId, currentStatus }: IActionMenuProps
                 const errorData = await res.json();
                 showToast(errorData.message || errorData.error || 'Nie można zaktualizować daty rezerwacji.', "error");
             }
-        } catch (e) {
+        } catch  {
             showToast('Wystąpił błąd podczas aktualizacji daty.', "error");
         } finally {
             setIsSavingDate(false);

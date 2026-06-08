@@ -16,8 +16,7 @@ export async function DELETE(req: Request, {params}: {params: Promise<{id: strin
         });
 
         return NextResponse.json({message: "Usunięto pomyślnie"}, {status: 200});
-    }catch (e) {
-        console.error(e);
+    }catch {
         return NextResponse.json({message: "Wystąpił błąd"}, {status: 500});
     }
 }

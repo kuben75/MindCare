@@ -40,7 +40,7 @@ export async function POST(req: Request, {params}: {params: Promise<{id: string}
         }
 
         return NextResponse.json({success: true}, {status: 200});
-    }catch (e) {
+    }catch {
         return NextResponse.json({error: "Wystąpił błąd serwera. Spróbuj ponownie później."}, {status: 500});
     }
 }

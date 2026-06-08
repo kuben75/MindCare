@@ -15,7 +15,7 @@ export async function GET(req: Request, context: Context) {
             return NextResponse.json({error: "Post nie został znaleziony"}, {status: 404})
         }
         return NextResponse.json(post, {status: 200})
-    }catch (error) {
+    }catch {
         return NextResponse.json({error: "Błąd serwera"}, {status: 500})
     }
 }
@@ -40,7 +40,7 @@ export async function PUT(req: Request, context: Context) {
             data: {title, content, slug, isPublished}
         })
         return NextResponse.json(updatedPost, {status: 200})
-    }catch (error) {
+    }catch {
         return NextResponse.json({error: "Błąd serwera"}, {status: 500})
     }
 }

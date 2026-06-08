@@ -30,8 +30,7 @@ export async function POST(req: Request) {
         return NextResponse.json({success: 1, file: {
                 url: `/uploads/${fileName}`,
             }})
-    } catch (error) {
-        console.error("Error uploading file:", error);
+    } catch {
         return NextResponse.json({success: 0, error: "Wystąpił błąd podczas przesyłania pliku."}, {status: 500});
     }
 }

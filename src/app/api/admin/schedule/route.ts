@@ -35,8 +35,7 @@ export async function PUT(req: Request) {
             }))
         );
         return NextResponse.json({ message: "Grafik zaktualizowany" }, { status: 200 });
-    }catch (e) {
-        console.error("Error updating schedule:", e);
+    }catch  {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

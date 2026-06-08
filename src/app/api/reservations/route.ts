@@ -83,7 +83,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ url: stripeSession.url }, { status: 201 });
 
-    } catch (e) {
+    } catch {
         return NextResponse.json({ error: "Wystąpił błąd podczas tworzenia rezerwacji" }, { status: 500 });
     }
 }

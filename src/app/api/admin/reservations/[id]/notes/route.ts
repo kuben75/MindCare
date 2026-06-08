@@ -22,7 +22,7 @@ export async function PATCH(req: Request, { params}: {params: Promise<{id: strin
 
         return NextResponse.json({success: true, reservation: updatedReservation});
 
-    }  catch (e) {
+    }  catch  {
         return NextResponse.json({error: "Internal server error"}, {status: 500});
     }
 }

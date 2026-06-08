@@ -17,7 +17,7 @@ export async function DELETE(req: Request, {params}: {params: Promise<{id: strin
         });
 
         return NextResponse.json({success: true});
-    }catch (e) {
+    }catch {
         return NextResponse.json({error: "Wystąpił błąd podczas usuwania z listy oczekujących"}, {status: 500});
     }
 }

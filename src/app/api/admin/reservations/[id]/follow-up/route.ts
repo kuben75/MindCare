@@ -32,7 +32,7 @@ export async function POST(req: Request, {params}: {params: Promise<{id: string}
             email: reservation.email,
             patientName: reservation.patientName,
             date: reservation.date,
-            message: message.trim
+            message: message.trim()
         })
 
         if(!emailSent) {

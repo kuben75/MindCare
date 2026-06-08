@@ -71,7 +71,7 @@ export const MagicLinkEmail = ({
                                     {bankAccount}
                                 </Text>
                                 <Text style={{ margin: "8px 0 0 0", color: "#4b5563", fontSize: "12px" }}>
-                                    W tytule przelewu proszę wpisać: "Konsultacja - {firstName} {patientName.split(' ')[1] || ''}".
+                                    W tytule przelewu proszę wpisać: &quot;Konsultacja - {firstName} {patientName.split(' ')[1] || ''}&quot;.
                                 </Text>
                             </Section>
                         )}

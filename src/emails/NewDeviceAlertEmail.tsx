@@ -46,7 +46,7 @@ export const NewDeviceAlertEmail = ({
                         </Section>
 
                         <Text style={emailTheme.paragraph}>
-                            <strong>Jeśli to nie Ty:</strong> Natychmiast zaloguj się do panelu, wejdź w zakładkę <strong>Bezpieczeństwo</strong> i kliknij "Wyloguj urządzenie" przy podejrzanej sesji, a następnie zmień swoje hasło.
+                            <strong>Jeśli to nie Ty:</strong> Natychmiast zaloguj się do panelu, wejdź w zakładkę <strong>Bezpieczeństwo</strong> i kliknij &quot;Wyloguj urządzenie&quot; przy podejrzanej sesji, a następnie zmień swoje hasło.
                         </Text>
 
                         <Hr style={emailTheme.hr} />

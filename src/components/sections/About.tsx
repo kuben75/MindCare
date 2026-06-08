@@ -31,7 +31,7 @@ export const About = () => {
                         </p>
 
                         <div className="relative mt-2 p-6 md:p-8 bg-beige-light rounded-2xl border-l-4 border-sage shadow-sm">
-                            <div className="absolute -top-4 -left-2 text-6xl text-sage opacity-20 font-serif">"</div>
+                            <div className="absolute -top-4 -left-2 text-6xl text-sage opacity-20 font-serif">&quot;</div>
                             <p className="text-graphite italic font-medium leading-relaxed relative z-10">
                                 Mam również osobiste doświadczenie ciężkiej choroby nowotworowej. To doświadczenie w naturalny sposób pogłębiło moją wrażliwość na cierpienie, bezradność i lęk. Nauczyło mnie ono szczególnego szacunku do granic, siły i kruchości drugiego człowieka.
                             </p>

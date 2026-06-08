@@ -9,6 +9,8 @@
 ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
 ![Framer Motion](https://img.shields.io/badge/Framer_Motion-black?style=for-the-badge&logo=framer&logoColor=blue)
 
+<video src="https://github.com/user-attachments/assets/c1017787-f160-4213-ae52-6e245b111e2e" autoplay loop muted playsinline width="100%"></video>
+
 A comprehensive, bespoke B2B platform engineered specifically for a private psychological clinic. It automates the entire patient lifecycle—from smart scheduling and secure payments to automated reminders—while providing a highly secure, FinTech-grade administrative dashboard and built-in CMS.
 
 ## Business Value & Real-World Application
@@ -23,17 +25,11 @@ This platform was not built just as a technical showcase; it was engineered to s
 ## Screenshots
 
 <img width="2505" height="1291" alt="image" src="https://github.com/user-attachments/assets/f8fd15f0-3a00-41f7-9ba8-c64ffa2bf783" />
-
 <img width="2517" height="1292" alt="image" src="https://github.com/user-attachments/assets/43db934b-3ea2-4306-9d3f-84a2a706b368" />
-
 <img width="2514" height="1287" alt="image" src="https://github.com/user-attachments/assets/7041f6ae-47dc-4995-b478-abf2924b58dd" />
-
 <img width="2521" height="1287" alt="image" src="https://github.com/user-attachments/assets/7a02d150-6863-4566-b084-73b0830310a9" />
-
 <img width="2517" height="1291" alt="image" src="https://github.com/user-attachments/assets/878d0f74-b331-40f8-b0fd-8e48dbcdbe00" />
-
 <img width="394" height="848" alt="image" src="https://github.com/user-attachments/assets/2078be34-e56e-47c0-86f1-9614d4529c50" />
-
 <img width="2508" height="1289" alt="image" src="https://github.com/user-attachments/assets/b50a8559-2f43-46d3-8c81-7a2c212664d8" />
 
 ## Key Features: For Patients (Public App)
@@ -51,28 +47,151 @@ This platform was not built just as a technical showcase; it was engineered to s
 * **Automated CRON Jobs:** Sweeps and releases unpaid pending reservations after 30 minutes, dispatches 24-hour appointment reminders, and generates daily morning briefings.
 * **Full CMS & Financials:** Built-in blog engine, dynamic landing page builder, financial overviews, and detailed system logs.
 
-## Testing & Quality Assurance (QA)
-
-To ensure maximum reliability, the core business logic is covered by automated unit tests using **Vitest**.
-* **Calendar Engine Tests:** Simulates timezone behaviors and verifies that the `api/slots` engine successfully drops past times, honors vacation blocks, and strictly prevents overbooking.
-* **DOM & UI Interaction Tests:** Mocks browser APIs (e.g., `scrollIntoView`, `scrollBy`) to validate complex custom hooks like `useCalendarLogic` in simulated JSDOM environments.
-* **Security & Auth Tests:** Validates the robust parsing of incoming User-Agent strings and logical constraints for the 15-minute brute-force lockout window.
-* **Payment Endpoint Tests:** Mocks Prisma and Stripe SDK to ensure malicious payloads cannot manipulate service prices during the Stripe Checkout session generation.
-
 ## Architecture & Engineering Highlights
 
 * **Timezone Normalization:** The database operates strictly in UTC, while the dashboard and public booking engine safely normalize all interactions to `Europe/Warsaw`, preventing timezone drift regardless of the administrator's physical location.
 * **Data Integrity:** Heavy reliance on Prisma transactions to ensure database state consistency during complex, multi-step operations (e.g., webhook fulfillment, order sequencing).
 * **Protected Routing:** Strict Next.js Middleware acts as a proxy, verifying JWT sessions before any administrative route or API endpoint is accessed.
+* **Integrations:** Utilizes `NextAuth.js` for secure JWT session management, `Resend` + `React Email` for programmatic transactional email dispatch, and `otplib` for TOTP (2FA) generation.
 * **Type Safety:** 100% end-to-end TypeScript integration, from Zod schema validation on the client to Prisma schema types on the database layer.
+
+## Database Schema (Prisma / PostgreSQL)
+
+Below is a high-level Entity-Relationship Diagram representing the core business logic.
+
+```mermaid
+erDiagram
+    Service ||--o{ Reservation : "books"
+    Service ||--o{ Waitlist : "queues"
+    Admin ||--o{ DeviceSession : "has active"
+
+    Service {
+        String id PK
+        String name
+        Int duration
+        Float price
+        Boolean isActive
+    }
+
+    Reservation {
+        String id PK
+        String patientName
+        DateTime date
+        ReservationStatus status
+        String serviceId FK
+        String magicToken
+    }
+
+    Waitlist {
+        String id PK
+        String patientName
+        String email
+        String serviceId FK
+    }
+
+    Admin {
+        String id PK
+        String email
+        Boolean twoFactorEnabled
+    }
+
+    DeviceSession {
+        String id PK
+        String ipAddress
+        String userAgent
+        Boolean isValid
+    }
+
+    SystemLog {
+        String id PK
+        String action
+        String ipAddress
+        DateTime createdAt
+    }
+
+    ClinicSettings {
+        String id PK
+        String clinicName
+        String nipNumber
+        String bankAccount
+    }
+    
+    Post {
+        String id PK
+        String title
+        String slug
+        Boolean isPublished
+    }
+```
+## Project Structure
+
+The codebase follows a Domain-Driven Design (DDD) inspired approach, separating external services, types, hooks, and UI components to ensure maintainability and testability.
+
+```text
+├── .github/                # GitHub Actions CI/CD workflows
+├── prisma/
+│   ├── migrations/         # Database migration history
+│   ├── schema.prisma       # Database models & relationships
+│   ├── cleanup.ts          # DB cleanup utilities
+│   └── seed.ts             # Initial admin & settings seeding
+├── public/                 # Static assets, user uploads, and screenshots
+├── src/
+│   ├── app/                # Next.js App Router
+│   │   ├── admin/          # Protected dashboard routes (CMS, Financials, Settings)
+│   │   ├── api/            # Serverless API endpoints (Stripe webhooks, CRON, Data)
+│   │   ├── blog/           # Public blog articles viewer
+│   │   ├── reservation/    # Public booking & payment success flow
+│   │   ├── privacy-policy/ # Legal subpages
+│   │   └── statute/        # Terms & conditions subpages
+│   ├── components/         # Reusable UI components
+│   │   ├── calendar/       # Public-facing booking calendar engine
+│   │   ├── layout/         # Navigation, footers, and page wrappers
+│   │   ├── sections/       # Dynamic landing page sections
+│   │   └── ui/             # Primitive UI elements (Buttons, Inputs, Tooltips)
+│   ├── constants/          # Global configurations, labels, and static data
+│   ├── context/            # React Context providers (Global state)
+│   ├── emails/             # React Email templates (Magic Links, Reminders)
+│   ├── framer-motion/      # Animation variants and configs
+│   ├── hooks/              # Custom React Hooks (Business logic & local state)
+│   ├── infrastructure/     # External service singletons (Prisma, Stripe, Resend)
+│   ├── schemas/            # Zod validation schemas for forms and API requests
+│   ├── services/           # Server-side business logic & data access layer
+│   ├── tests/              # Vitest test suites (Unit & Integration tests)
+│   ├── types/              # Global TypeScript interfaces and DTOs
+│   └── utils/              # Helper functions (Date formatting, auth helpers)
+├── docker-compose.yml      # Local PostgreSQL database container setup
+└── .env.example            # Environment variables template
+```
+
+## Testing & Quality Assurance (QA)
+
+To ensure maximum reliability, the core business logic is covered by automated unit tests using Vitest.
+
+* **Calendar Engine Tests:** Simulates timezone behaviors and verifies that the `api/slots` engine successfully drops past times, honors vacation blocks, and strictly prevents overbooking.
+* **DOM & UI Interaction Tests:** Mocks browser APIs (e.g., `scrollIntoView`, `scrollBy`) to validate complex custom hooks like `useCalendarLogic` in simulated JSDOM environments.
+* **Security & Auth Tests:** Validates the robust parsing of incoming User-Agent strings and logical constraints for the 15-minute brute-force lockout window.
+* **Payment Endpoint Tests:** Mocks Prisma and Stripe SDK to ensure malicious payloads cannot manipulate service prices during the Stripe Checkout session generation.
 
 ## Local Setup & Installation
 
 Follow these steps to safely configure and launch the platform on your local machine:
 
-1. **Clone the repository:** Execute `git clone https://github.com/username/MindCare.git` and navigate into the folder using `cd MindCare`.
+1. **Clone the repository:** Execute `git clone https://github.com/kuben75/MindCare.git` and navigate into the folder using `cd MindCare`.
 2. **Install dependencies:** Run `npm install` to download all necessary packages.
 3. **Configure environment:** Copy the example template using `cp .env.example .env` and securely populate it with your Stripe, Resend, NextAuth, and Database keys.
 4. **Initialize database:** Ensure Docker is running your local PostgreSQL instance, then apply the Prisma schema by running `npx prisma db push`.
 5. **Start application:** Execute `npm run dev` to launch the development server on localhost port 3000.
 6. Navigate to `http://localhost:3000` to view the public application, or `http://localhost:3000/admin/login` for the dashboard.
+
+## Author & Contact
+
+## Author & Contact
+
+**Jakub Ławniczak**
+* **LinkedIn:** [Jakub Ławniczak](https://www.linkedin.com/in/jlawniczak1)
+* **GitHub:** [@kuben75](https://github.com/kuben75)
+* **Email:** [jakub.lawniczak753@gmail.com](mailto:jakub.lawniczak753@gmail.com)
+
+## License
+
+This project is proprietary software developed for a specific client. All rights reserved.

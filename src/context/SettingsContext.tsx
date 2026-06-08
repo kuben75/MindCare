@@ -9,7 +9,7 @@ const SettingsContext = createContext<ClinicSettings | null>(null);
 export const useSettings = () => useContext(SettingsContext);
 
 export function SettingsProvider({ children, initialSettings }: { children: React.ReactNode, initialSettings: ClinicSettings | null }) {
-    const [settings, setSettings] = useState<ClinicSettings | null>(initialSettings);
+    const [settings] = useState<ClinicSettings | null>(initialSettings);
 
     return (
         <SettingsContext.Provider value={settings}>

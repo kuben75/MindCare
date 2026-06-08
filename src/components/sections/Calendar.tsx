@@ -13,7 +13,6 @@ export const Calendar = () => {
         selectedSlot,
         setSelectedSlot,
         headerDate,
-        setHeaderDate,
         today,
         maxDate,
         isLoading,

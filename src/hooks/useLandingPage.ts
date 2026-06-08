@@ -22,7 +22,6 @@ export const useLandingPage = () => {
                 setTemplates(data);
             }
         } catch {
-            console.error(e);
             showToast("Nie udało się pobrać szablonów z serwera.", "error");
         } finally {
             setIsLoading(false);
@@ -47,7 +46,6 @@ export const useLandingPage = () => {
                 showToast("Wystąpił błąd podczas aktywacji szablonu.", "error");
             }
         } catch {
-            console.error(e);
             showToast("Wystąpił błąd połączenia z serwerem.", "error");
         } finally {
             setActionLoading(null);
@@ -81,7 +79,6 @@ export const useLandingPage = () => {
                 showToast(data.message || "Wystąpił błąd podczas usuwania szablonu.", "error");
             }
         } catch {
-            console.error(e);
             showToast("Wystąpił błąd połączenia z serwerem.", "error");
         }
     };

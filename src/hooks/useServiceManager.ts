@@ -91,7 +91,6 @@ export const useServiceManager = ({ initialServices }: { initialServices: Servic
                 showToast(data.error || "Nie można usunąć tej usługi. Użyj opcji 'Ukryj usługę'.", "error");
             }
         } catch {
-            console.error("Error deleting service:", e);
             showToast("Nie udało się połączyć z serwerem.", "error");
         }
     };
@@ -112,7 +111,6 @@ export const useServiceManager = ({ initialServices }: { initialServices: Servic
                 showToast("Nie udało się zmienić widoczności usługi.", "error");
             }
         } catch {
-            console.error("Error toggling service active state:", e);
             showToast("Wystąpił błąd podczas zmiany widoczności.", "error");
         }
     };

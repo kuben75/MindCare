@@ -35,7 +35,6 @@ export const useScheduleForm = ({ initialSchedules }: { initialSchedules: Weekly
                 showToast("Nie udało się zaktualizować grafiku.", "error");
             }
         } catch {
-            console.error("Error saving schedule:", e);
             showToast("Błąd serwera. Spróbuj ponownie później.", "error");
         } finally {
             setIsLoading(false);

@@ -33,7 +33,6 @@ export const useSecurityHub = ({ is2FAEnabled }: { is2FAEnabled: boolean }) => {
                     setActiveSessions(data.sessions || []);
                 }
             } catch {
-                console.error("Błąd pobierania sesji", e);
                 showToast("Nie udało się pobrać listy urządzeń.", "error");
             } finally {
                 setIsSessionsLoading(false);

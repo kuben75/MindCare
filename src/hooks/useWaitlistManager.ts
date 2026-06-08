@@ -35,7 +35,7 @@ export const useWaitlistManager = () => {
                 const errorData = await res.json();
                 showToast(errorData.message || errorData.error || "Nie udało się usunąć pacjenta. Spróbuj ponownie.", "error");
             }
-        } catch (e) {
+        } catch {
             showToast("Błąd połączenia z serwerem.", "error");
         } finally {
             setIsDeleting(null);

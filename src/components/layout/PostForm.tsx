@@ -2,10 +2,6 @@
 
 import dynamic from "next/dynamic";
 import { TInitialData } from "@/types/editor";
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { useToast } from "@/hooks/useToast";
-import { useConfirm } from "@/hooks/useConfirm";
 import { Toast } from "@/components/ui/Toast";
 import { motion } from "framer-motion";
 import {usePostForm} from "@/hooks/usePostForm";
@@ -27,7 +23,6 @@ export default function PostForm({ initialData }: { initialData?: TInitialData }
         content,
         setContent,
         isPublished,
-        setIsPublished,
         postId,
         isLoading,
         lastSaved,

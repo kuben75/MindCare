@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { IInfoTooltipProps } from "@/types/settings";
 import {useInfoTooltip} from "@/hooks/useInfoTooltip";
+import Image from "next/image";
 
 export default function InfoTooltip({ title, description, images }: IInfoTooltipProps) {
 const {
@@ -19,7 +20,7 @@ const {
     handleMouseLeave,
     toggleVisibility,
     setIsVisible
-} = useInfoTooltip({ title, description, images });
+} = useInfoTooltip();
 
     const TooltipContent = () => (
         <div className="flex flex-col sm:flex-row gap-6 sm:gap-8 items-start">
@@ -45,7 +46,7 @@ const {
                             onClick={() => setLightboxImage(img)}
                             className="relative aspect-video rounded-2xl overflow-hidden border border-black/5 dark:border-white/10 bg-black/[0.03] dark:bg-white/[0.03] cursor-zoom-in group shadow-inner"
                         >
-                            <img
+                            <Image
                                 src={img}
                                 alt={`Podgląd funkcji ${idx + 1}`}
                                 className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
@@ -108,7 +109,7 @@ const {
                                 <div className="relative overflow-hidden bg-white/95 dark:bg-[#18181b]/95 backdrop-blur-3xl border border-white/40 dark:border-zinc-700/50 rounded-[2rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.15)] dark:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] ring-1 ring-black/5 dark:ring-white/10">
                                     <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-sage/5 dark:from-emerald-500/10 to-transparent pointer-events-none"></div>
                                     <div className="relative p-6 sm:p-8">
-                                        <TooltipContent />
+                                        {TooltipContent()}
                                     </div>
                                 </div>
 
@@ -144,7 +145,7 @@ const {
                             >
                                 <div className="w-12 h-1.5 bg-black/10 dark:bg-white/10 rounded-full mx-auto mb-6"></div>
 
-                                <TooltipContent />
+                                {TooltipContent()}
 
                                 <button
                                     onClick={() => setIsVisible(false)}

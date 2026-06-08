@@ -1,6 +1,5 @@
 "use client";
 
-import {useState} from "react";
 import {IPublicCalendarHeaderProps} from "@/types/calendar";
 import {MINI_CAL_DAYS, POLISH_MONTHS} from "@/constants/calendar";
 import {usePublicCalendarHeader} from "@/hooks/usePublicCalendarHeader";
@@ -10,7 +9,6 @@ const {
     isMiniCalOpen,
     setIsMiniCalOpen,
     miniCalMonth,
-    setMiniCalMonth,
     isPrevDisabled,
     isNextDisabled,
     daysInMonth,

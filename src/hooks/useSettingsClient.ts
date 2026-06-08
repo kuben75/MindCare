@@ -43,7 +43,7 @@ export const useSettingsClient = (initialSettings: ClinicSettings) => {
                 const errorData = await res.json();
                 showToast(errorData.message || errorData.error || "Wystąpił błąd podczas zapisywania.", "error");
             }
-        } catch (error) {
+        } catch  {
             showToast("Brak połączenia z serwerem.", "error");
         } finally {
             setIsLoading(false);

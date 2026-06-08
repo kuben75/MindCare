@@ -21,7 +21,7 @@ export default function BlockEditor({ data, onChange }: IBlockEditorProps) {
                 isReady.current = false;
             }
         };
-    }, []);
+    });
 
     const initEditor = async () => {
         const EditorJS = (await import("@editorjs/editorjs")).default;

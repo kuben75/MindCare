@@ -90,7 +90,7 @@ export const useReservationManager = ({ initialReservations, services }: { initi
                 const errorData = await res.json();
                 showToast(errorData.message || errorData.error || "Nie udało się dodać rezerwacji.", "error");
             }
-        } catch (e) {
+        } catch {
             showToast("Wystąpił błąd podczas dodawania rezerwacji.", "error");
         } finally {
             setIsSubmitting(false);
@@ -114,7 +114,7 @@ export const useReservationManager = ({ initialReservations, services }: { initi
                 const errorData = await res.json();
                 showToast( errorData.message || "Nie udało się zapisać notatek.", "error");
             }
-        } catch (e) {
+        } catch {
             showToast("Błąd połączenia z serwerem.", "error");
         } finally {
             setIsSavingNotes(false);
@@ -157,7 +157,7 @@ export const useReservationManager = ({ initialReservations, services }: { initi
                 const errorData = await res.json();
                 showToast(errorData.message || errorData.error || "Nie udało się wysłać wiadomości.", "error");
             }
-        } catch (error) {
+        } catch {
             showToast("Błąd podczas wysyłania e-maila.", "error");
         } finally {
             setIsSendingEmail(false);

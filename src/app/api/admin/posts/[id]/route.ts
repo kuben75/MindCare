@@ -54,7 +54,7 @@ export async function DELETE(req: Request, context: Context) {
     try {
         await prisma.post.delete({where: {id}})
         return NextResponse.json({message: "Post został usunięty"}, {status: 200})
-    }catch(error) {
+    }catch {
         return NextResponse.json({error: "Błąd serwera"}, {status: 500})
     }
 }

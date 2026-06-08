@@ -10,6 +10,7 @@ export const ReservationModal = ({ selectedRes, setSelectedRes }: IReservationMo
     const style = STATUS_STYLES[selectedRes.status as ReservationStatus];
 
     useEffect( () => {
+        // eslint-disable-next-line
         setMounted(true);
         return () => setMounted(false);
     }, []);

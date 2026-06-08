@@ -24,7 +24,7 @@ export const useCalendarLogic = () => {
             fetch('/api/services')
                 .then(res => res.json())
                 .then(data => setServices(data))
-                .catch(err => console.error("Nie udało się wczytać usług:"));
+                .catch(() => console.error("Nie udało się wczytać usług:"));
         }
     }, [activeTab, services.length]);
 
@@ -44,7 +44,7 @@ export const useCalendarLogic = () => {
                     }));
                     setCalendarData(parsedDays);
                 }
-            } catch (error) {
+            } catch{
                 setError("Nie udało się wczytać dostępnych terminów. Sprawdź połączenie z internetem.");
             } finally {
                 setIsLoading(false);
@@ -52,7 +52,7 @@ export const useCalendarLogic = () => {
         };
 
         fetchSlots();
-    }, []);
+    });
 
     const handleMove = (direction: 1 | -1) => {
         if (carouselRef.current) {

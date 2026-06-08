@@ -32,7 +32,7 @@ export const useSecurityHub = ({ is2FAEnabled }: { is2FAEnabled: boolean }) => {
                     const data = await res.json();
                     setActiveSessions(data.sessions || []);
                 }
-            } catch (e) {
+            } catch {
                 console.error("Błąd pobierania sesji", e);
                 showToast("Nie udało się pobrać listy urządzeń.", "error");
             } finally {
@@ -64,7 +64,7 @@ export const useSecurityHub = ({ is2FAEnabled }: { is2FAEnabled: boolean }) => {
             } else {
                 showToast("Nie udało się wylogować urządzenia.", "error");
             }
-        } catch (e) {
+        } catch {
             showToast("Błąd połączenia z serwerem.", "error");
         }
     };
@@ -83,7 +83,7 @@ export const useSecurityHub = ({ is2FAEnabled }: { is2FAEnabled: boolean }) => {
                 } else {
                     showToast("Błąd serwera. Nie można wygenerować kodu QR.", "error");
                 }
-            } catch (e) {
+            } catch {
                 setErrorMessage("Wystąpił błąd podczas generowania kodu. Spróbuj ponownie.");
             } finally {
                 setIsLoading(false);
@@ -125,7 +125,7 @@ export const useSecurityHub = ({ is2FAEnabled }: { is2FAEnabled: boolean }) => {
                 const data = await res.json();
                 setErrorMessage(data.error || "Nieprawidłowy kod.");
             }
-        } catch (e) {
+        } catch {
             setErrorMessage("Błąd połączenia. Spróbuj ponownie.");
         } finally {
             setIsLoading(false);
@@ -153,7 +153,7 @@ export const useSecurityHub = ({ is2FAEnabled }: { is2FAEnabled: boolean }) => {
                 const errorData = await res.json();
                 showToast(errorData.message || errorData.error || "Nie udało się wyłączyć 2FA.", "error");
             }
-        } catch (e) {
+        } catch {
             showToast("Błąd połączenia z serwerem.", "error");
         } finally {
             setIsLoading(false);

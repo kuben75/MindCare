@@ -2,7 +2,7 @@ import {useRouter} from "next/navigation";
 import {useState} from "react";
 import {IPatientActionsProps} from "@/types/reservation";
 
-export const usePatientActions = ({ token, status, isRescheduleRequested, reservationDate }: IPatientActionsProps) => {
+export const usePatientActions = ({ token, reservationDate }: IPatientActionsProps) => {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
@@ -31,7 +31,7 @@ export const usePatientActions = ({ token, status, isRescheduleRequested, reserv
                 const data = await res.json();
                 setMessage(data.message || "Nie można anulować rezerwacji");
             }
-        } catch (e) {
+        } catch {
             setMessage("Coś poszło nie tak. Spróbuj ponownie później.");
         } finally {
             setIsLoading(false);
@@ -54,7 +54,7 @@ export const usePatientActions = ({ token, status, isRescheduleRequested, reserv
                 const data = await res.json();
                 setMessage(data.message || "Nie można złożyć prośby o zmianę terminu");
             }
-        } catch (e) {
+        } catch {
             setMessage("Coś poszło nie tak. Spróbuj ponownie później.");
         } finally {
             setIsLoading(false);

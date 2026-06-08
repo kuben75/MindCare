@@ -43,7 +43,7 @@ export const useReservationClient = ({ initialDate, initialTime, services }: IRe
                 const errorData = await response.json();
                 setErrorMessage(errorData.error || "Wystąpił błąd podczas rezerwacji.");
             }
-        }catch (e) {
+        }catch {
             setErrorMessage("Błąd połączenia z serwerem. Spróbuj ponownie.");
         }finally{
             setIsLoading(false);

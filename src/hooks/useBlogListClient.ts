@@ -41,8 +41,7 @@ export const useBlogListClient = ({ initialPosts }: { initialPosts: TPost[] }) =
                 const errorData = await response.json();
                 showToast(errorData.message || errorData.error || "Nie udało się zapisać kolejności. Spróbuj ponownie.", "error");
             }
-        } catch (error) {
-            console.error(error);
+        } catch  {
             showToast("Nie udało się zapisać kolejności. Spróbuj ponownie.", "error");
             setPosts(posts);
         } finally {

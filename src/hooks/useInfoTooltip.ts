@@ -1,8 +1,7 @@
 import {useEffect, useRef, useState} from "react";
-import {IInfoTooltipProps} from "@/types/settings";
 
 
-export const useInfoTooltip = ({ title, description, images }: IInfoTooltipProps) => {
+export const useInfoTooltip = () => {
     const [isVisible, setIsVisible] = useState(false);
     const [lightboxImage, setLightboxImage] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
@@ -13,6 +12,7 @@ export const useInfoTooltip = ({ title, description, images }: IInfoTooltipProps
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
+        // eslint-disable-next-line
         setMounted(true);
         const checkMobile = () => setIsMobile(window.innerWidth < 640);
         checkMobile();

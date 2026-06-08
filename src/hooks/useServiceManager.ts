@@ -64,7 +64,7 @@ export const useServiceManager = ({ initialServices }: { initialServices: Servic
                 const data = await res.json();
                 showToast(data.error || "Nie można zapisać tej usługi. Sprawdź dane.", "error");
             }
-        } catch (e) {
+        } catch {
             console.error("Error saving service:", e);
             showToast("Wystąpił błąd podczas zapisywania usługi.", "error");
         } finally {
@@ -90,7 +90,7 @@ export const useServiceManager = ({ initialServices }: { initialServices: Servic
                 const data = await res.json();
                 showToast(data.error || "Nie można usunąć tej usługi. Użyj opcji 'Ukryj usługę'.", "error");
             }
-        } catch (e) {
+        } catch {
             console.error("Error deleting service:", e);
             showToast("Nie udało się połączyć z serwerem.", "error");
         }
@@ -111,7 +111,7 @@ export const useServiceManager = ({ initialServices }: { initialServices: Servic
             } else {
                 showToast("Nie udało się zmienić widoczności usługi.", "error");
             }
-        } catch (e) {
+        } catch {
             console.error("Error toggling service active state:", e);
             showToast("Wystąpił błąd podczas zmiany widoczności.", "error");
         }

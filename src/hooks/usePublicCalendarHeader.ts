@@ -1,5 +1,5 @@
 import {useState} from "react";
-import {IPublicCalendarHeaderProps, TPublicCalendarParams} from "@/types/calendar";
+import {TPublicCalendarParams} from "@/types/calendar";
 
 
 export const usePublicCalendarHeader = ({ startDate, today, maxDate, jumpToDate }: TPublicCalendarParams) => {

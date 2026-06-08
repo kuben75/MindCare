@@ -32,7 +32,7 @@ export const useWaitlistForm = ({services}: IWaitlistFormData) => {
                 setStatus('error');
                 setErrorMessage(data.error || "Nie udało się zapisać na listę oczekujących. Spróbuj ponownie później.");
             }
-        }catch (e) {
+        }catch {
             setStatus('error');
             setErrorMessage("Wystąpił błąd podczas zapisywania. Sprawdź połączenie z internetem i spróbuj ponownie.");
         }

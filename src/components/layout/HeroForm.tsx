@@ -7,6 +7,7 @@ import { THeroProps } from "@/types/hero";
 import { Toast } from "@/components/ui/Toast";
 import {AnimatePresence, motion} from "framer-motion";
 import {useHeroForm} from "@/hooks/useHeroForm";
+import Image from "next/image";
 
 export default function HeroForm({ initialData }: { initialData?: THeroProps }) {
 const  {
@@ -14,7 +15,7 @@ const  {
     subtitle, setSubtitle,
     layout, setLayout,
     imageStyle, setImageStyle,
-    imageFile, handleImageChange,
+     handleImageChange,
     previewUrl,
     showPrimaryButton, setShowPrimaryButton,
     primaryButtonText, setPrimaryButtonText,
@@ -130,7 +131,7 @@ const  {
                                 <input type="file" accept="image/*" className="hidden" onChange={handleImageChange}/>
                                 {previewUrl ? (
                                     <>
-                                        <img src={previewUrl} alt="Podgląd" className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity"/>
+                                        <Image src={previewUrl} alt="Podgląd" className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity"/>
                                         <div className="absolute inset-0 flex flex-col items-center justify-center z-10 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <div className="bg-graphite dark:bg-zinc-100 text-white dark:text-graphite px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg">Zmień zdjęcie</div>
                                         </div>

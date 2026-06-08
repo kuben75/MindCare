@@ -68,7 +68,7 @@ export const usePostForm = ({ initialData }: { initialData?: TInitialData }) => 
                 } else {
                     setSaveStatus("error");
                 }
-            } catch (e) {
+            } catch {
                 setSaveStatus("error");
             }
         }, 3000);
@@ -135,7 +135,7 @@ export const usePostForm = ({ initialData }: { initialData?: TInitialData }) => 
                     router.refresh();
                 }, 1000);
             }
-        } catch (error) {
+        } catch {
             showToast("Błąd przy usuwaniu artykułu.", "error");
         }
     };

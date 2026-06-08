@@ -9,7 +9,7 @@ export const extractFirstImage = (contentStr: string): string | null => {
         const imageBlock = parsed.blocks.find((b: IEditorContent) => b.type === 'image');
 
         return imageBlock?.data?.file?.url || null;
-    }catch(e) {
+    }catch {
         return null;
     }
 }
@@ -27,7 +27,7 @@ export const extractExcerpt = (contentStr: string): string => {
             return cleanText.length > 120 ? cleanText.substring(0, 120) + "..." : cleanText;
         }
     }
-    catch (e) {
+    catch {
         return "";
     }
     return "";

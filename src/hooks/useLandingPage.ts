@@ -21,7 +21,7 @@ export const useLandingPage = () => {
                 const data = await res.json();
                 setTemplates(data);
             }
-        } catch (e) {
+        } catch {
             console.error(e);
             showToast("Nie udało się pobrać szablonów z serwera.", "error");
         } finally {
@@ -46,7 +46,7 @@ export const useLandingPage = () => {
             } else {
                 showToast("Wystąpił błąd podczas aktywacji szablonu.", "error");
             }
-        } catch (e) {
+        } catch {
             console.error(e);
             showToast("Wystąpił błąd połączenia z serwerem.", "error");
         } finally {
@@ -80,7 +80,7 @@ export const useLandingPage = () => {
                 const data = await res.json();
                 showToast(data.message || "Wystąpił błąd podczas usuwania szablonu.", "error");
             }
-        } catch (e) {
+        } catch {
             console.error(e);
             showToast("Wystąpił błąd połączenia z serwerem.", "error");
         }

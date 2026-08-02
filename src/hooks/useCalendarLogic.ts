@@ -52,7 +52,7 @@ export const useCalendarLogic = () => {
         };
 
         fetchSlots();
-    });
+    }, []);
 
     const handleMove = (direction: 1 | -1) => {
         if (carouselRef.current) {

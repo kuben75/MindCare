@@ -38,7 +38,7 @@ export default async function PublicBlogPage() {
                                   className="group flex flex-col bg-white dark:bg-[#262626] rounded-[2rem] overflow-hidden border border-beige-dark/20 dark:border-zinc-800 shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-2xl hover:-translate-y-2 transition-all duration-500">
                                 <div className="h-60 w-full relative bg-beige-light dark:bg-zinc-800 overflow-hidden">
                                     {coverImage ? (
-                                        <Image src={coverImage} alt={post.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700"/>
+                                        <Image fill src={coverImage} alt={post.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700"/>
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center bg-sage/10 dark:bg-emerald-900/10 text-sage/30 dark:text-emerald-500/20">
                                             <svg className="w-20 h-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>

@@ -129,7 +129,7 @@ export default function SecurityTutorialModal({
                                 <div className="w-48 h-48 bg-white p-3 rounded-3xl shadow-lg border border-beige-dark/20 flex items-center justify-center mb-6 relative overflow-hidden group">
                                     <motion.div className="absolute left-0 right-0 h-1 bg-sage dark:bg-emerald-400 shadow-[0_0_15px_4px_rgba(143,155,140,0.6)] z-10" animate={{top: ['5%', '95%', '5%']}} transition={{repeat: Infinity, duration: 2.5, ease: "linear"}} />
                                     {qrCodeData ? (
-                                        <Image src={qrCodeData} alt="Kod QR 2FA" className="w-full h-full object-contain relative z-0 rounded-xl"/>
+                                        <Image fill src={qrCodeData} alt="Kod QR 2FA" className="w-full h-full object-contain relative z-0 rounded-xl"/>
                                     ) : (
                                         <span className="animate-spin w-8 h-8 border-4 border-sage border-t-transparent rounded-full"/>
                                     )}

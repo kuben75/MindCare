@@ -29,7 +29,7 @@ const {
                     <div className="flex-1 flex justify-start relative z-40">
                         <Link href="/" className="flex items-center gap-3 group">
                             <div className="relative w-10 h-10 md:w-12 md:h-12 transition-transform duration-300 group-hover:scale-105">
-                                <Image src="/logo-icon.png" alt="Logo" fill sizes="(max-width: 768px) 40px, 48px" className="object-contain"
+                                <Image  src="/logo-icon.png" alt="Logo" fill sizes="(max-width: 768px) 40px, 48px" className="object-contain"
                                     priority />
                             </div>
 

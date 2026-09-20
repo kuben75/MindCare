@@ -82,7 +82,7 @@ export default function LandingPageCreator({ templates, isLoading, actionLoading
                                     }`}
                                 >
                                     <div className="w-full sm:w-56 h-56 sm:h-auto shrink-0 relative bg-beige-dark/20 dark:bg-zinc-800 overflow-hidden">
-                                        <Image
+                                        <Image fill
                                             src={template.imageUrl || "/photo-horizontal.jpg"}
                                             alt="Miniaturka Szablonu"
                                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"

@@ -46,7 +46,7 @@ const {
                             onClick={() => setLightboxImage(img)}
                             className="relative aspect-video rounded-2xl overflow-hidden border border-black/5 dark:border-white/10 bg-black/[0.03] dark:bg-white/[0.03] cursor-zoom-in group shadow-inner"
                         >
-                            <Image
+                            <Image fill
                                 src={img}
                                 alt={`Podgląd funkcji ${idx + 1}`}
                                 className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"

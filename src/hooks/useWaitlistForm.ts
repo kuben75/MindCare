@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {IWaitlistFormData} from "@/types/waitlist";
 
 export const useWaitlistForm = ({services}: IWaitlistFormData) => {
@@ -13,6 +13,12 @@ export const useWaitlistForm = ({services}: IWaitlistFormData) => {
 
     const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
     const [errorMessage, setErrorMessage] = useState("");
+
+    useEffect(() => {
+        if(services.length > 0 && !formData.serviceId) {
+            setFormData(prev => ({...prev, serviceId: services[0].id}));
+        }
+    }, [services, formData.serviceId]);
 
     const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();

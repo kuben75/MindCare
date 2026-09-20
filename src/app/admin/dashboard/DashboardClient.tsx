@@ -9,6 +9,7 @@ import {StatCard} from "@/app/admin/dashboard/components/StatCard";
 import {ShortcutLink} from "@/app/admin/dashboard/components/ShortcutLink";
 import {AlertBox} from "@/app/admin/dashboard/components/AlertBox";
 import {AgendaCard} from "@/app/admin/dashboard/components/AgendaCard";
+import {getPlural} from "@/utils/pluralize";
 
 
 export default function DashboardClient({ data }: { data: IDashboardData }) {
@@ -29,7 +30,7 @@ export default function DashboardClient({ data }: { data: IDashboardData }) {
                         Dzień dobry, Paulina
                     </h1>
                     <p className="text-graphite/60 dark:text-gray-400 mt-2 text-sm font-medium">
-                        <span className="capitalize">{todayFormatted}</span> • Masz zaplanowane <strong className="text-graphite dark:text-zinc-200">{data.todayVisitsCount}</strong> spotkań.
+                        <span className="capitalize">{todayFormatted}</span> • Masz zaplanowane <strong className="text-graphite dark:text-zinc-200">{data.todayVisitsCount}</strong> {getPlural(data.todayVisitsCount, ["spotkanie", "spotkania", "spotkań"])}.
                     </p>
                 </div>
                 <div className="shrink-0">
@@ -42,19 +43,19 @@ export default function DashboardClient({ data }: { data: IDashboardData }) {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
                 <StatCard
-                    label="Dzisiaj" value={data.todayVisitsCount} subLabel="wizyt"
+                    label="Dzisiaj" value={data.todayVisitsCount} subLabel={getPlural(data.todayVisitsCount, ["wizyta", "wizyty", "wizyt"])}
                     icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>}
                 />
                 <StatCard
-                    label="Jutro" value={data.tomorrowVisitsCount} subLabel="wizyt"
+                    label="Jutro" value={data.tomorrowVisitsCount} subLabel={getPlural(data.tomorrowVisitsCount, ["wizyta", "wizyty", "wizyt"])}
                     icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>}
                 />
                 <StatCard
-                    label="Brak wpłaty" value={data.pendingVisitsCount} subLabel="koszyków" isAlert={data.pendingVisitsCount > 0}
+                    label="Brak wpłaty" value={data.pendingVisitsCount} subLabel={getPlural(data.pendingVisitsCount, ["koszyk", "koszyki", "koszyków"])} isAlert={data.pendingVisitsCount > 0}
                     icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>}
                 />
                 <StatCard
-                    label="Katalog" value={data.activeServicesCount} subLabel="usług"
+                    label="Katalog" value={data.activeServicesCount} subLabel={getPlural(data.activeServicesCount, ["usługa", "usługi", "usług"])}
                     icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z"/></svg>}
                 />
             </div>

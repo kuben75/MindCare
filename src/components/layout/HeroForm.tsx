@@ -131,7 +131,7 @@ const  {
                                 <input type="file" accept="image/*" className="hidden" onChange={handleImageChange}/>
                                 {previewUrl ? (
                                     <>
-                                        <Image src={previewUrl} alt="Podgląd" className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity"/>
+                                        <Image fill src={previewUrl} alt="Podgląd" className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity"/>
                                         <div className="absolute inset-0 flex flex-col items-center justify-center z-10 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <div className="bg-graphite dark:bg-zinc-100 text-white dark:text-graphite px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg">Zmień zdjęcie</div>
                                         </div>

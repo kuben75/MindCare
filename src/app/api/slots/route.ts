@@ -1,40 +1,50 @@
 import {NextResponse} from "next/server";
 import prisma from "@/infrastructure/prisma";
 import {getDateKey} from "@/utils/calendar-utils";
+import {getWarsawStartOfDay, getWarsawNow} from "@/utils/warsaw-time"; // <-- IMPORTY
+import {DateTime} from "luxon";
 
 export async function GET(req: Request) {
     try{
         const {searchParams} = new URL(req.url);
         const startDateParam = searchParams.get('startDate');
+
         if(!startDateParam) {
             return NextResponse.json({error: 'Brak daty startowej'}, {status: 400});
         }
-        const startDate = new Date(startDateParam);
-        startDate.setHours(0, 0, 0, 0);
 
-        const endDate = new Date(startDate);
-        endDate.setDate(startDate.getDate() + 30);
-        endDate.setHours(23, 59, 59, 999);
+        // 1. Definiujemy "dzisiaj" i "teraz" w PL, wykluczając czas Vercela (UTC)
+        const warsawNow = getWarsawNow();
+        const startOfDay = getWarsawStartOfDay(startDateParam);
+
+        // 2. Dodajemy 30 dni w przyszłość
+        const endOfDayLimit = startOfDay.plus({days: 30}).endOf('day');
+
+        // Baza potrzebuje czystych obiektów JS Date
+        const jsStartDate = startOfDay.toJSDate();
+        const jsEndDate = endOfDayLimit.toJSDate();
 
         const reservations = await prisma.reservation.findMany({
             where: {
-                date: {gte: startDate, lte: endDate},
+                date: {gte: jsStartDate, lte: jsEndDate},
                 status: {not: 'CANCELLED'}
             }
         });
 
+        // Tworzymy unikalne klucze w strefie PL (np. "2026-09-24-17:00")
         const bookedSlots = new Set(
             reservations.map(res => {
                 const dateKey = getDateKey(res.date);
-                const time = res.date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+                // Wyrzucamy toLocaleTimeString (który brał strefę Vercela) i używamy Luxona:
+                const time = DateTime.fromJSDate(res.date).setZone('Europe/Warsaw').toFormat('HH:mm');
                 return `${dateKey}-${time}`;
             })
         );
 
         const blockedTimes = await prisma.blockedTime.findMany({
             where: {
-                endDate: {gte: startDate},
-                startDate: {lte: endDate}
+                endDate: {gte: jsStartDate},
+                startDate: {lte: jsEndDate}
             }
         });
 
@@ -51,21 +61,17 @@ export async function GET(req: Request) {
         ];
 
         const schedulesToUse = dbSchedules.length > 0 ? dbSchedules : fallbackSchedules;
-
         const scheduleMap = new Map(schedulesToUse.map(s => [s.dayOfWeek, s]));
 
         const days = [];
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const todayKey = getDateKey(warsawNow.toJSDate());
 
         for (let i = 0; i < 30; i++) {
-            const currentDate = new Date(startDate);
-            currentDate.setDate(startDate.getDate() + i);
+            const currentDay = startOfDay.plus({days: i});
+            const dateKey = currentDay.toFormat('yyyy-MM-dd');
+            const isToday = dateKey === todayKey;
 
-            const isToday = currentDate.getTime() === today.getTime();
-            const dateKey = getDateKey(currentDate);
-            const dayOfWeek = currentDate.getDay();
+            const dayOfWeek = currentDay.weekday === 7 ? 0 : currentDay.weekday;
 
             const slots = [];
             const dayConfig = scheduleMap.get(dayOfWeek);
@@ -78,16 +84,13 @@ export async function GET(req: Request) {
                     const timeString = `${String(h).padStart(2, '0')}:00`;
                     const slotKey = `${dateKey}-${timeString}`;
 
-                    const slotStartDate = new Date(currentDate);
-                    slotStartDate.setHours(h, 0, 0, 0);
+                    const slotStart = currentDay.set({hour: h, minute: 0, second: 0, millisecond: 0});
+                    const slotEnd = slotStart.plus({hours: 1});
 
-                    const slotEndDate = new Date(currentDate);
-                    slotEndDate.setHours(h + 1, 0, 0, 0);
-
-                    const isPast = slotStartDate < new Date();
+                    const isPast = slotStart < warsawNow;
 
                     const isBlocked = blockedTimes.some(block => {
-                        return block.startDate < slotEndDate && block.endDate > slotStartDate;
+                        return block.startDate < slotEnd.toJSDate() && block.endDate > slotStart.toJSDate();
                     });
 
                     const isBooked = bookedSlots.has(slotKey);
@@ -101,7 +104,7 @@ export async function GET(req: Request) {
                 }
             }
             days.push({
-                date: currentDate.toISOString(),
+                date: currentDay.toJSDate().toISOString(),
                 slots: slots,
                 isToday: isToday
             });

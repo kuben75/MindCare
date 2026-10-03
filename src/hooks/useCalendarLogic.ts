@@ -2,13 +2,14 @@ import {useState, useEffect, useRef} from "react";
 import {DAYS_PER_VIEW_DESKTOP, DAYS_PER_VIEW_MOBILE, MAX_DAYS_AHEAD} from "@/constants/calendar";
 import {IDaySchedule, TRawDaySchedule} from "@/types/calendar";
 import {Service} from "@prisma/client";
+import {getWarsawStartOfDay} from "@/utils/warsaw-time";
 
 export const useCalendarLogic = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const luxonToday = getWarsawStartOfDay();
+    const today = luxonToday.toJSDate();
 
-    const maxDate = new Date(today);
-    maxDate.setDate(maxDate.getDate() + MAX_DAYS_AHEAD);
+
+    const maxDate = luxonToday.plus({ days: MAX_DAYS_AHEAD }).toJSDate();
 
     const [calendarData, setCalendarData] = useState<IDaySchedule[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -35,7 +36,7 @@ export const useCalendarLogic = () => {
             setIsLoading(true);
             setError(null);
             try {
-                const response = await fetch(`/api/slots?startDate=${today.toISOString()}`);
+                const response = await fetch(`/api/slots?startDate=${luxonToday.toISODate()}`);
                 if (response.ok) {
                     const data = await response.json();
                     const parsedDays: IDaySchedule[] = data.days.map((day: TRawDaySchedule) => ({
@@ -62,8 +63,7 @@ export const useCalendarLogic = () => {
     };
 
     const jumpToDate = (dateString: string) => {
-        const newDate = new Date(dateString);
-        newDate.setHours(0, 0, 0, 0);
+        const newDate = getWarsawStartOfDay(dateString).toJSDate();
 
         const element = document.getElementById(`day-${newDate.getTime()}`);
         if (element && carouselRef.current) {

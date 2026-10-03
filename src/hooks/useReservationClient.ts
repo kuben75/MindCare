@@ -1,5 +1,6 @@
 import React, {useState} from "react";
 import {IReservationFormProps} from "@/types/reservation";
+import {buildWarsawDateObj} from "@/utils/warsaw-time";
 
 
 export const useReservationClient = ({ initialDate, initialTime, services }: IReservationFormProps) => {
@@ -24,7 +25,7 @@ export const useReservationClient = ({ initialDate, initialTime, services }: IRe
         }
         setIsLoading(true);
         try{
-            const finalDateObj = new Date(initialDate);
+            const finalDateObj = buildWarsawDateObj(initialDate, initialTime);
             const [hours, minutes] = initialTime.split(":");
             finalDateObj.setHours(parseInt(hours), parseInt(minutes), 0, 0);
             const response = await fetch('/api/reservations', {

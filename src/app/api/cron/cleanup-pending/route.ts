@@ -9,15 +9,15 @@ export async function GET(req: Request) {
     }
 
     try {
-        const thirtyMinutesAgo = new Date();
-        thirtyMinutesAgo.setMinutes(thirtyMinutesAgo.getMinutes() - 30);
+        const expirationLimit = new Date();
+        expirationLimit.setMinutes(expirationLimit.getMinutes() - 40);
 
         const result = await prisma.reservation.updateMany({
             where: {
                 status: "PENDING",
                 isManual: false,
                 createdAt: {
-                    lt: thirtyMinutesAgo
+                    lt: expirationLimit
                 }
             },
             data: {

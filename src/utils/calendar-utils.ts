@@ -1,22 +1,24 @@
 import {POLISH_MONTHS} from "@/constants/calendar";
+import {DateTime} from "luxon";
 
 export const formatDateShort = (date: Date): string => {
     return `${date.getDate()} ${POLISH_MONTHS[date.getMonth()].slice(0, 3)}`;
 };
 
-export const getDateKey = (date: Date): string => {
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const dd = String(date.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
+export const getDateKey = (date: Date | string): string => {
+   return DateTime.fromJSDate(new Date(date)).setZone("Europe/Warsaw").toFormat("yyyy-MM-dd");
 };
 
 
 export const formatDateTime = (date: string | Date) => {
-    const d = new Date(date);
-    const monthName = POLISH_MONTHS[d.getMonth()] ? POLISH_MONTHS[d.getMonth()].toLowerCase() : String(d.getMonth() + 1);
-    const formattedDate = `${d.getDate()} ${monthName} ${d.getFullYear()}`;
-    const formattedTime = d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+
+    const dt = DateTime.fromJSDate(new Date(date)).setZone("Europe/Warsaw");
+    const monthName = POLISH_MONTHS[dt.month - 1]
+        ? POLISH_MONTHS[dt.month - 1].toLowerCase()
+        : String(dt.month);
+
+    const formattedDate = `${dt.day} ${monthName} ${dt.year}`;
+    const formattedTime = dt.toFormat("HH:mm");
     return { formattedDate, formattedTime };
 };
 

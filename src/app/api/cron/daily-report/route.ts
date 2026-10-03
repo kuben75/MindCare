@@ -1,6 +1,7 @@
 import prisma from "@/infrastructure/prisma";
 import {sendAdminDailyReportEmail} from "@/utils/email-sender";
 import {NextResponse} from "next/server";
+import {getWarsawStartOfDay} from "@/utils/warsaw-time";
 
 
 export async function GET(req: Request) {
@@ -10,11 +11,10 @@ export async function GET(req: Request) {
         return new Response('Unauthorized', { status: 401 });
     }
     try{
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const luxonToday = getWarsawStartOfDay();
+        const today = luxonToday.toJSDate();
 
-        const endOfToday = new Date(today);
-        endOfToday.setHours(23, 59, 59, 999);
+        const endOfToday = luxonToday.endOf('day').toJSDate();
 
         const todayAppointments = await prisma.reservation.findMany({
             where: {

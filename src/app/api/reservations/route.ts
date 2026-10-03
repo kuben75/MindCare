@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/infrastructure/prisma";
 import { reservationSchema } from "@/schemas/reservation";
 import {stripe} from "@/infrastructure/stripe";
+import {formatDateTime} from "@/utils/calendar-utils";
 
 export async function POST(req: Request) {
     try {
@@ -46,6 +47,9 @@ export async function POST(req: Request) {
 
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
+        const {formattedDate, formattedTime} = formatDateTime(date);
+        const expiresAt = Math.floor(Date.now() / 1000) + (35 * 60)
+
         const stripeSession = await stripe.checkout.sessions.create({
             payment_method_types: ['card', 'blik', 'revolut_pay', 'p24'],
             customer_email: newReservation.email,
@@ -53,13 +57,14 @@ export async function POST(req: Request) {
             metadata: {
                 reservationId: newReservation.id
             },
+            expires_at: expiresAt,
             line_items: [
                 {
                     price_data: {
                         currency: 'pln',
                         product_data: {
                             name: newReservation.service.name,
-                            description: `Wizyta zaplanowana na: ${new Date(date).toLocaleDateString('pl-PL')} o ${new Date(date).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}`
+                            description: `Wizyta zaplanowana na: ${formattedDate} o ${formattedTime}`
                         },
                         unit_amount: Math.round(newReservation.service.price * 100),
                     },

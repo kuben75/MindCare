@@ -37,7 +37,10 @@ export async function POST(req: Request) {
                 await stripe.refunds.create({
                     payment_intent: reservation.stripePaymentIntentId,
                     reason: 'requested_by_customer'
-                });
+                },
+                    {
+                        idempotencyKey: `refund_${reservation.id}`
+                    });
                 refundSuccessful = true;
 
                 await prisma.systemLog.create({

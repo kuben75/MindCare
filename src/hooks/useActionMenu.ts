@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { ReservationStatus } from "@prisma/client";
 import { IActionMenuProps } from "@/types/reservation";
 import { useToast } from "@/hooks/useToast";
+import {buildWarsawDateObj} from "@/utils/warsaw-time";
 
 export const useActionMenu = ({ reservationId, currentStatus }: IActionMenuProps) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -78,11 +79,12 @@ export const useActionMenu = ({ reservationId, currentStatus }: IActionMenuProps
         e.preventDefault();
         setIsSavingDate(true);
         try {
-            const combinedNewDate = new Date (`${editForm.date}T${editForm.time}`).toISOString();
+            const finalDateObj = buildWarsawDateObj(editForm.date, editForm.time);
+
             const res = await fetch(`/api/admin/reservations/new-date/${reservationId}`, {
                 method: "PATCH",
                 headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({date: combinedNewDate})
+                body: JSON.stringify({ date: finalDateObj.toISOString() })
             });
 
             if (res.ok) {

@@ -1,18 +1,15 @@
 import prisma from "@/infrastructure/prisma";
+import {getWarsawStartOfDay} from "@/utils/warsaw-time";
 
 
 export async function getDashboardDate() {
-    const startToday = new Date();
-    startToday.setHours(0, 0, 0, 0);
+    const luxonStartToday = getWarsawStartOfDay();
 
-    const todayEnd = new Date();
-    todayEnd.setHours(23, 59, 59, 999);
+    const startToday = luxonStartToday.toJSDate();
+    const todayEnd = luxonStartToday.endOf('day').toJSDate();
 
-    const tomorrowStart = new Date(startToday);
-    tomorrowStart.setDate(tomorrowStart.getDate() + 1);
-
-    const tomorrowEnd = new Date(todayEnd);
-    tomorrowEnd.setDate(tomorrowEnd.getDate() + 1);
+    const tomorrowStart = luxonStartToday.plus({ days: 1 }).toJSDate();
+    const tomorrowEnd = luxonStartToday.plus({ days: 1 }).endOf('day').toJSDate();
 
     const [
         todaysAppointments,

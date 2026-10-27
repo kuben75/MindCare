@@ -1,79 +1,81 @@
 import { POLISH_MONTHS } from "@/constants/calendar";
 import { useState } from "react";
 import { TViewType } from "@/types/calendar";
-import {TReservationWithService} from "@/types/reservation";
+import { TReservationWithService } from "@/types/reservation";
+import { DateTime } from "luxon";
+import { getWarsawStartOfDay, getWarsawNow } from "@/utils/warsaw-time";
 
 export const useAdminCalendarLogic = (initialReservations: TReservationWithService[]) => {
-    const [currentDate, setCurrentDate] = useState<Date>(new Date());
+    const [currentDateString, setCurrentDateString] = useState<string>(getWarsawStartOfDay().toISODate()!);
     const [view, setView] = useState<TViewType>('week');
 
+    const luxonCurrent = DateTime.fromISO(currentDateString).setZone('Europe/Warsaw');
+    const currentDate = luxonCurrent.toJSDate();
+
     const handleNavigate = (direction: 'prev' | 'next') => {
-        const newDate = new Date(currentDate);
+        let newLuxon = luxonCurrent;
         if (view === 'day') {
-            newDate.setDate(currentDate.getDate() + (direction === 'next' ? 1 : -1));
+            newLuxon = luxonCurrent.plus({ days: direction === 'next' ? 1 : -1 });
         } else if (view === 'week') {
-            newDate.setDate(currentDate.getDate() + (direction === 'next' ? 7 : -7));
+            newLuxon = luxonCurrent.plus({ weeks: direction === 'next' ? 1 : -1 });
         } else {
-            newDate.setMonth(currentDate.getMonth() + (direction === 'next' ? 1 : -1));
+            newLuxon = luxonCurrent.plus({ months: direction === 'next' ? 1 : -1 });
         }
-        setCurrentDate(newDate);
+        setCurrentDateString(newLuxon.toISODate()!);
     };
 
-    const handleToday = () => setCurrentDate(new Date());
+    const handleToday = () => setCurrentDateString(getWarsawStartOfDay().toISODate()!);
 
     const getStartOfWeek = (date: Date) => {
-        const d = new Date(date);
-        const day = d.getDay();
-        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-        return new Date(d.setDate(diff));
+        return DateTime.fromJSDate(date).setZone('Europe/Warsaw').startOf('week').toJSDate();
     };
 
     const getDaysOfWeek = (date: Date) => {
-        const start = getStartOfWeek(date);
-        return Array.from({ length: 7 }, (_, i) => {
-            const d = new Date(start);
-            d.setDate(start.getDate() + i);
-            return d;
-        });
+        const luxonStart = DateTime.fromJSDate(date).setZone('Europe/Warsaw').startOf('week');
+        return Array.from({ length: 7 }, (_, i) => luxonStart.plus({ days: i }).toJSDate());
     };
 
     const getDaysInMonth = (date: Date) => {
-        const year = date.getFullYear();
-        const month = date.getMonth();
-        const startOfMonth = new Date(year, month, 1);
-        const endOfMonth = new Date(year, month + 1, 0);
+        const luxonDate = DateTime.fromJSDate(date).setZone('Europe/Warsaw');
+        const startOfMonth = luxonDate.startOf('month');
+        const endOfMonth = luxonDate.endOf('month');
 
-        let startDay = startOfMonth.getDay();
-        startDay = startDay === 0 ? 6 : startDay - 1;
+        let startDay = startOfMonth.weekday - 1;
 
         const days = [];
         for (let i = startDay; i > 0; i--) {
-            const d = new Date(year, month, 1 - i);
-            days.push({ date: d, isCurrentMonth: false });
+            days.push({
+                date: startOfMonth.minus({ days: i }).toJSDate(),
+                isCurrentMonth: false
+            });
         }
-        for (let i = 1; i <= endOfMonth.getDate(); i++) {
-            const d = new Date(year, month, i);
-            days.push({ date: d, isCurrentMonth: true });
+        for (let i = 0; i < endOfMonth.day; i++) {
+            days.push({
+                date: startOfMonth.plus({ days: i }).toJSDate(),
+                isCurrentMonth: true
+            });
         }
         return days;
     };
 
     const visibleReservations = initialReservations.filter(res => {
-        const resDate = new Date(res.date);
+
+        if (res.status === 'CANCELLED') return false;
+
+        const resDate = DateTime.fromJSDate(new Date(res.date)).setZone('Europe/Warsaw');
+
         if (view === 'day') {
-            return resDate.toDateString() === currentDate.toDateString();
+            return resDate.hasSame(luxonCurrent, 'day');
         } else if (view === 'week') {
-            const weekDays = getDaysOfWeek(currentDate);
-            return resDate >= weekDays[0] && resDate <= new Date(new Date(weekDays[6]).setHours(23, 59, 59));
+            const startOfWeek = luxonCurrent.startOf('week');
+            const endOfWeek = luxonCurrent.endOf('week');
+            return resDate >= startOfWeek && resDate <= endOfWeek;
         } else {
-            return resDate.getMonth() === currentDate.getMonth() && resDate.getFullYear() === currentDate.getFullYear();
+            return resDate.hasSame(luxonCurrent, 'month');
         }
     });
 
     const stats = visibleReservations.reduce((acc, res) => {
-        if (res.status === 'CANCELLED') {
-            return acc;
-        }
         acc.totalCount += 1;
         acc.totalMinutes += res.service.duration;
         acc.estimatedEarnings += res.service.price;
@@ -88,18 +90,26 @@ export const useAdminCalendarLogic = (initialReservations: TReservationWithServi
 
     const formatHeaderDate = () => {
         if (view === 'day') {
-            return currentDate.toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            return luxonCurrent.toFormat("EEEE, d MMMM yyyy", { locale: 'pl-PL' });
         } else if (view === 'week') {
-            const days = getDaysOfWeek(currentDate);
-            return `${days[0].getDate()} - ${days[6].getDate()} ${POLISH_MONTHS[days[6].getMonth()]} ${days[6].getFullYear()}`;
+            const start = luxonCurrent.startOf('week');
+            const end = luxonCurrent.endOf('week');
+
+            const startMonth = POLISH_MONTHS[start.month - 1];
+            const endMonth = POLISH_MONTHS[end.month - 1];
+
+            if (start.month === end.month) {
+                return `${start.day} - ${end.day} ${startMonth} ${end.year}`;
+            }
+            return `${start.day} ${startMonth} - ${end.day} ${endMonth} ${end.year}`;
         } else {
-            return `${POLISH_MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+            return `${POLISH_MONTHS[luxonCurrent.month - 1]} ${luxonCurrent.year}`;
         }
     };
 
     return {
         currentDate,
-        setCurrentDate,
+        setCurrentDate: (date: Date) => setCurrentDateString(DateTime.fromJSDate(date).setZone('Europe/Warsaw').toISODate()!),
         view,
         handleNavigate,
         handleToday,

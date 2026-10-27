@@ -1,15 +1,15 @@
 import prisma from "@/infrastructure/prisma";
 import {ITransaction} from "@/types/transaction";
-
+import { getWarsawNow } from "@/utils/warsaw-time";
+import { DateTime } from "luxon";
 
 export async function getFinancesData() {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
 
-    const sixMonthsAgo = new Date(currentYear, currentMonth - 5, 1);
-    const firstDayOfCurrentMonth = new Date(currentYear, currentMonth, 1);
-    const firstDayOfPrevMonth = new Date(currentYear, currentMonth - 1, 1);
+    const warsawNow = getWarsawNow();
+
+   const firstDayOfCurrentMonth = warsawNow.startOf('month');
+    const firstDayOfPrevMonth = firstDayOfCurrentMonth.minus({ months: 1 });
+    const sixMonthsAgo = firstDayOfCurrentMonth.minus({ months: 5 });
 
     const [
         statusGroup,
@@ -29,7 +29,7 @@ export async function getFinancesData() {
 
         prisma.reservation.findMany({
             where: {
-                date: { gte: sixMonthsAgo },
+                date: { gte: sixMonthsAgo.toJSDate() },
                 status: { in: ['PAID', 'COMPLETED'] }
             },
             include: { service: true },
@@ -37,13 +37,16 @@ export async function getFinancesData() {
         })
     ]);
 
-    const getCount = (status: string) => statusGroup.find(s => s.status === status)?._count || 0;
+    type StatusGroupEntry = (typeof statusGroup)[number];
+    type PaidRevenue = (typeof allPaidRevenues)[number];
+
+    const getCount = (status: string) => statusGroup.find((s: StatusGroupEntry) => s.status === status)?._count || 0;
     const completedCount = getCount('COMPLETED');
     const cancelledCount = getCount('CANCELLED');
     const pendingCount = getCount('PENDING');
     const paidCount = getCount('PAID');
 
-    const totalRevenue = allPaidRevenues.reduce((sum, res) => sum + res.service.price, 0);
+    const totalRevenue = allPaidRevenues.reduce((sum: number, res: PaidRevenue) => sum + res.service.price, 0);
 
     let currentMonthRevenue = 0;
     let prevMonthRevenue = 0;
@@ -52,15 +55,15 @@ export async function getFinancesData() {
     const currentMonthTransactions: ITransaction[] = [];
 
     for (let i = 5; i >= 0; i--) {
-        const d = new Date(currentYear, currentMonth - i, 1);
-        const key = d.toLocaleString('pl-PL', { month: 'short', year: 'numeric' });
+        const targetMonth = firstDayOfCurrentMonth.minus({ months: i });
+        const key = targetMonth.toFormat("MMM yyyy", { locale: 'pl-PL' });
         monthlyRevenue[key] = 0;
     }
 
     for (const res of recentPaidReservations) {
         const price = res.service.price;
-        const resDate = new Date(res.date);
-        const key = resDate.toLocaleString('pl-PL', { month: 'short', year: 'numeric' });
+        const resDate = DateTime.fromJSDate(new Date(res.date)).setZone("Europe/Warsaw");
+        const key = resDate.toFormat("MMM yyyy", { locale: 'pl-PL' });
 
         if (key in monthlyRevenue) monthlyRevenue[key] += price;
 

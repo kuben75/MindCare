@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/infrastructure/prisma";
 import { stripe } from "@/infrastructure/stripe";
+import {formatDateTime} from "@/utils/calendar-utils";
 
 export async function POST(req: Request) {
     try {
@@ -19,18 +20,22 @@ export async function POST(req: Request) {
 
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
+        const {formattedDate, formattedTime} = formatDateTime(reservation.date);
+        const expiresAt = Math.floor(Date.now() / 1000) + (35 * 60);
+
         const stripeSession = await stripe.checkout.sessions.create({
             payment_method_types: ['card', 'blik', 'revolut_pay', 'p24'],
             customer_email: reservation.email,
             client_reference_id: reservation.id,
             metadata: { reservationId: reservation.id },
+            expires_at: expiresAt,
             line_items: [
                 {
                     price_data: {
                         currency: 'pln',
                         product_data: {
                             name: reservation.service.name,
-                            description: `Wizyta zaplanowana na: ${new Date(reservation.date).toLocaleDateString('pl-PL')} o ${new Date(reservation.date).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}`
+                            description: `Wizyta zaplanowana na: ${formattedDate} o ${formattedTime}`
                         },
                         unit_amount: Math.round(reservation.service.price * 100),
                     },
@@ -42,7 +47,8 @@ export async function POST(req: Request) {
             cancel_url: `${baseUrl}/reservation/failed?token=${reservation.magicToken}`,
         });
 
-        if (!stripeSession.url) throw new Error("Brak URL sesji Stripe");
+        if (!stripeSession.url)
+            throw new Error("Brak URL sesji Stripe");
 
         await prisma.systemLog.create({
             data: {

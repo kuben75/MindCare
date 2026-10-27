@@ -3,14 +3,15 @@ import {ReservationStatus, Service} from "@prisma/client";
 import {useRouter} from "next/navigation";
 import {TReservationWithService} from "@/types/reservation";
 import { useToast } from "@/hooks/useToast";
+import {buildWarsawDateObj, getWarsawNow} from "@/utils/warsaw-time";
+import {DateTime} from "luxon";
 
 export const useReservationManager = ({ initialReservations, services }: { initialReservations: TReservationWithService[], services: Service[] }) => {
-
+    // ... [zmienne stanowe pozostają bez zmian] ...
     const [activeTab, setActiveTab] = useState<'upcoming' | 'history' | 'cancelled'>('upcoming');
     const [searchQuery, setSearchQuery] = useState("");
     const [isOpenModal, setIsOpenModal] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-
     const [expandedReservationId, setExpandedReservationId] = useState<string | null>(null);
     const [activeNotesText, setActiveNotesText] = useState("");
     const [isSavingNotes, setIsSavingNotes] = useState(false);
@@ -30,11 +31,14 @@ export const useReservationManager = ({ initialReservations, services }: { initi
     });
 
     const router = useRouter();
-    const now = new Date();
+    // ZMIENIONE: Bierzemy bezpieczne "teraz" w strefie PL
+    const warsawNow = getWarsawNow();
     const { toast, showToast, hideToast } = useToast();
 
     const filteredReservations = initialReservations.filter((res) => {
-        const resDate = new Date(res.date);
+        // ZMIENIONE: Datę z bazy również przeliczamy w bezpiecznym środowisku Luxon
+        const resDate = DateTime.fromJSDate(new Date(res.date)).setZone('Europe/Warsaw');
+
         const matchesSearch =
             res.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
             res.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -43,10 +47,10 @@ export const useReservationManager = ({ initialReservations, services }: { initi
         if (!matchesSearch) return false;
 
         if (activeTab === 'upcoming') {
-            return res.status !== 'CANCELLED' && resDate >= now;
+            return res.status !== 'CANCELLED' && resDate >= warsawNow;
         }
         if (activeTab === 'history') {
-            return res.status !== 'CANCELLED' && (resDate < now || res.status === 'COMPLETED');
+            return res.status !== 'CANCELLED' && (resDate < warsawNow || res.status === 'COMPLETED');
         }
         if (activeTab === 'cancelled') {
             return res.status === 'CANCELLED';
@@ -59,7 +63,8 @@ export const useReservationManager = ({ initialReservations, services }: { initi
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            const combinedDateTime = new Date(`${formData.date}T${formData.time}`);
+            // ZMIENIONE: Używamy naszego loadera czasu, który zbuduje czysty obiekt JS na warszawskim zegarze
+            const finalDateObj = buildWarsawDateObj(formData.date, formData.time);
 
             const res = await fetch("/api/admin/reservations", {
                 method: "POST",
@@ -68,11 +73,13 @@ export const useReservationManager = ({ initialReservations, services }: { initi
                     patientName: formData.patientName,
                     email: formData.email,
                     phone: formData.phone,
-                    date: combinedDateTime.toISOString(),
+                    // toISOString() gwarantuje znak Z na końcu, baza to łyknie bez zająknięcia
+                    date: finalDateObj.toISOString(),
                     serviceId: formData.serviceId,
                     status: formData.status
                 })
             });
+            // ... [reszta funkcji handleSubmit pozostaje bez zmian] ...
             if (res.ok) {
                 setIsOpenModal(false);
                 setFormData({

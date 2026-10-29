@@ -7,7 +7,6 @@ import {buildWarsawDateObj, getWarsawNow} from "@/utils/warsaw-time";
 import {DateTime} from "luxon";
 
 export const useReservationManager = ({ initialReservations, services }: { initialReservations: TReservationWithService[], services: Service[] }) => {
-    // ... [zmienne stanowe pozostają bez zmian] ...
     const [activeTab, setActiveTab] = useState<'upcoming' | 'history' | 'cancelled'>('upcoming');
     const [searchQuery, setSearchQuery] = useState("");
     const [isOpenModal, setIsOpenModal] = useState(false);
@@ -31,12 +30,10 @@ export const useReservationManager = ({ initialReservations, services }: { initi
     });
 
     const router = useRouter();
-    // ZMIENIONE: Bierzemy bezpieczne "teraz" w strefie PL
     const warsawNow = getWarsawNow();
     const { toast, showToast, hideToast } = useToast();
 
     const filteredReservations = initialReservations.filter((res) => {
-        // ZMIENIONE: Datę z bazy również przeliczamy w bezpiecznym środowisku Luxon
         const resDate = DateTime.fromJSDate(new Date(res.date)).setZone('Europe/Warsaw');
 
         const matchesSearch =
@@ -63,7 +60,6 @@ export const useReservationManager = ({ initialReservations, services }: { initi
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            // ZMIENIONE: Używamy naszego loadera czasu, który zbuduje czysty obiekt JS na warszawskim zegarze
             const finalDateObj = buildWarsawDateObj(formData.date, formData.time);
 
             const res = await fetch("/api/admin/reservations", {
@@ -73,13 +69,11 @@ export const useReservationManager = ({ initialReservations, services }: { initi
                     patientName: formData.patientName,
                     email: formData.email,
                     phone: formData.phone,
-                    // toISOString() gwarantuje znak Z na końcu, baza to łyknie bez zająknięcia
                     date: finalDateObj.toISOString(),
                     serviceId: formData.serviceId,
                     status: formData.status
                 })
             });
-            // ... [reszta funkcji handleSubmit pozostaje bez zmian] ...
             if (res.ok) {
                 setIsOpenModal(false);
                 setFormData({

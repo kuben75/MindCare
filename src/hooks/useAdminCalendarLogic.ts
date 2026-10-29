@@ -3,7 +3,7 @@ import { useState } from "react";
 import { TViewType } from "@/types/calendar";
 import { TReservationWithService } from "@/types/reservation";
 import { DateTime } from "luxon";
-import { getWarsawStartOfDay, getWarsawNow } from "@/utils/warsaw-time";
+import { getWarsawStartOfDay } from "@/utils/warsaw-time";
 
 export const useAdminCalendarLogic = (initialReservations: TReservationWithService[]) => {
     const [currentDateString, setCurrentDateString] = useState<string>(getWarsawStartOfDay().toISODate()!);

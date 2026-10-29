@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/infrastructure/prisma";
+import {getWarsawNow} from "@/utils/warsaw-time";
 
 export async function GET(req: Request) {
 
@@ -9,8 +10,7 @@ export async function GET(req: Request) {
     }
 
     try {
-        const expirationLimit = new Date();
-        expirationLimit.setMinutes(expirationLimit.getMinutes() - 40);
+        const expirationLimit = getWarsawNow().minus({minutes: 30}).toJSDate();
 
         const result = await prisma.reservation.updateMany({
             where: {

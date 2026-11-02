@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/infrastructure/prisma";
 import { reservationSchema } from "@/schemas/reservation";
-import {stripe} from "@/infrastructure/stripe";
-import {formatDateTime} from "@/utils/calendar-utils";
+import { isSlotAvailable } from "@/services/availability.service";
+import { sendMagicLinkEmail, sendNewReservationAdminAlert, getAdminNotificationEmail } from "@/utils/email-sender";
 
 export async function POST(req: Request) {
     try {
@@ -11,30 +11,34 @@ export async function POST(req: Request) {
         const validation = reservationSchema.safeParse(body);
 
         if (!validation.success) {
-            const firstErrorMessage = validation.error.issues[0].message;
+            const firstErrorMessage = validation.error.issues[0]?.message || "Nieprawidłowe dane formularza";
             return NextResponse.json({ error: firstErrorMessage }, { status: 400 });
         }
 
         const { patientName, email, phone, serviceId, date, termsAccepted } = validation.data;
 
-        const existingReservation = await prisma.reservation.findFirst({
-            where: {
-                date: date,
-                status: {
-                    not: "CANCELLED"
-                }
-            }
+        const service = await prisma.service.findUnique({
+            where: { id: serviceId }
         });
 
-        if (existingReservation) {
-            return NextResponse.json({ error: "Przepraszamy, ten termin został właśnie zarezerwowany przez kogoś innego. Wybierz inną godzinę." }, { status: 409 });
+        if (!service || !service.isActive) {
+            return NextResponse.json({ error: "Wybrana usługa jest obecnie niedostępna." }, { status: 400 });
+        }
+
+        const isFree = await isSlotAvailable(date, service.duration);
+
+        if (!isFree) {
+            return NextResponse.json(
+                { error: "Przepraszamy, ten termin został właśnie zajęty lub koliduje z inną wizytą. Wybierz inną godzinę." },
+                { status: 409 }
+            );
         }
 
         const newReservation = await prisma.reservation.create({
             data: {
                 patientName: patientName.trim(),
                 email: email.trim().toLowerCase(),
-                phone: phone,
+                phone: phone.trim(),
                 date: date,
                 serviceId,
                 status: "PENDING",
@@ -47,48 +51,40 @@ export async function POST(req: Request) {
 
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-        const {formattedDate, formattedTime} = formatDateTime(date);
-        const expiresAt = Math.floor(Date.now() / 1000) + (35 * 60)
-
-        const stripeSession = await stripe.checkout.sessions.create({
-            payment_method_types: ['card', 'blik', 'revolut_pay', 'p24'],
-            customer_email: newReservation.email,
-            client_reference_id: newReservation.id,
-            metadata: {
-                reservationId: newReservation.id
-            },
-            expires_at: expiresAt,
-            line_items: [
-                {
-                    price_data: {
-                        currency: 'pln',
-                        product_data: {
-                            name: newReservation.service.name,
-                            description: `Wizyta zaplanowana na: ${formattedDate} o ${formattedTime}`
-                        },
-                        unit_amount: Math.round(newReservation.service.price * 100),
-                    },
-                    quantity: 1,
-                },
-            ],
-            mode: 'payment',
-            success_url: `${baseUrl}/reservation/success?token=${newReservation.magicToken}`,
-            cancel_url: `${baseUrl}/reservation/failed?token=${newReservation.magicToken}`,
-        });
-
-        if (!stripeSession.url) {
-            return NextResponse.json({ error: "Błąd podczas generowania płatności. Skontaktuj się z gabinetem." }, { status: 500 });
-        }
         await prisma.systemLog.create({
             data: {
-                action: "PŁATNOŚĆ_INICJACJA",
-                details: `Rezerwacja: ${newReservation.id} | Email: ${newReservation.email} | Sesja Stripe: ${stripeSession.id}`,
+                action: "REZERWACJA_WSTĘPNA",
+                details: `Utworzono rezerwację wstępną: ${newReservation.id} | Pacjent: ${newReservation.patientName} (${newReservation.email}) | Usługa: ${newReservation.service.name}`,
             }
         });
 
-        return NextResponse.json({ url: stripeSession.url }, { status: 201 });
+        try {
+            await sendMagicLinkEmail({
+                email: newReservation.email,
+                patientName: newReservation.patientName,
+                date: newReservation.date,
+                serviceName: newReservation.service.name,
+                magicToken: newReservation.magicToken,
+                status: newReservation.status,
+            });
 
-    } catch {
+            const adminEmail = await getAdminNotificationEmail();
+            await sendNewReservationAdminAlert({
+                adminEmail,
+                patientName: newReservation.patientName,
+                date: newReservation.date,
+                serviceName: newReservation.service.name,
+            });
+        } catch (mailErr) {
+            console.error("Błąd wysyłki e-maili:", mailErr);
+        }
+
+        return NextResponse.json({
+            url: `${baseUrl}/reservation/success?token=${newReservation.magicToken}`
+        }, { status: 201 });
+
+    } catch (error) {
+        console.error("Błąd podczas tworzenia rezerwacji:", error);
         return NextResponse.json({ error: "Wystąpił błąd podczas tworzenia rezerwacji" }, { status: 500 });
     }
 }

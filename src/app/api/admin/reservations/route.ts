@@ -1,68 +1,80 @@
-import {getServerSession} from "next-auth";
-import {authOptions} from "@/app/api/auth/[...nextauth]/route";
-import {NextResponse} from "next/server";
+import { NextResponse } from "next/server";
 import prisma from "@/infrastructure/prisma";
-import {sendMagicLinkEmail} from "@/utils/email-sender";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { isSlotAvailable } from "@/services/availability.service";
+import { z } from "zod";
+
+const adminReservationSchema = z.object({
+    patientName: z.string().min(2, "Imię i nazwisko jest wymagane"),
+    email: z.string().email("Nieprawidłowy format adresu email"),
+    phone: z.string().min(7, "Numer telefonu jest wymagany"),
+    serviceId: z.string().min(1, "Wybierz usługę"),
+    date: z.string().or(z.date()),
+    status: z.enum(["PENDING", "PAID", "CANCELLED", "COMPLETED"]).optional().default("PENDING"),
+    notes: z.string().optional().nullable(),
+});
 
 export async function POST(req: Request) {
-    try{
+    try {
         const session = await getServerSession(authOptions);
-
-        if (!session) {
-            return NextResponse.json({message: "Unauthorized"}, {status: 401});
+        if (!session || !session.user?.email) {
+            return NextResponse.json({ error: "Brak autoryzacji" }, { status: 401 });
         }
 
         const body = await req.json();
-        const {patientName, email, phone, date, serviceId, status} = body;
+        const validation = adminReservationSchema.safeParse(body);
 
-        if (!patientName || !email || !phone || !date || !serviceId) {
-            return NextResponse.json({message: "Wszystkie pola są wymagane"}, {status: 400});
+        if (!validation.success) {
+            const firstErrorMessage = validation.error.issues[0]?.message || "Nieprawidłowe dane formularza";
+            return NextResponse.json({ error: firstErrorMessage }, { status: 400 });
         }
-        const checkFreeSlot = await prisma.reservation.findFirst({
-            where: {
-                date: new Date(date),
-                serviceId,
-                status: {
-                    not: "CANCELLED"
-                }
-            }
+
+        const { patientName, email, phone, serviceId, date, status, notes } = validation.data;
+
+        const service = await prisma.service.findUnique({
+            where: { id: serviceId }
         });
 
-        if (checkFreeSlot) {
-            return NextResponse.json({message: "Ten termin jest już zajęty"}, {status: 400});
+        if (!service) {
+            return NextResponse.json({ error: "Wybrana usługa nie istnieje." }, { status: 400 });
         }
+
+        const isFree = await isSlotAvailable(date, service.duration);
+        if (!isFree) {
+            return NextResponse.json(
+                { error: "Ten termin nakłada się na inną zaplanowaną wizytę w kalendarzu." },
+                { status: 409 }
+            );
+        }
+
         const newReservation = await prisma.reservation.create({
             data: {
-                patientName,
-                email,
-                phone,
+                patientName: patientName.trim(),
+                email: email.trim().toLowerCase(),
+                phone: phone.trim(),
                 date: new Date(date),
                 serviceId,
-                status: status || "PAID",
-                isManual: true
+                status: status || "PENDING",
+                privateNotes: notes ? notes.trim() : null,
+                hasAcceptedTerms: true,
             },
             include: {
                 service: true
             }
         });
 
-        const settings = await prisma.clinicSettings.findUnique({
-            where: { id: "global" }
+        await prisma.systemLog.create({
+            data: {
+                action: "ADMIN_DODANIE_WIZYTY",
+                details: `Admin ${session.user.email} ręcznie dodał wizytę: ${newReservation.id} dla ${newReservation.patientName} (${newReservation.service.name}) ze statusem ${newReservation.status}`,
+            }
         });
 
-        await sendMagicLinkEmail({
-            email: newReservation.email,
-            patientName: newReservation.patientName,
-            date: newReservation.date,
-            serviceName: newReservation.service.name,
-            magicToken: newReservation.magicToken,
-            status: newReservation.status,
-            bankAccount: settings?.bankAccount || null
-        });
+        return NextResponse.json(newReservation, { status: 201 });
 
-        return NextResponse.json({success: true, reservation: newReservation}, {status: 201});
-    } catch  {
-        return NextResponse.json({message: "Błąd serwera"}, {status: 500});
+    } catch (error) {
+        console.error("Błąd podczas ręcznego tworzenia rezerwacji przez admina:", error);
+        return NextResponse.json({ error: "Wystąpił błąd podczas dodawania rezerwacji" }, { status: 500 });
     }
-
 }

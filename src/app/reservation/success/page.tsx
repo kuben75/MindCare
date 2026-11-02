@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import prisma from "@/infrastructure/prisma";
 import Link from "next/link";
-import { POLISH_MONTHS } from "@/constants/calendar";
+import { formatDateTime } from "@/utils/calendar-utils";
 import PatientActions from "@/app/reservation/success/PatientActions";
 
 export const dynamic = 'force-dynamic';
@@ -31,12 +31,10 @@ export default async function SuccessReservationPage({ searchParams }: { searchP
         );
     }
 
-    const date = new Date(reservation.date);
-    const formattedDate = `${date.getDate()} ${POLISH_MONTHS[date.getMonth()].toLowerCase()} ${date.getFullYear()}`;
-    const formattedTime = date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+    const { formattedDate, formattedTime } = formatDateTime(reservation.date);
 
     const getHeading = () => {
-        if (reservation.status === 'PENDING') return "Rezerwacja w toku";
+        if (reservation.status === 'PENDING') return "Rezerwacja wstępna przyjęta";
         if (reservation.status === 'PAID') return "Wizyta potwierdzona";
         if (reservation.status === 'CANCELLED') return "Wizyta anulowana";
         if (reservation.status === 'COMPLETED') return "Wizyta zakończona";
@@ -68,16 +66,38 @@ export default async function SuccessReservationPage({ searchParams }: { searchP
                     </div>
 
                     <h1 className="text-3xl md:text-4xl font-serif text-graphite mb-4">{getHeading()}</h1>
-                    <p className="text-graphite/70 mb-10 text-lg leading-relaxed">
+                    <p className="text-graphite/70 mb-8 text-lg leading-relaxed">
                         Witaj, <span className="font-semibold text-graphite">{reservation.patientName.split(' ')[0]}</span>. Poniżej znajdują się szczegóły Twojego spotkania z Pauliną.
                     </p>
+
+                    {reservation.status === 'PENDING' && (
+                        <div className="mb-8 p-5 bg-amber-50/80 text-amber-950 rounded-2xl text-left border border-amber-200/60 text-sm">
+                            <p className="font-semibold mb-1 flex items-center gap-2 text-amber-900">
+                                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                                Informacja o płatności
+                            </p>
+                            <p className="text-amber-900/80 leading-relaxed text-xs sm:text-sm">
+                                Bezpośrednia bramka płatności online jest w trakcie finalnej konfiguracji. Twój termin został wstępnie zablokowany w kalendarzu. Szczegóły dotyczące opłacenia wizyty (link płatniczy lub dane do przelewu tradycyjnego) otrzymasz wkrótce w wiadomości e-mail od gabinetu.
+                            </p>
+                        </div>
+                    )}
 
                     <div className="bg-beige-light/30 border border-beige-dark/20 rounded-2xl p-6 text-left mb-10 space-y-4">
                         <div className="flex flex-col sm:flex-row justify-between pb-4 border-b border-beige-dark/10 gap-2">
                             <span className="text-graphite/60 text-sm uppercase tracking-wider font-medium">Status</span>
                             <span className="font-semibold text-graphite text-right">
-                                {reservation.status === 'PENDING' && <span className="text-amber-600 flex items-center gap-2 justify-end"><span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>Oczekuje na płatność</span>}
-                                {reservation.status === 'PAID' && <span className="text-sage flex items-center gap-1 justify-end"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/></svg>Opłacona</span>}
+                                {reservation.status === 'PENDING' && (
+                                    <span className="text-amber-600 flex items-center gap-2 justify-end">
+                                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                                        Wstępnie zarezerwowana
+                                    </span>
+                                )}
+                                {reservation.status === 'PAID' && (
+                                    <span className="text-sage flex items-center gap-1 justify-end">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/></svg>
+                                        Opłacona
+                                    </span>
+                                )}
                                 {reservation.status === 'CANCELLED' && <span className="text-red-500">Anulowana</span>}
                                 {reservation.status === 'COMPLETED' && <span className="text-blue-500">Zakończona</span>}
                             </span>
@@ -93,14 +113,14 @@ export default async function SuccessReservationPage({ searchParams }: { searchP
                             </span>
                         </div>
                         <div className="flex flex-col sm:flex-row justify-between gap-2">
-                            <span className="text-graphite/60 text-sm uppercase tracking-wider font-medium">Koszt</span>
+                            <span className="text-graphite/60 text-sm uppercase tracking-wider font-medium">Koszt orientacyjny</span>
                             <span className="font-semibold text-graphite text-right">{reservation.service.price} zł</span>
                         </div>
                     </div>
 
                     <PatientActions token={token} status={reservation.status} isRescheduleRequested={reservation.rescheduleRequested} reservationDate={reservation.date}/>
 
-                    <div className="flex justify-center">
+                    <div className="flex justify-center mt-6">
                         <Link href="/" className="text-sm text-graphite/50 hover:text-sage transition-colors flex items-center justify-center gap-2">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                             Powrót do strony głównej

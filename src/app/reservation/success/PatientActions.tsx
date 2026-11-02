@@ -2,23 +2,20 @@
 
 import React from "react";
 import { IPatientActionsProps } from "@/types/reservation";
-import {usePatientActions} from "@/hooks/usePatientActions";
-
-
+import { usePatientActions } from "@/hooks/usePatientActions";
 
 export default function PatientActions({ token, status, isRescheduleRequested, reservationDate }: IPatientActionsProps) {
-
-     const {
-            isLoading,
-            message,
-            isReservationCancelled,
-            showRescheduleConfirm,
-            setShowRescheduleConfirm,
-            setIsReservationCancelled,
-            handleCancel,
-            handleReschedule,
-            isLessThan24h
-        } = usePatientActions({ token, status, isRescheduleRequested, reservationDate });
+    const {
+        isLoading,
+        message,
+        isReservationCancelled,
+        showRescheduleConfirm,
+        setShowRescheduleConfirm,
+        setIsReservationCancelled,
+        handleCancel,
+        handleReschedule,
+        isLessThan24h
+    } = usePatientActions({ token, status, isRescheduleRequested, reservationDate });
 
     if (status === 'CANCELLED' || status === 'COMPLETED') {
         return null;
@@ -85,19 +82,23 @@ export default function PatientActions({ token, status, isRescheduleRequested, r
             )}
 
             {isReservationCancelled && (
-                <div className={`w-full p-6 rounded-2xl border text-center space-y-4 animate-fade-in shadow-sm ${isLessThan24h ? 'bg-red-50/60 border-red-200' : 'bg-beige-light/20 border-beige-dark/30'}`}>
+                <div className={`w-full p-6 rounded-2xl border text-center space-y-4 animate-fade-in shadow-sm ${isLessThan24h && status === 'PAID' ? 'bg-red-50/60 border-red-200' : 'bg-beige-light/20 border-beige-dark/30'}`}>
                     <div className="space-y-2">
                         <p className="text-sm text-graphite font-bold leading-relaxed">
                             Czy na pewno chcesz odwołać wizytę?
                         </p>
 
-                        {isLessThan24h ? (
+                        {status === 'PENDING' ? (
+                            <p className="text-xs text-graphite/60 font-medium">
+                                Twoja rezerwacja wstępna zostanie anulowana, a termin zwolniony w kalendarzu.
+                            </p>
+                        ) : isLessThan24h ? (
                             <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-medium leading-relaxed max-w-md mx-auto">
-                                 <strong>Uwaga:</strong> Do wizyty zostało mniej niż 24 godziny. Zgodnie z regulaminem gabinetu, w przypadku rezygnacji w tak krótkim czasie wniesiona opłata <strong>nie podlega zwrotowi</strong>.
+                                <strong>Uwaga:</strong> Do wizyty zostało mniej niż 24 godziny. Zgodnie z regulaminem gabinetu, w przypadku rezygnacji w tak krótkim czasie wniesiona opłata <strong>nie podlega zwrotowi</strong>.
                             </div>
                         ) : (
                             <p className="text-xs text-emerald-600 dark:text-emerald-500 font-medium">
-                                Do wizyty zostało ponad 24h. Środki zostaną automatycznie zwrócone na Twoje konto.
+                                Do wizyty zostało ponad 24h. Ewentualny zwrot środków nastąpi zgodnie z regulaminem gabinetu.
                             </p>
                         )}
                     </div>

@@ -1,57 +1,43 @@
-import {DateTime} from "luxon";
-import {getWarsawNow} from "@/utils/warsaw-time";
 import prisma from "@/infrastructure/prisma";
-import {Reservation} from "@prisma/client";
+import { DateTime } from "luxon";
 
-export async function isSlotAvailable(dateParam: Date, serviceDurationInMinutes: number, ignoreReservationId?: string) {
-    const luxonStart = DateTime.fromJSDate(dateParam).setZone("Europe/Warsaw");
-    const luxonEnd = luxonStart.plus({minutes: serviceDurationInMinutes})
+export async function isSlotAvailable(
+    dateParam: string | Date,
+    serviceDurationMinutes: number = 60,
+    ignoreReservationId?: string
+): Promise<boolean> {
+    const requestedDt = DateTime.fromJSDate(new Date(dateParam)).setZone("Europe/Warsaw");
+    const requestedStart = requestedDt.toJSDate();
+    const requestedEnd = requestedDt.plus({ minutes: serviceDurationMinutes }).toJSDate();
 
-    if( luxonStart < getWarsawNow()) {
-        return {available: false, reason: "Nie można rezerwować w przeszłości"};
-    }
+    const dayStart = requestedDt.startOf("day").toJSDate();
+    const dayEnd = requestedDt.endOf("day").toJSDate();
 
-    const jsStart = luxonStart.toJSDate();
-    const jsEnd = luxonEnd.toJSDate();
-
-    const conflictingBlock = await prisma.blockedTime.findFirst({
-        where: {
-            startDate: {lt: jsEnd},
-            endDate: {gt: jsStart}
-        }
-    });
-
-    if(conflictingBlock) {
-        return {available: false, reason: "Ten termin jest zablokowany"};
-    }
-
-    const startOfDay = luxonStart.startOf("day").toJSDate();
-    const endOfDay = luxonEnd.endOf("day").toJSDate();
-
-    const daysReservation = await prisma.reservation.findMany({
+    const existingReservations = await prisma.reservation.findMany({
         where: {
             date: {
-                gte: startOfDay,
-                lte: endOfDay
+                gte: dayStart,
+                lte: dayEnd,
             },
             status: {
-                not: "CANCELLED"
+                not: "CANCELLED",
             },
-            ...(ignoreReservationId ? {id: {not: ignoreReservationId}} : {})
+            ...(ignoreReservationId ? { id: { not: ignoreReservationId } } : {}),
         },
         include: {
-            service: true
+            service: true,
+        },
+    });
+
+    for (const res of existingReservations) {
+        const existingStart = new Date(res.date);
+        const duration = res.service?.duration || 60;
+        const existingEnd = new Date(existingStart.getTime() + duration * 60 * 1000);
+
+        if (requestedStart < existingEnd && requestedEnd > existingStart) {
+            return false;
         }
-    });
-
-    const conflictingReservation = daysReservation.find((res: Reservation) => {
-        const resLuxonStart = DateTime.fromJSDate(res.date).setZone("Europe/Warsaw");
-        const resLuxonEnd = resLuxonStart.plus({minutes: res.service.duration});
-        return resLuxonStart < luxonEnd && resLuxonEnd > luxonStart;
-    });
-
-    if (conflictingReservation) {
-        return {available: false, reason: "Ten termin jest już zajęty"};
     }
-    return {available: true, reason: null};
+
+    return true;
 }

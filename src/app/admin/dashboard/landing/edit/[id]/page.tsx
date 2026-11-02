@@ -3,7 +3,7 @@ import {notFound} from "next/navigation";
 import HeroForm from "@/components/layout/HeroForm";
 
 
-export default async function EditLandingTemplatePage({params}: {params: {id: string}}) {
+export default async function EditLandingTemplatePage({params}: {params: Promise<{id: string}>}) {
     const {id} = await params;
 
     const template = await prisma.heroTemplate.findUnique({where: {id}});

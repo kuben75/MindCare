@@ -7,6 +7,7 @@ import { containerVariants, itemVariants } from "@/framer-motion/animation-logs"
 import InfoTooltip from "@/components/ui/InfoTooltip";
 import ActiveSessionsList from "./sections/ActiveSessionsList";
 import SecurityTutorialModal from "./sections/SecurityTutorialModal";
+import ChangePasswordCard from "./sections/ChangePasswordCard";
 
 export default function SecurityHub({ is2FAEnabled, currentSessionId }: { is2FAEnabled: boolean, currentSessionId: string | null }) {
     const {
@@ -76,6 +77,8 @@ export default function SecurityHub({ is2FAEnabled, currentSessionId }: { is2FAE
                     </button>
                 </div>
             </motion.div>
+
+            <ChangePasswordCard />
 
             <motion.div variants={itemVariants} className=" relative z-10 hover:z-[100] focus-within:z-[100] bg-white/60 dark:bg-[#262626]/60 backdrop-blur-xl border border-beige-dark/20 dark:border-zinc-700 rounded-[2rem] p-6 lg:p-8 shadow-sm">
                 <div className="flex gap-4 items-center mb-8 border-b border-beige-dark/10 dark:border-zinc-800 pb-5">

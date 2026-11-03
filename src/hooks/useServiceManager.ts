@@ -64,8 +64,8 @@ export const useServiceManager = ({ initialServices }: { initialServices: Servic
                 const data = await res.json();
                 showToast(data.error || "Nie można zapisać tej usługi. Sprawdź dane.", "error");
             }
-        } catch {
-            console.error("Error saving service:", e);
+        } catch (err) {
+            console.error("Błąd podczas zapisywania usługi:", err);
             showToast("Wystąpił błąd podczas zapisywania usługi.", "error");
         } finally {
             setIsLoading(false);
@@ -90,7 +90,8 @@ export const useServiceManager = ({ initialServices }: { initialServices: Servic
                 const data = await res.json();
                 showToast(data.error || "Nie można usunąć tej usługi. Użyj opcji 'Ukryj usługę'.", "error");
             }
-        } catch {
+        } catch (err) {
+            console.error("Błąd podczas usuwania usługi:", err);
             showToast("Nie udało się połączyć z serwerem.", "error");
         }
     };
@@ -110,7 +111,8 @@ export const useServiceManager = ({ initialServices }: { initialServices: Servic
             } else {
                 showToast("Nie udało się zmienić widoczności usługi.", "error");
             }
-        } catch {
+        } catch (err) {
+            console.error("Błąd podczas zmiany widoczności usługi:", err);
             showToast("Wystąpił błąd podczas zmiany widoczności.", "error");
         }
     };

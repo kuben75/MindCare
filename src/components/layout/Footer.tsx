@@ -109,8 +109,8 @@ export const Footer = () => {
                     className="border-t border-graphite/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-graphite/60 text-center md:text-left">
                     <p>© {new Date().getFullYear()} {settings?.clinicName || "Paulina Kawka-Mirek"}. Wszelkie prawa zastrzeżone.</p>
                     <div className="flex gap-6 font-medium">
-                        <Link href="/statute" className="hover:text-sage transition-colors">Polityka prywatności</Link>
-                        <Link href="/privacy-policy" className="hover:text-sage transition-colors">Regulamin i RODO</Link>
+                        <Link href="/statute" className="hover:text-sage transition-colors">Regulamin</Link>
+                        <Link href="/privacy-policy" className="hover:text-sage transition-colors">Polityka prywatności</Link>
                     </div>
                 </div>
             </div>

@@ -52,6 +52,6 @@ export async function DELETE(req: Request, {params}: {params: Promise<{id: strin
         return NextResponse.json({message: "Usługa została usunięta"}, {status: 200});
 
     }catch {
-
+            return NextResponse.json({message: "Internal server error"}, {status: 500})
     }
 }

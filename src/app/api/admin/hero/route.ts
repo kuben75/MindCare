@@ -5,6 +5,11 @@ import {authOptions} from "@/app/api/auth/[...nextauth]/route";
 
 
 export async function GET() {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user?.email) {
+        return NextResponse.json({error: "Brak autoryzacji"}, {status: 401});
+    }
+
     try {
         const template = await prisma.heroTemplate.findMany({
             orderBy: {createdAt: 'desc'}

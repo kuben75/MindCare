@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/infrastructure/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import {Reservation} from "@prisma/client";
 
 export async function GET() {
     try {
@@ -69,7 +70,7 @@ export async function POST(req: Request) {
             }
         })
 
-        const conflictingReservation = daysReservations.find(res => {
+        const conflictingReservation = daysReservations.find((res: Reservation) => {
             const resStart = res.date.getTime();
             const resEnd = resStart + (res.service.duration * 60 * 1000);
             const blockStart = startDateTime.getTime();

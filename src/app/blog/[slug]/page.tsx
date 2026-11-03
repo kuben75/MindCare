@@ -2,10 +2,60 @@ import edjsHTML from "editorjs-html";
 import prisma from "@/infrastructure/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import type { Metadata } from "next";
 
 const edjsParser = edjsHTML();
 
-export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+interface PageProps {
+    params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+    const { slug } = await params;
+
+    const post = await prisma.post.findFirst({
+        where: { slug, isPublished: true },
+        select: { title: true, content: true, createdAt: true }
+    });
+
+    if (!post) {
+        return {
+            title: "Artykuł nie został odnaleziony | Paulina Kawka-Mirek",
+        };
+    }
+
+    let description = "Artykuł z zakresu psychologii i psychoterapii na blogu Pauliny Kawka-Mirek.";
+    try {
+        const json = typeof post.content === "string" ? JSON.parse(post.content) : post.content;
+        if (json?.blocks && Array.isArray(json.blocks)) {
+            const firstParagraph = json.blocks.find((b: { type: string; data?: { text?: string } }) => b.type === "paragraph");
+            if (firstParagraph?.data?.text) {
+                description = firstParagraph.data.text.replace(/<[^>]*>?/gm, "").slice(0, 160);
+            }
+        }
+    } catch {
+        // fallback do domyślnego opisu
+    }
+
+    return {
+        title: `${post.title} | Paulina Kawka-Mirek`,
+        description,
+        openGraph: {
+            title: post.title,
+            description,
+            type: "article",
+            publishedTime: post.createdAt.toISOString(),
+            locale: "pl_PL",
+        },
+        twitter: {
+            card: "summary_large_image",
+            title: post.title,
+            description,
+        }
+    };
+}
+
+export default async function BlogPostPage({ params }: PageProps) {
     const { slug } = await params;
 
     const post = await prisma.post.findFirst({
@@ -21,7 +71,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         const jsonContent = typeof post.content === 'string' ? JSON.parse(post.content) : post.content;
         const parsed = edjsParser.parse(jsonContent);
         parsedContent = Array.isArray(parsed) ? parsed : [parsed as unknown as string];
-    } catch  {
+    } catch {
         parsedContent = [`<p>${typeof post.content === 'string' ? post.content : "Błąd ładowania."}</p>`];
     }
 
@@ -40,11 +90,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                         border-radius: 1rem !important; 
                     }
                     .prose img {
-                    max-height: 500px !important;
-                    object-fit: cover !important;
-                    max-width: 100% !important;
+                        max-height: 500px !important;
+                        object-fit: cover !important;
+                        max-width: 100% !important;
                     }
-                    
                     .prose iframe {
                         width: 100% !important;
                         aspect-ratio: 16 / 9 !important;
@@ -52,13 +101,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 `
             }}/>
 
-            <article
-                className="max-w-3xl mx-auto bg-white dark:bg-[#262626] p-5 sm:p-8 md:p-16 rounded-[2rem] sm:rounded-[2.5rem] shadow-sm border border-beige-dark/20 dark:border-zinc-800 transition-colors duration-500 w-full">
-
-                <Link href="/blog"
-                      className="inline-flex items-center gap-2 text-graphite/40 dark:text-zinc-500 hover:text-sage dark:hover:text-emerald-400 transition-all font-bold text-[10px] uppercase tracking-widest mb-10 group w-max">
-                    <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none"
-                         stroke="currentColor" viewBox="0 0 24 24">
+            <article className="max-w-3xl mx-auto bg-white dark:bg-[#262626] p-5 sm:p-8 md:p-16 rounded-[2rem] sm:rounded-[2.5rem] shadow-sm border border-beige-dark/20 dark:border-zinc-800 transition-colors duration-500 w-full">
+                <Link
+                    href="/blog"
+                    className="inline-flex items-center gap-2 text-graphite/40 dark:text-zinc-500 hover:text-sage dark:hover:text-emerald-400 transition-all font-bold text-[10px] uppercase tracking-widest mb-10 group w-max"
+                >
+                    <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7"/>
                     </svg>
                     Wróć do listy
@@ -67,6 +115,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 <header className="mb-12 sm:mb-16">
                     <p className="text-sage dark:text-emerald-400 font-bold text-[10px] mb-4 sm:mb-6 uppercase tracking-widest">
                         {new Date(post.createdAt).toLocaleDateString('pl-PL', {
+                            timeZone: 'Europe/Warsaw',
                             day: 'numeric',
                             month: 'long',
                             year: 'numeric'
@@ -82,11 +131,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                     className="prose prose-base sm:prose-lg md:prose-xl dark:prose-invert
                         prose-headings:font-serif prose-headings:text-graphite dark:prose-headings:text-zinc-100
                         prose-a:text-sage dark:prose-a:text-emerald-400 max-w-none text-graphite/80 dark:text-zinc-300 leading-relaxed
-
-
-                        prose-img:max-w-[500px]
-                        prose-img:shadow-xl
-
+                        prose-img:max-w-[500px] prose-img:shadow-xl
                         prose-blockquote:border-l-sage prose-blockquote:bg-sage/5 prose-blockquote:py-4 prose-blockquote:px-6 sm:prose-blockquote:px-8 prose-blockquote:rounded-r-2xl prose-blockquote:text-graphite dark:prose-blockquote:text-zinc-200 prose-blockquote:not-italic prose-blockquote:font-medium
                         prose-strong:text-graphite dark:prose-strong:text-zinc-100 break-words"
                     dangerouslySetInnerHTML={{ __html: parsedContent.join('') }}

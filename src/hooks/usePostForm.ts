@@ -1,9 +1,8 @@
-import {useRouter} from "next/navigation";
-import {useToast} from "@/hooks/useToast";
-import {useConfirm} from "@/hooks/useConfirm";
-import {useEffect, useRef, useState} from "react";
-import {TInitialData} from "@/types/editor";
-
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/useToast";
+import { useConfirm } from "@/hooks/useConfirm";
+import { useEffect, useRef, useState } from "react";
+import { TInitialData } from "@/types/editor";
 
 export const usePostForm = ({ initialData }: { initialData?: TInitialData }) => {
     const router = useRouter();
@@ -34,6 +33,7 @@ export const usePostForm = ({ initialData }: { initialData?: TInitialData }) => 
     }, [saveStatus, title, content]);
 
     useEffect(() => {
+        if (isPublished) return;
         if (!title.trim() && !content) return;
         if (title === prevTitle.current && content === prevContent.current) return;
 
@@ -52,7 +52,7 @@ export const usePostForm = ({ initialData }: { initialData?: TInitialData }) => 
                     body: JSON.stringify({
                         title: title || "Bez tytułu",
                         content: safeContent,
-                        isPublished: isPublished
+                        isPublished: false // Zawsze szkic przy automatycznym zapisie
                     })
                 });
 
@@ -72,6 +72,7 @@ export const usePostForm = ({ initialData }: { initialData?: TInitialData }) => 
                 setSaveStatus("error");
             }
         }, 3000);
+
         return () => clearTimeout(timer);
     }, [title, content, isPublished, postId]);
 
@@ -92,13 +93,21 @@ export const usePostForm = ({ initialData }: { initialData?: TInitialData }) => 
                 method,
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    title,
+                    title: title.trim(),
                     content: safeContent,
                     isPublished: publishStatus
                 }),
             });
 
             if (response.ok) {
+                const data = await response.json();
+                if (isNew && data.id) {
+                    setPostId(data.id);
+                }
+                setIsPublished(publishStatus);
+                prevTitle.current = title;
+                prevContent.current = content;
+
                 window.onbeforeunload = null;
                 showToast(publishStatus ? "Artykuł został opublikowany!" : "Szkic został zapisany.", "success");
                 setTimeout(() => {
@@ -109,6 +118,8 @@ export const usePostForm = ({ initialData }: { initialData?: TInitialData }) => 
                 const errorData = await response.json();
                 showToast(errorData.message || errorData.error || "Wystąpił błąd podczas zapisywania.", "error");
             }
+        } catch {
+            showToast("Wystąpił błąd połączenia z serwerem.", "error");
         } finally {
             setIsLoading(false);
         }
@@ -152,6 +163,7 @@ export const usePostForm = ({ initialData }: { initialData?: TInitialData }) => 
         }
         router.push("/admin/dashboard/blog");
     };
+
     return {
         title,
         setTitle,
@@ -168,5 +180,5 @@ export const usePostForm = ({ initialData }: { initialData?: TInitialData }) => 
         handleGoBack,
         toast,
         hideToast
-    }
-}
+    };
+};

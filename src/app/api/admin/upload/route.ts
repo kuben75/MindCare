@@ -21,6 +21,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: 0, error: "Nie przesłano poprawnego pliku." }, { status: 400 });
         }
 
+        // 1. Walidacja typu MIME
         if (!ALLOWED_MIME_TYPES.includes(file.type)) {
             return NextResponse.json({
                 success: 0,
@@ -28,6 +29,7 @@ export async function POST(req: Request) {
             }, { status: 400 });
         }
 
+        // 2. Walidacja rozmiaru
         if (file.size > MAX_FILE_SIZE) {
             return NextResponse.json({
                 success: 0,
@@ -35,6 +37,7 @@ export async function POST(req: Request) {
             }, { status: 400 });
         }
 
+        // 3. Bezpieczna nazwa pliku (usunięcie ścieżek ../ i spacji)
         const rawFileName = path.basename(file.name);
         const sanitizedFileName = rawFileName.replace(/[^a-zA-Z0-9.-]/g, "_");
         const blobPath = `uploads/${Date.now()}-${sanitizedFileName}`;

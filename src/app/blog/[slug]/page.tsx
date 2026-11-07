@@ -34,7 +34,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
             }
         }
     } catch {
-        // fallback do domyślnego opisu
     }
 
     return {

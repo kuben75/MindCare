@@ -12,62 +12,76 @@ datasource db {
 }
 
 model Waitlist {
-  id           String @id @default(cuid())
-  patientName  String
-  email        String
-  phone        String
-  serviceId    String
-  service      Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  notes        String? @db.Text
-  createdAt    DateTime @default(now())
+  id               String   @id @default(cuid())
+  patientName      String
+  email            String
+  phone            String
+  serviceId        String
+  service          Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  notes            String?  @db.Text
+  hasAcceptedTerms Boolean  @default(true)
+  createdAt        DateTime @default(now())
+
+  @@index([serviceId])
 }
 
 model Service {
-  id          String   @id @default(cuid())
-  name        String
-  duration    Int
-  price       Float
-  isActive    Boolean  @default(true)
+  id           String        @id @default(cuid())
+  name         String
+  duration     Int
+  price        Float
+  isActive     Boolean       @default(true)
   reservations Reservation[]
-  waitlist    Waitlist[]
+  waitlist     Waitlist[]
 }
 
 model Admin {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
+  id               String   @id @default(cuid())
+  email            String   @unique
+  password         String
   twoFactorEnabled Boolean  @default(false)
-  twoFactorSecret String?
-  recoveryCodes String @default("[]")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  twoFactorSecret  String?  @db.Text
+  recoveryCodes    String   @default("[]") @db.Text
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model SystemLog {
-  id         String @id @default(cuid())
-  action     String
-  details    String?
-  ipAddress  String?
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  action    String
+  details   String?  @db.Text
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([action, createdAt])
 }
 
 model Reservation {
-  id          String   @id @default(cuid())
-  patientName String
-  email       String
-  phone       String
-  date        DateTime
-  status      ReservationStatus @default(PENDING)
-  serviceId   String
-  service     Service  @relation(fields: [serviceId], references: [id])
-  magicToken  String   @unique @default(uuid())
-  privateNotes String? @db.Text
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  hasAcceptedTerms Boolean  @default(false)
-  rescheduleRequested Boolean  @default(false)
+  id                  String            @id @default(cuid())
+  patientName         String
+  email               String
+  phone               String
+  date                DateTime
+  status              ReservationStatus @default(PENDING)
+  serviceId           String
+  service             Service           @relation(fields: [serviceId], references: [id])
+  magicToken          String            @unique @default(uuid())
+  privateNotes        String?           @db.Text
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  hasAcceptedTerms    Boolean           @default(false)
+  rescheduleRequested Boolean           @default(false)
+  isManual            Boolean           @default(false)
+
+  amountPaid    Float?
+  currency      String  @default("PLN")
+  paymentLink   String? @db.Text
+  paymentMethod String?
+
   stripePaymentIntentId String?
-  isManual Boolean @default(false)
+
+  @@index([date, status])
+  @@index([email])
 }
 
 enum ReservationStatus {
@@ -92,58 +106,64 @@ model BlockedTime {
   reason    String?
   isFullDay Boolean  @default(false)
   createdAt DateTime @default(now())
+
+  @@index([startDate, endDate])
 }
 
-
 model Post {
-  id        String   @id @default(cuid())
-  slug      String   @unique
-  title     String
-  content   Json
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  content     Json
   isPublished Boolean  @default(false)
   order       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([isPublished, order])
 }
 
 model HeroTemplate {
-  id          String     @id @default(cuid())
-  title       String
-  subtitle    String     @db.Text
-  imageUrl    String?
-  layout      HeroLayout @default(TEXT_LEFT)
-  imageStyle  ImageStyle @default(HORIZONTAL)
-  showPrimaryButton Boolean @default(true)
-  primaryButtonText String  @default("Poznaj moje podejście")
-  primaryButtonLink String  @default("/#o-mnie")
-  showZnanyLekarz   Boolean @default(true)
+  id                String     @id @default(cuid())
+  title             String
+  subtitle          String     @db.Text
+  imageUrl          String?
+  layout            HeroLayout @default(TEXT_LEFT)
+  imageStyle        ImageStyle @default(HORIZONTAL)
+  showPrimaryButton Boolean    @default(true)
+  primaryButtonText String     @default("Poznaj moje podejście")
+  primaryButtonLink String     @default("/#o-mnie")
+  showZnanyLekarz   Boolean    @default(true)
+  isActive          Boolean    @default(false)
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+}
 
-  isActive    Boolean    @default(false)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-}
 model DeviceSession {
-  id          String   @id @default(cuid())
-  adminEmail  String
-  ipAddress   String
-  userAgent   String
-  deviceInfo  String
-  createdAt   DateTime @default(now())
-  isValid     Boolean  @default(true)
+  id         String   @id @default(cuid())
+  adminEmail String
+  ipAddress  String
+  userAgent  String
+  deviceInfo String
+  createdAt  DateTime @default(now())
+  isValid    Boolean  @default(true)
+
+  @@index([adminEmail, isValid])
 }
+
 model ClinicSettings {
-  id           String   @id @default("global")
-  clinicName   String   @default("Paulina Kawka-Mirek")
-  email        String   @default("paulinakmirek@gmail.com")
-  phone        String   @default("+44 7599 362770")
-  address      String   @default("")
-  bankAccount  String?
-  instagramUrl String? @default("https://www.instagram.com/psychologia_odbicia/")
-  facebookUrl  String? @default("https://www.facebook.com/profile.php?id=61586481414788")
-  znanyLekarzUrl String? @default("https://www.znanylekarz.pl/paulina-kawka-mirek/psycholog/wronki")
-  updatedAt    DateTime @updatedAt
-  linkedinUrl    String? @default("https://www.linkedin.com/in/paulina-kawka-mirek-3a2224253/")
-  nipNumber       String? @default("")
+  id             String   @id @default("global")
+  clinicName     String   @default("Gabinet Psychoterapii")
+  email          String   @default("")
+  phone          String   @default("")
+  address        String   @default("")
+  bankAccount    String?
+  nipNumber      String?
+  instagramUrl   String?
+  facebookUrl    String?
+  znanyLekarzUrl String?
+  linkedinUrl    String?
+  updatedAt      DateTime @updatedAt
 }
 
 enum HeroLayout {

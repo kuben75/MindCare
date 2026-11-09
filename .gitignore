@@ -21,3 +21,5 @@ public/uploads/*
 npm-debug.log*
 
 .idea/
+
+reset.ts

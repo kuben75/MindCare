@@ -125,7 +125,7 @@ export const authOptions: NextAuthOptions = {
                     }
                 });
                 if(!pastSession) {
-                    await sendNewDeviceAlertEmail({
+                    void sendNewDeviceAlertEmail({
                         adminEmail: email,
                         adminName: admin.email,
                         deviceInfo,

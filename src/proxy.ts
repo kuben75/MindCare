@@ -3,7 +3,22 @@ import { NextRequest, NextResponse } from "next/server";
 
 export default async function proxy(req: NextRequest) {
     const { pathname } = req.nextUrl;
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+
+    const hasSecureToken = req.cookies.has("__Secure-next-auth.session-token");
+    const cookieName = hasSecureToken
+        ? "__Secure-next-auth.session-token"
+        : "next-auth.session-token";
+
+    const token = await getToken({
+        req,
+        secret: process.env.NEXTAUTH_SECRET,
+        secureCookie: hasSecureToken,
+        cookieName: cookieName,
+    });
+
+    if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
+        console.log(`[AUTH PROXY] Ścieżka: ${pathname} | Zalogowany: ${Boolean(token)} | Ciasteczko: ${cookieName}`);
+    }
 
     if (pathname.startsWith("/api/admin")) {
         if (!token) {

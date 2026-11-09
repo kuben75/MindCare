@@ -8,7 +8,7 @@ import MagicLinkEmail from "@/emails/MagicLink";
 import CancelAppointmentEmail from "@/emails/CancelAppointmentEmail";
 import NewDeviceAlertEmail from "@/emails/NewDeviceAlertEmail";
 import UniversalEmail from "@/emails/UniversalEmail";
-import { Reservation } from "@prisma/client";
+import { Reservation, ReservationStatus } from "@prisma/client";
 
 const DEFAULT_FROM = process.env.EMAIL_FROM || "Gabinet Paulina Kawka-Mirek <onboarding@resend.dev>";
 const SYSTEM_FROM = process.env.EMAIL_FROM || "System MindCare <onboarding@resend.dev>";
@@ -18,32 +18,51 @@ async function sendEmailBase(
     subject: string,
     reactComponent: React.ReactElement,
     from = DEFAULT_FROM
-) {
-    if (!process.env.RESEND_API_KEY) {
-        console.warn(`[Resend Warn] Brak RESEND_API_KEY - pomijanie wysyłki maila: "${subject}" do: ${to}`);
+): Promise<boolean> {
+    if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY.startsWith("re_dummy")) {
+        console.warn(`[Resend Warn] Brak poprawnego RESEND_API_KEY - pomijam wysyłkę maila: "${subject}" do: ${to}`);
         return false;
     }
+
     try {
         const html = await render(reactComponent);
-        await resend.emails.send({ from, to, subject, html });
+        const { data, error } = await resend.emails.send({ from, to, subject, html });
+
+        if (error) {
+            console.error(`[Resend API Error] Błąd wysyłania do ${to}:`, error);
+            await prisma.systemLog.create({
+                data: {
+                    action: "BŁĄD_EMAIL",
+                    details: `Resend odrzucił wysyłkę "${subject}" do ${to}: ${error.message}`
+                }
+            }).catch(() => {});
+            return false;
+        }
+
         return true;
     } catch (error) {
-        console.error(`[Resend Error] Błąd wysyłania e-maila (${subject}) do ${to}:`, error);
+        console.error(`[Resend Exception] Wyjątek podczas wysyłania maila "${subject}" do ${to}:`, error);
+        await prisma.systemLog.create({
+            data: {
+                action: "BŁĄD_EMAIL",
+                details: `Błąd sieci/kodu przy wysyłce "${subject}" do ${to}: ${error instanceof Error ? error.message : String(error)}`
+            }
+        }).catch(() => {});
         return false;
     }
 }
 
 export async function getAdminNotificationEmail(): Promise<string> {
     if (process.env.ADMIN_NOTIFICATION_EMAIL) {
-        return process.env.ADMIN_NOTIFICATION_EMAIL;
+        return process.env.ADMIN_NOTIFICATION_EMAIL.trim().toLowerCase();
     }
     const admin = await prisma.admin.findFirst({ select: { email: true } });
-    if (admin?.email) return admin.email;
+    if (admin?.email) return admin.email.trim().toLowerCase();
 
     const settings = await prisma.clinicSettings.findFirst({ select: { email: true } });
-    if (settings?.email) return settings.email;
+    if (settings?.email) return settings.email.trim().toLowerCase();
 
-    return "kontakt@paulinakawkamirek.pl";
+    return (process.env.ADMIN_EMAIL || "kontakt@paulinakawkamirek.pl").trim().toLowerCase();
 }
 
 export async function sendMagicLinkEmail({
@@ -82,9 +101,9 @@ export async function sendCancellationEmail({
 }
 
 export async function sendRescheduleEmail({
-                                              email, patientName, date, serviceName, magicToken
+                                              email, patientName, date, serviceName, magicToken, status
                                           }: {
-    email: string; patientName: string; date: Date; serviceName: string; magicToken?: string
+    email: string; patientName: string; date: Date; serviceName: string; magicToken?: string; status?: ReservationStatus
 }) {
     const { formattedDate, formattedTime } = formatDateTime(date);
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
@@ -93,7 +112,14 @@ export async function sendRescheduleEmail({
     return sendEmailBase(
         email,
         `Nowy termin wizyty: ${formattedDate}`,
-        MagicLinkEmail({ patientName, date: formattedDate, time: formattedTime, serviceName, magicLink: link })
+        MagicLinkEmail({
+            patientName,
+            date: formattedDate,
+            time: formattedTime,
+            serviceName,
+            magicLink: link,
+            status: status || "PENDING"
+        })
     );
 }
 
@@ -157,21 +183,27 @@ export async function sendFollowUpEmail({
 }
 
 export async function sendNewReservationAdminAlert({
-                                                       adminEmail, patientName, date, serviceName
+                                                       adminEmail, patientName, patientEmail, patientPhone, date, serviceName, status
                                                    }: {
-    adminEmail: string; patientName: string; date: Date; serviceName: string
+    adminEmail: string;
+    patientName: string;
+    patientEmail?: string;
+    patientPhone?: string;
+    date: Date;
+    serviceName: string;
+    status?: string;
 }) {
     const { formattedDate, formattedTime } = formatDateTime(date);
 
     return sendEmailBase(
         adminEmail,
-        `Nowa rezerwacja do wyceny: ${patientName} (${formattedDate})`,
+        `Nowa rezerwacja: ${patientName} (${formattedDate})`,
         UniversalEmail({
             title: "Masz nową rezerwację!",
             previewText: `Nowy pacjent: ${patientName} zapisał się na ${formattedDate}`,
             greeting: `Cześć Paulina,`,
-            message: `W Twoim kalendarzu pojawiła się nowa wizyta wstępna.\n\nSzczegóły spotkania:\nPacjent: ${patientName}\nUsługa: ${serviceName}\nData: ${formattedDate}\nGodzina: ${formattedTime}\n\nWizyta oczekuje na przesłanie linku do płatności Revolut lub danych do przelewu. Zaloguj się do panelu, aby zarządzać rezerwacją.`,
-            actionLabel: "Przejdź do rezerwacji",
+            message: `W Twoim kalendarzu pojawiła się nowa wizyta.\n\nSzczegóły spotkania:\n• Pacjent: ${patientName}\n• Email: ${patientEmail || 'brak'}\n• Telefon: ${patientPhone || 'brak'}\n• Usługa: ${serviceName}\n• Termin: ${formattedDate} o godz. ${formattedTime}\n• Status: ${status || 'PENDING'}\n\nZaloguj się do panelu, aby zarządzać wizytą i zweryfikować płatność.`,
+            actionLabel: "Przejdź do kalendarza",
             actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/dashboard/calendar`
         }),
         SYSTEM_FROM
@@ -192,7 +224,7 @@ export async function sendAdminRescheduleAlert({
             title: "Prośba o zmianę terminu",
             previewText: `${patientName} prosi o zmianę daty wizyty.`,
             greeting: `Cześć,`,
-            message: `Pacjent ${patientName} poprosił przed chwilą o zmianę terminu wizyty zaplanowanej na ${formattedDate} o godzinie ${formattedTime}.\n\nSkontaktuj się z pacjentem, aby ustalić nowy termin i odblokować tę godzinę w kalendarzu.`,
+            message: `Pacjent ${patientName} poprosił przed chwilą o zmianę terminu wizyty zaplanowanej na ${formattedDate} o godzinie ${formattedTime}.\n\nSkontaktuj się z pacjentem, aby ustalić nowy termin i zaktualizować wizytę w kalendarzu.`,
             actionLabel: "Przejdź do panelu",
             actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/dashboard/calendar`
         }),

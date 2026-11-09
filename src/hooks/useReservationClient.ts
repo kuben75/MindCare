@@ -26,8 +26,7 @@ export const useReservationClient = ({ initialDate, initialTime, services }: IRe
         setIsLoading(true);
         try{
             const finalDateObj = buildWarsawDateObj(initialDate, initialTime);
-            const [hours, minutes] = initialTime.split(":");
-            finalDateObj.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
             const response = await fetch('/api/reservations', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},

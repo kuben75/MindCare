@@ -2,102 +2,90 @@ import { NextResponse } from "next/server";
 import prisma from "@/infrastructure/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import {Reservation} from "@prisma/client";
+import { DateTime } from "luxon";
 
 export async function GET() {
-    try {
-        const session = await getServerSession(authOptions);
-        if (!session) return NextResponse.json({ error: "Brak uprawnień" }, { status: 401 });
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user?.email) {
+        return NextResponse.json({ error: "Brak autoryzacji" }, { status: 401 });
+    }
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+    try {
+        const todayWarsaw = DateTime.now().setZone("Europe/Warsaw").startOf("day").toJSDate();
 
         const blockedTimes = await prisma.blockedTime.findMany({
-            where: { endDate: { gte: today } },
-            orderBy: { startDate: 'asc' }
+            where: {
+                endDate: { gte: todayWarsaw }
+            },
+            orderBy: { startDate: "asc" }
         });
 
-        return NextResponse.json(blockedTimes, { status: 200 });
-    } catch {
-        return NextResponse.json({ error: "Wystąpił błąd serwera" }, { status: 500 });
+        return NextResponse.json(blockedTimes);
+    } catch (error) {
+        console.error("Błąd pobierania blokad:", error);
+        return NextResponse.json({ error: "Nie udało się pobrać blokad" }, { status: 500 });
     }
 }
 
 export async function POST(req: Request) {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user?.email) {
+        return NextResponse.json({ error: "Brak autoryzacji" }, { status: 401 });
+    }
+
     try {
-        const session = await getServerSession(authOptions);
-        if (!session) return NextResponse.json({ error: "Brak uprawnień" }, { status: 401 });
-
         const body = await req.json();
-        const { date, startTime, endTime, reason } = body;
+        const { date, startTime, endTime, reason, isFullDay } = body;
 
-        if (!date || !startTime || !endTime) {
-            return NextResponse.json({ error: "Data i godziny są wymagane" }, { status: 400 });
+        if (!date) {
+            return NextResponse.json({ error: "Data jest wymagana" }, { status: 400 });
         }
 
-        const startDateTime = new Date(`${date}T${startTime}:00`);
-        const endDateTime = new Date(`${date}T${endTime}:00`);
+        let startDateTime: Date;
+        let endDateTime: Date;
 
-        const isBlockExists = await prisma.blockedTime.findFirst({
-            where: {
-                startDate: { lt: endDateTime },
-                endDate: { gt: startDateTime }
+        if (isFullDay) {
+            startDateTime = DateTime.fromISO(date, { zone: "Europe/Warsaw" }).startOf("day").toJSDate();
+            endDateTime = DateTime.fromISO(date, { zone: "Europe/Warsaw" }).endOf("day").toJSDate();
+        } else {
+            if (!startTime || !endTime) {
+                return NextResponse.json({ error: "Podaj godzinę rozpoczęcia i zakończenia" }, { status: 400 });
             }
-        });
 
-        if (isBlockExists) {
-            return NextResponse.json({ error: "Istnieje już blokada pokrywająca ten czas" }, { status: 409 });
-        }
+            const parsedStart = DateTime.fromISO(`${date}T${startTime}`, { zone: "Europe/Warsaw" });
+            const parsedEnd = DateTime.fromISO(`${date}T${endTime}`, { zone: "Europe/Warsaw" });
 
-        const startOfDay = new Date(date);
-        startOfDay.setHours(0, 0, 0, 0);
-
-        const endOfDay = new Date(date);
-        endOfDay.setHours(23, 59, 59, 999);
-
-        const daysReservations = await prisma.reservation.findMany({
-            where: {
-                date: {
-                    gte: startOfDay,
-                    lte: endOfDay
-                },
-                status: {
-                    not: "CANCELLED"
-                }
-            },
-            include: {
-                service: true
+            if (!parsedStart.isValid || !parsedEnd.isValid) {
+                return NextResponse.json({ error: "Nieprawidłowy format daty lub godziny" }, { status: 400 });
             }
-        })
 
-        const conflictingReservation = daysReservations.find((res: Reservation) => {
-            const resStart = res.date.getTime();
-            const resEnd = resStart + (res.service.duration * 60 * 1000);
-            const blockStart = startDateTime.getTime();
-            const blockEnd = endDateTime.getTime();
+            if (parsedEnd <= parsedStart) {
+                return NextResponse.json({ error: "Godzina zakończenia musi być późniejsza niż rozpoczęcia" }, { status: 400 });
+            }
 
-            return resStart < blockEnd && resEnd > blockStart;
-        });
-
-        if (conflictingReservation) {
-            const conflictTime = new Date(conflictingReservation.date).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
-            return NextResponse.json({
-                error: `Kolizja! Pacjent ${conflictingReservation.patientName} ma wizytę o ${conflictTime}. Przełóż lub anuluj tę wizytę przed zablokowaniem terminu.`
-            }, { status: 409 });
+            startDateTime = parsedStart.toJSDate();
+            endDateTime = parsedEnd.toJSDate();
         }
 
-
-        const newBlock = await prisma.blockedTime.create({
+        const blocked = await prisma.blockedTime.create({
             data: {
                 startDate: startDateTime,
                 endDate: endDateTime,
-                reason: reason || "",
-                isFullDay: false
+                reason: reason?.trim() || null,
+                isFullDay: Boolean(isFullDay)
             }
         });
 
-        return NextResponse.json(newBlock, { status: 201 });
-    } catch {
-        return NextResponse.json({ error: "Wystąpił błąd zapisu" }, { status: 500 });
+        await prisma.systemLog.create({
+            data: {
+                action: "DODANIE_BLOKADY",
+                details: `Admin ${session.user.email} zablokował termin: ${startDateTime.toISOString()} - ${endDateTime.toISOString()} (${reason || 'brak powodu'})`
+            }
+        });
+
+        return NextResponse.json(blocked, { status: 201 });
+    } catch (error) {
+        console.error("Błąd tworzenia blokady terminu:", error);
+        return NextResponse.json({ error: "Wystąpił błąd podczas blokowania terminu" }, { status: 500 });
     }
 }

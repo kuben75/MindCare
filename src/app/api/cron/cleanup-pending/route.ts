@@ -3,9 +3,10 @@ import prisma from "@/infrastructure/prisma";
 import {getWarsawNow} from "@/utils/warsaw-time";
 
 export async function GET(req: Request) {
-
+    const cronSecret = process.env.CRON_SECRET;
     const authHeader = req.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
         return new Response('Unauthorized', { status: 401 });
     }
 

@@ -48,6 +48,7 @@ export async function POST(req: Request) {
             );
         }
 
+        // W prisma.reservation.create:
         const newReservation = await prisma.reservation.create({
             data: {
                 patientName: patientName.trim(),
@@ -58,6 +59,9 @@ export async function POST(req: Request) {
                 status: status || "PENDING",
                 privateNotes: notes ? notes.trim() : null,
                 hasAcceptedTerms: true,
+                isManual: true,
+                amountPaid: service.price,
+                currency: "PLN"
             },
             include: {
                 service: true

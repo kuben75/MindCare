@@ -7,7 +7,6 @@ import { sendMagicLinkEmail, sendNewReservationAdminAlert, getAdminNotificationE
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-
         const validation = reservationSchema.safeParse(body);
 
         if (!validation.success) {
@@ -26,13 +25,14 @@ export async function POST(req: Request) {
         }
 
         const isFree = await isSlotAvailable(date, service.duration);
-
         if (!isFree) {
             return NextResponse.json(
                 { error: "Przepraszamy, ten termin został właśnie zajęty lub koliduje z inną wizytą. Wybierz inną godzinę." },
                 { status: 409 }
             );
         }
+
+        const clinicSettings = await prisma.clinicSettings.findFirst();
 
         const newReservation = await prisma.reservation.create({
             data: {
@@ -42,7 +42,10 @@ export async function POST(req: Request) {
                 date: date,
                 serviceId,
                 status: "PENDING",
+                isManual: false,
                 hasAcceptedTerms: termsAccepted,
+                amountPaid: service.price,
+                currency: "PLN"
             },
             include: {
                 service: true
@@ -51,33 +54,37 @@ export async function POST(req: Request) {
 
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-        await prisma.systemLog.create({
-            data: {
-                action: "REZERWACJA_WSTĘPNA",
-                details: `Utworzono rezerwację wstępną: ${newReservation.id} | Pacjent: ${newReservation.patientName} (${newReservation.email}) | Usługa: ${newReservation.service.name}`,
-            }
-        });
-
         try {
             await sendMagicLinkEmail({
                 email: newReservation.email,
                 patientName: newReservation.patientName,
-                date: newReservation.date,
                 serviceName: newReservation.service.name,
+                date: newReservation.date,
                 magicToken: newReservation.magicToken,
-                status: newReservation.status,
+                bankAccount: clinicSettings?.bankAccount || "Zostanie przesłany w kolejnej wiadomości",
+                price: newReservation.service.price
             });
 
             const adminEmail = await getAdminNotificationEmail();
             await sendNewReservationAdminAlert({
                 adminEmail,
                 patientName: newReservation.patientName,
-                date: newReservation.date,
+                patientEmail: newReservation.email,
+                patientPhone: newReservation.phone,
                 serviceName: newReservation.service.name,
+                date: newReservation.date,
+                status: "PENDING"
             });
-        } catch (mailErr) {
-            console.error("Błąd wysyłki e-maili:", mailErr);
+        } catch (emailError) {
+            console.error("Błąd wysyłki e-mail po rezerwacji:", emailError);
         }
+
+        await prisma.systemLog.create({
+            data: {
+                action: "REZERWACJA_WSTĘPNA",
+                details: `Utworzono rezerwację wstępną: ${newReservation.id} | Pacjent: ${newReservation.patientName} (${newReservation.email}) | Usługa: ${newReservation.service.name}`,
+            }
+        });
 
         return NextResponse.json({
             url: `${baseUrl}/reservation/success?token=${newReservation.magicToken}`

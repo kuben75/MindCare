@@ -6,6 +6,7 @@ export interface ISendMagicLinkParams {
     magicToken: string;
     status?: string;
     bankAccount?: string | null;
+    price: number;
 }
 
 export interface IMagicLinkEmailProps extends Omit<ISendMagicLinkParams, 'email' | 'date' | 'magicToken'> {
@@ -20,6 +21,7 @@ export interface ICancelAppointmentEmailProps {
     time: string;
     serviceName: string;
     reason?: string;
+    price: number;
 }
 
 export interface INewDeviceAlertEmailProps {

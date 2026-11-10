@@ -55,23 +55,23 @@ export default function ChangePasswordCard() {
     return (
         <motion.div
             variants={itemVariants}
-            className="relative z-10 hover:z-[100] focus-within:z-[100] bg-white/60 dark:bg-[#262626]/60 backdrop-blur-xl border border-beige-dark/20 dark:border-zinc-700 rounded-[2rem] p-6 lg:p-8 shadow-sm transition-all duration-300"
+            className="relative z-10 hover:z-[100] focus-within:z-[100] bg-white/60 dark:bg-[#262626]/60 backdrop-blur-xl border border-beige-dark/20 dark:border-zinc-700 rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 lg:p-8 shadow-sm transition-all duration-300"
         >
-            <div className="flex gap-4 items-center mb-6 border-b border-beige-dark/10 dark:border-zinc-800 pb-5">
-                <div className="p-3 bg-beige-light/50 dark:bg-zinc-800 rounded-xl text-graphite/40 dark:text-zinc-500 shadow-sm border border-beige-dark/20 dark:border-zinc-700/50">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex gap-3 sm:gap-4 items-center mb-6 border-b border-beige-dark/10 dark:border-zinc-800 pb-4 sm:pb-5">
+                <div className="p-2.5 sm:p-3 bg-beige-light/50 dark:bg-zinc-800 rounded-xl text-graphite/40 dark:text-zinc-500 shadow-sm border border-beige-dark/20 dark:border-zinc-700/50 shrink-0">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                     </svg>
                 </div>
-                <div>
-                    <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-serif font-bold text-graphite dark:text-zinc-100">Zmiana Hasła</h3>
+                <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-base sm:text-lg font-serif font-bold text-graphite dark:text-zinc-100">Zmiana Hasła</h3>
                         <InfoTooltip
                             title="Bezpieczeństwo logowania"
                             description="Ustaw własne, unikalne hasło (minimum 8 znaków). Po zmianie hasła Twoja obecna sesja pozostanie aktywna."
                         />
                     </div>
-                    <p className="text-xs font-semibold uppercase tracking-widest text-graphite/50 dark:text-zinc-400 mt-1">
+                    <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-graphite/50 dark:text-zinc-400 mt-1">
                         Zarządzanie kluczem dostępu do konta
                     </p>
                 </div>
@@ -139,7 +139,7 @@ export default function ChangePasswordCard() {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest bg-graphite dark:bg-zinc-100 text-white dark:text-graphite hover:bg-opacity-90 transition-all hover:cursor-pointer disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2"
+                        className="w-full sm:w-auto px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest bg-graphite dark:bg-zinc-100 text-white dark:text-graphite hover:bg-opacity-90 transition-all hover:cursor-pointer disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2"
                     >
                         {isLoading && <span className="animate-spin w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full" />}
                         Zapisz nowe hasło

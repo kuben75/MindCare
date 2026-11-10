@@ -18,6 +18,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <ThemeProvider attribute="class" defaultTheme="light">
                 <div className="min-h-screen bg-beige-light/30 flex dark:bg-[#1a1a1a] transition-colors duration-300">
 
+                    {/* Tło przy otwartym menu mobilnym */}
                     <AnimatePresence>
                         {isSidebarOpen && (
                             <motion.div
@@ -31,13 +32,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         )}
                     </AnimatePresence>
 
+                    {/* Sidebar */}
                     <aside className={`
-                    fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-beige-dark/20 shadow-xl md:shadow-none
-                    dark:bg-[#262626] dark:border-zinc-600 transition-colors duration-300
-                    transform ease-in-out md:relative md:translate-x-0
-                    ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
-                    flex flex-col
-                `}>
+                        fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-beige-dark/20 shadow-xl md:shadow-none
+                        dark:bg-[#262626] dark:border-zinc-600 transition-colors duration-300
+                        transform ease-in-out md:relative md:translate-x-0
+                        ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
+                        flex flex-col
+                    `}>
                         <div className="h-16 flex items-center px-6 border-b border-beige-dark/20 dark:border-zinc-600">
                             <span className="text-sage font-serif text-xl tracking-wide dark:text-zinc-200">Menu</span>
                         </div>
@@ -51,12 +53,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                         href={item.href}
                                         onClick={() => setIsSidebarOpen(false)}
                                         className={`
-                                        relative flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors duration-300 group outline-none
-                                        ${isActive
+                                            relative flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors duration-300 group outline-none
+                                            ${isActive
                                             ? "text-white"
                                             : "text-graphite/70 hover:text-graphite dark:text-zinc-200 dark:hover:text-gray-100"
                                         }
-                                    `}
+                                        `}
                                     >
                                         {isActive && (
                                             <motion.div
@@ -67,8 +69,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                         )}
 
                                         <span className={`transition-transform duration-300 group-hover:scale-105 ${isActive ? "text-white" : "text-graphite/40 dark:text-zinc-400 group-hover:text-graphite dark:group-hover:text-zinc-200"}`}>
-                                        {item.icon}
-                                    </span>
+                                            {item.icon}
+                                        </span>
                                         <span className="relative z-10">{item.name}</span>
                                     </Link>
                                 );
@@ -86,6 +88,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         </div>
                     </aside>
 
+                    {/* Główny obszar */}
                     <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
                         <header className="h-16 bg-white border-b border-beige-dark/20 dark:bg-[#262626] dark:border-zinc-600 flex items-center justify-between px-4 md:px-8 shrink-0 transition-colors duration-300">
                             <span className="text-graphite font-serif text-lg md:hidden dark:text-gray-100">Panel</span>
@@ -104,19 +107,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             </div>
                         </header>
 
+                        {/* Kontener treści – płynne wejście bez zawieszania widoku */}
                         <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-beige-light/10 dark:bg-zinc-900/40">
-                            <AnimatePresence mode="wait">
-                                <motion.div
-                                    key={pathname}
-                                    initial={{ opacity: 0, y: 12, filter: "blur(2px)" }}
-                                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                                    exit={{ opacity: 0, y: -10, filter: "blur(2px)" }}
-                                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                                    className="h-full w-full"
-                                >
-                                    {children}
-                                </motion.div>
-                            </AnimatePresence>
+                            <motion.div
+                                key={pathname}
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.2, ease: "easeOut" }}
+                                className="h-full w-full"
+                            >
+                                {children}
+                            </motion.div>
                         </div>
                     </main>
                 </div>

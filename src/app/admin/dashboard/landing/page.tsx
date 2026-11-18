@@ -2,10 +2,6 @@
 
 import { useLandingPage } from "@/hooks/useLandingPage";
 import LandingPageCreator from "@/app/admin/dashboard/landing/LandingPageCreator";
-<<<<<<< HEAD
-
-=======
->>>>>>> main
 
 export default async function LandingDashboardPage() {
 

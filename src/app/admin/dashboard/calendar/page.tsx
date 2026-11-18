@@ -1,16 +1,8 @@
 import prisma from "@/infrastructure/prisma";
 import AdminCalendar from "./AdminCalendar";
-<<<<<<< HEAD
-
 export const dynamic = 'force-dynamic';
 
 export default async function AdminCalendarPage() {
-
-=======
-export const dynamic = 'force-dynamic';
-
-export default async function AdminCalendarPage() {
->>>>>>> main
     const reservations = await prisma.reservation.findMany({
         include: { service: true },
         orderBy: { date: 'asc' }

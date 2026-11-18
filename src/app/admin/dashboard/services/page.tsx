@@ -1,17 +1,10 @@
 import prisma from "@/infrastructure/prisma";
 import ServiceManager from "@/app/admin/dashboard/services/ServiceManager";
-<<<<<<< HEAD
-
-=======
->>>>>>> main
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminServicesPage() {
-<<<<<<< HEAD
-=======
 
->>>>>>> main
 
 
     const initialServices = await prisma.service.findMany({

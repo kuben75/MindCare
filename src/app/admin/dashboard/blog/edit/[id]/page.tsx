@@ -1,14 +1,6 @@
 import prisma from "@/infrastructure/prisma";
 import { notFound, redirect } from "next/navigation";
 import PostForm from "@/components/layout/PostForm";
-<<<<<<< HEAD
-
-
-
-export default async function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
-
-    const {id} = await params;
-=======
 import { requireAdmin } from "@/lib/requireAdmin";
 
 export default async function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
@@ -18,7 +10,6 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
     }
 
     const { id } = await params;
->>>>>>> main
 
     const post = await prisma.post.findUnique({
         where: { id }

@@ -5,10 +5,6 @@ import BlogListClient from "./BlogListClient";
 export const dynamic = 'force-dynamic';
 
 export default async function AdminBlogPage() {
-<<<<<<< HEAD
-
-=======
->>>>>>> main
     const posts = await prisma.post.findMany({
         orderBy: [
             { order: "asc" },

@@ -1,9 +1,5 @@
 import prisma from "@/infrastructure/prisma";
 import SystemLogsViewer from "@/app/admin/dashboard/logs/SystemLogsViewer";
-<<<<<<< HEAD
-
-=======
->>>>>>> main
 export const dynamic = 'force-dynamic';
 
 export default async function LogsPage({searchParams}: {searchParams: Promise<{page?: string}>}) {

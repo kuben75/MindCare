@@ -16,12 +16,17 @@ const FALLBACK_SCHEDULES = [
 ];
 
 export async function isSlotAvailable(
-    date: Date,
+    date: Date | string,
     durationMinutes: number,
     db: DbClient = prisma
 ): Promise<boolean> {
+    const parsedDate = date instanceof Date ? date : new Date(date);
+    if (Number.isNaN(parsedDate.getTime())) {
+        return false;
+    }
+
     const warsawNow = getWarsawNow();
-    const slotStart = DateTime.fromJSDate(date).setZone("Europe/Warsaw");
+    const slotStart = DateTime.fromJSDate(parsedDate).setZone("Europe/Warsaw");
 
     if (!slotStart.isValid) {
         return false;

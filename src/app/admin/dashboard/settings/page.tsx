@@ -1,9 +1,5 @@
 import prisma from "@/infrastructure/prisma";
 import SettingsClient from "@/app/admin/dashboard/settings/SettingsClient";
-<<<<<<< HEAD
-
-=======
->>>>>>> main
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {

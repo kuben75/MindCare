@@ -1,10 +1,6 @@
 import prisma from "@/infrastructure/prisma";
 import WaitlistManager from "@/app/admin/dashboard/waitlist/WaitlistManager";
 import InfoTooltip from "@/components/ui/InfoTooltip";
-<<<<<<< HEAD
-
-=======
->>>>>>> main
 export const dynamic = "force-dynamic";
 
 export default async function WaitlistPage() {

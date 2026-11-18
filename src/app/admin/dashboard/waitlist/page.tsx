@@ -1,15 +1,10 @@
 import prisma from "@/infrastructure/prisma";
 import WaitlistManager from "@/app/admin/dashboard/waitlist/WaitlistManager";
 import InfoTooltip from "@/components/ui/InfoTooltip";
-import { requireAdmin } from "@/lib/requireAdmin";
-import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 export default async function WaitlistPage() {
-    const admin = await requireAdmin();
-    if (!admin) {
-        return NextResponse.json({message: "Invaid credentials"}, {status: 401});
-    }
+
 
     const waitlist = await prisma.waitlist.findMany({
         include: { service: true },

@@ -1,14 +1,9 @@
 import prisma from "@/infrastructure/prisma";
 import SettingsClient from "@/app/admin/dashboard/settings/SettingsClient";
-import { requireAdmin } from "@/lib/requireAdmin";
-import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-    const admin = await requireAdmin();
-    if (!admin) {
-        return NextResponse.json({message: "Invaid credentials"}, {status: 401});
-    }
+
     const settings = await prisma.clinicSettings.upsert({
         where: { id: "global" },
         update: {},

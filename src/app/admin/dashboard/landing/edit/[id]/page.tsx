@@ -1,14 +1,10 @@
 import prisma from "@/infrastructure/prisma";
 import {notFound} from "next/navigation";
 import HeroForm from "@/components/layout/HeroForm";
-import { requireAdmin } from "@/lib/requireAdmin";
-import { NextResponse } from "next/server";
+
 
 export default async function EditLandingTemplatePage({params}: {params: Promise<{id: string}>}) {
-    const admin = await requireAdmin();
-if (!admin) {
-    return NextResponse.json({message: "Invaid credentials"}, {status: 401});
-}
+
     const {id} = await params;
 
     const template = await prisma.heroTemplate.findUnique({where: {id}});

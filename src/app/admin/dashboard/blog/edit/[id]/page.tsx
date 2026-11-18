@@ -1,23 +1,23 @@
 import prisma from "@/infrastructure/prisma";
-import {notFound} from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import PostForm from "@/components/layout/PostForm";
 import { requireAdmin } from "@/lib/requireAdmin";
-import { NextResponse } from "next/server";
-
 
 export default async function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
     const admin = await requireAdmin();
     if (!admin) {
-        return NextResponse.json({message: "Invaid credentials"}, {status: 401});
+        redirect("/admin/login");
     }
-    const {id} = await params;
+
+    const { id } = await params;
 
     const post = await prisma.post.findUnique({
-        where: {id}
+        where: { id }
     });
-    if(!post) {
+    if (!post) {
         notFound();
     }
+
     return (
         <PostForm initialData={{
             id: post.id,
@@ -25,5 +25,5 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
             content: typeof post.content === "string" ? post.content : JSON.stringify(post.content),
             isPublished: post.isPublished
         }} />
-    )
+    );
 }

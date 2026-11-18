@@ -1,15 +1,10 @@
 import PatientsClient from "@/app/admin/dashboard/patients/PatientsClient";
 import InfoTooltip from "@/components/ui/InfoTooltip";
 import {GetPatientsService} from "@/services/patients.service";
-import { requireAdmin } from "@/lib/requireAdmin";
-import { NextResponse } from "next/server";
 export const dynamic = 'force-dynamic';
 
 export default async function PatientsPage() {
-    const admin = await requireAdmin();
-if (!admin) {
-    return NextResponse.json({message: "Invaid credentials"}, {status: 401});
-}
+
     const { patientList } = await GetPatientsService();
 
     return (

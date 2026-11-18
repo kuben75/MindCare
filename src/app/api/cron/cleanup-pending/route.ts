@@ -1,43 +1,55 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 import prisma from "@/infrastructure/prisma";
-import {getWarsawNow} from "@/utils/warsaw-time";
+
+function isAuthorizedCron(req: Request): boolean {
+    const cronSecret = process.env.CRON_SECRET;
+    if (!cronSecret) return false;
+
+    const authHeader = req.headers.get("authorization") || "";
+    const expected = `Bearer ${cronSecret}`;
+
+    if (authHeader.length !== expected.length) {
+        return false;
+    }
+
+    return crypto.timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected));
+}
 
 export async function GET(req: Request) {
-    const cronSecret = process.env.CRON_SECRET;
-    const authHeader = req.headers.get('authorization');
-
-    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-        return new Response('Unauthorized', { status: 401 });
+    if (!isAuthorizedCron(req)) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     try {
-        const expirationLimit = getWarsawNow().minus({minutes: 30}).toJSDate();
+        const now = new Date();
+        const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-        const result = await prisma.reservation.updateMany({
+        const expired = await prisma.reservation.updateMany({
             where: {
                 status: "PENDING",
-                isManual: false,
-                createdAt: {
-                    lt: expirationLimit
-                }
+                OR: [
+                    { createdAt: { lt: twentyFourHoursAgo } },
+                    { date: { lt: now } },
+                ],
             },
             data: {
-                status: "CANCELLED"
-            }
+                status: "CANCELLED",
+            },
         });
 
-        if (result.count > 0) {
+        if (expired.count > 0) {
             await prisma.systemLog.create({
                 data: {
-                    action: "CRON_CZYSZCZENIE_KOSZYKÓW",
-                    details: `System automatycznie uwolnił ${result.count} nieopłaconych terminów.`
-                }
+                    action: "CRON_CLEANUP_PENDING",
+                    details: `Automatycznie anulowano wygasłe rezerwacje PENDING: ${expired.count}`,
+                },
             });
         }
 
-        return NextResponse.json({ success: true, freedSlots: result.count });
-
-    } catch  {
-        return NextResponse.json({ error: "Wystąpił błąd serwera" }, { status: 500 });
+        return NextResponse.json({ success: true, cancelledCount: expired.count });
+    } catch (error) {
+        console.error("Błąd crona cleanup-pending:", error);
+        return NextResponse.json({ error: "Błąd serwera" }, { status: 500 });
     }
 }

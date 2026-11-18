@@ -1,19 +1,32 @@
 import prisma from "@/infrastructure/prisma";
-import {notFound} from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import PostForm from "@/components/layout/PostForm";
+<<<<<<< HEAD
 
 
 
 export default async function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
 
     const {id} = await params;
+=======
+import { requireAdmin } from "@/lib/requireAdmin";
+
+export default async function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
+    const admin = await requireAdmin();
+    if (!admin) {
+        redirect("/admin/login");
+    }
+
+    const { id } = await params;
+>>>>>>> main
 
     const post = await prisma.post.findUnique({
-        where: {id}
+        where: { id }
     });
-    if(!post) {
+    if (!post) {
         notFound();
     }
+
     return (
         <PostForm initialData={{
             id: post.id,
@@ -21,5 +34,5 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
             content: typeof post.content === "string" ? post.content : JSON.stringify(post.content),
             isPublished: post.isPublished
         }} />
-    )
+    );
 }

@@ -1,6 +1,10 @@
 import prisma from "@/infrastructure/prisma";
 import {notFound} from "next/navigation";
 import HeroForm from "@/components/layout/HeroForm";
+<<<<<<< HEAD
+=======
+
+>>>>>>> main
 
 export default async function EditLandingTemplatePage({params}: {params: Promise<{id: string}>}) {
 

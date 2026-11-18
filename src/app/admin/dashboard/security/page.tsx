@@ -1,13 +1,21 @@
 import prisma from "@/infrastructure/prisma";
 import { redirect } from "next/navigation";
 import SecurityHub from "@/app/admin/dashboard/security/SecurityHub";
+<<<<<<< HEAD
 import { requireAdmin } from "@/lib/requireAdmin";  
+=======
+import { requireAdmin } from "@/lib/requireAdmin";     
+>>>>>>> main
 export const dynamic = 'force-dynamic';
 
 export default async function SecurityPage() {
     const sessionAdmin = await requireAdmin();
 if (!sessionAdmin) {
+<<<<<<< HEAD
    redirect("/admin/login");
+=======
+    redirect("/admin/login")
+>>>>>>> main
 }
 
     const admin = await prisma.admin.findUnique({

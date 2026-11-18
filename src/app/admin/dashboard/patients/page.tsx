@@ -1,7 +1,10 @@
 import PatientsClient from "@/app/admin/dashboard/patients/PatientsClient";
 import InfoTooltip from "@/components/ui/InfoTooltip";
 import {GetPatientsService} from "@/services/patients.service";
+<<<<<<< HEAD
 
+=======
+>>>>>>> main
 export const dynamic = 'force-dynamic';
 
 export default async function PatientsPage() {

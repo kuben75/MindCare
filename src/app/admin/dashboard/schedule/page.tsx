@@ -1,11 +1,17 @@
 import prisma from "@/infrastructure/prisma";
 import ScheduleForm from "@/app/admin/dashboard/schedule/ScheduleForm";
 import BlockedTimeManager from "@/app/admin/dashboard/schedule/BlockedTimeManager";
+<<<<<<< HEAD
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminSchedulePage() {
 
+=======
+export const dynamic = 'force-dynamic';
+
+export default async function AdminSchedulePage() {
+>>>>>>> main
     let schedules = await prisma.weeklySchedule.findMany({
         orderBy: {dayOfWeek: "asc"}
     });

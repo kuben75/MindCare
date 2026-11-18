@@ -1,12 +1,11 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/infrastructure/prisma";
 import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/requireAdmin";
 
 export async function GET() {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user?.email) {
-        return NextResponse.json({ error: "Brak autoryzacji" }, { status: 401 });
+    const admin = requireAdmin() ;
+    if (!admin) {
+        return NextResponse.json({message: "Invaid credentials"}, {status: 401});
     }
 
     try {
@@ -36,9 +35,9 @@ export async function GET() {
 }
 
 export async function PUT(req: Request) {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user?.email) {
-        return NextResponse.json({ error: "Brak autoryzacji" }, { status: 401 });
+    const admin = requireAdmin() ;
+    if (!admin) {
+        return NextResponse.json({message: "Invaid credentials"}, {status: 401});
     }
 
     try {
@@ -68,7 +67,7 @@ export async function PUT(req: Request) {
         await prisma.systemLog.create({
             data: {
                 action: "AKTUALIZACJA_USTAWIEŃ",
-                details: `Admin ${session.user.email} zaktualizował globalne dane gabinetu i numer konta.`
+                details: `Admin zaktualizował globalne dane gabinetu i numer konta.`
             }
         });
 

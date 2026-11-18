@@ -1,9 +1,14 @@
 import prisma from "@/infrastructure/prisma";
 import ReservationsManager from "./ReservationsManager";
-
+import { requireAdmin } from "@/lib/requireAdmin";
+import { NextResponse } from "next/server";
 export const dynamic = 'force-dynamic';
 
 export default async function AdminReservationsPage() {
+    const admin = await requireAdmin();
+if (!admin) {
+    return NextResponse.json({message: "Invaid credentials"}, {status: 401});
+}
     const reservations = await prisma.reservation.findMany({
         include: { service: true },
         orderBy: { date: 'asc' }

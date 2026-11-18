@@ -1,14 +1,13 @@
-import {getServerSession} from "next-auth";
-import {authOptions} from "@/app/api/auth/[...nextauth]/route";
 import {NextResponse} from "next/server";
 import prisma from "@/infrastructure/prisma";
 import {ISchedulePayload} from "@/types/reservation";
+import { requireAdmin } from "@/lib/requireAdmin";
 
 export async function PUT(req: Request) {
     try{
-        const session = await getServerSession(authOptions);
-        if(!session) {
-            return NextResponse.json({message: "Unauthorized"}, {status: 401});
+        const admin = await requireAdmin();
+        if (!admin) {
+            return NextResponse.json({error: "Invalid credentials"}, {status: 401});
         }
         const body = await req.json();
         const {schedules} = body;

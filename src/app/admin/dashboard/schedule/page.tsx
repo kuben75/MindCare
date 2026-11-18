@@ -1,10 +1,15 @@
 import prisma from "@/infrastructure/prisma";
 import ScheduleForm from "@/app/admin/dashboard/schedule/ScheduleForm";
 import BlockedTimeManager from "@/app/admin/dashboard/schedule/BlockedTimeManager";
-
+import { requireAdmin } from "@/lib/requireAdmin";
+import { NextResponse } from "next/server";
 export const dynamic = 'force-dynamic';
 
 export default async function AdminSchedulePage() {
+    const admin = await requireAdmin();
+    if (!admin) {
+    return NextResponse.json({message: "Invaid credentials"}, {status: 401});
+    }
     let schedules = await prisma.weeklySchedule.findMany({
         orderBy: {dayOfWeek: "asc"}
     });

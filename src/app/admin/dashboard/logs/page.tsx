@@ -1,9 +1,14 @@
 import prisma from "@/infrastructure/prisma";
 import SystemLogsViewer from "@/app/admin/dashboard/logs/SystemLogsViewer";
-
+import { requireAdmin } from "@/lib/requireAdmin";
+import { NextResponse } from "next/server"; 
 export const dynamic = 'force-dynamic';
 
 export default async function LogsPage({searchParams}: {searchParams: Promise<{page?: string}>}) {
+    const admin = await requireAdmin();
+if (!admin) {
+    return NextResponse.json({message: "Invaid credentials"}, {status: 401});
+}
     const resolvedParams = await searchParams;
     const currentPage = Number(resolvedParams.page) || 1;
     const pageSize = 20;

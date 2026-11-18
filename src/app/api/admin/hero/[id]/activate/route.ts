@@ -1,12 +1,12 @@
-import {getServerSession} from "next-auth";
+
 import prisma from "@/infrastructure/prisma";
 import {NextResponse} from "next/server";
-import {authOptions} from "@/app/api/auth/[...nextauth]/route";
+import {requireAdmin} from "@/lib/requireAdmin"
 
 export async function PATCH(req: Request, {params}: {params: Promise<{id: string}>}) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-       return NextResponse.json({error: "Unauthorized"}, {status: 401});
+    const admin = await requireAdmin();
+    if (!admin) {
+        return NextResponse.json({ error: "Brak autoryzacji" }, { status: 401 });
     }
     try {
         const {id} = await params;

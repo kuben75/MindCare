@@ -14,6 +14,11 @@ export const useSecurityHub = ({ is2FAEnabled }: { is2FAEnabled: boolean }) => {
     const [mobileOS, setMobileOS] = useState<'ios' | 'android'>('ios');
     const [verificationCode, setVerificationCode] = useState("");
 
+    const [isDisableModalOpen, setIsDisableModalOpen] = useState(false);
+    const [disablePassword, setDisablePassword] = useState("");
+    const [disableCode, setDisableCode] = useState("");
+    const [disableError, setDisableError] = useState<string | null>(null);
+
     const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
     const [isCopied, setIsCopied] = useState(false);
 
@@ -80,7 +85,8 @@ export const useSecurityHub = ({ is2FAEnabled }: { is2FAEnabled: boolean }) => {
                     if (data.recoveryCodes) setRecoveryCodes(data.recoveryCodes);
                     setTutorialStep(4);
                 } else {
-                    showToast("Błąd serwera. Nie można wygenerować kodu QR.", "error");
+                    const data = await res.json().catch(() => ({}));
+                    showToast(data.error || "Błąd serwera. Nie można wygenerować kodu QR.", "error");
                 }
             } catch {
                 setErrorMessage("Wystąpił błąd podczas generowania kodu. Spróbuj ponownie.");
@@ -131,29 +137,50 @@ export const useSecurityHub = ({ is2FAEnabled }: { is2FAEnabled: boolean }) => {
         }
     };
 
-    const handleDisable = async () => {
-        const hasConfirmed = await confirm("Wyłączenie weryfikacji 2FA znacząco obniży bezpieczeństwo Twojego konta. Czy na pewno chcesz to zrobić?", {
-            title: "Wyłącz 2FA",
-            confirmLabel: "Tak, wyłącz zabezpieczenia",
-            type: "danger"
-        });
+    const openDisableModal = () => {
+        setDisablePassword("");
+        setDisableCode("");
+        setDisableError(null);
+        setIsDisableModalOpen(true);
+    };
 
-        if (!hasConfirmed) return;
+    const closeDisableModal = () => {
+        setIsDisableModalOpen(false);
+        setDisablePassword("");
+        setDisableCode("");
+        setDisableError(null);
+    };
+
+    const handleDisable = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        setDisableError(null);
+
+        if (!disablePassword || disableCode.trim().length !== 6) {
+            setDisableError("Podaj obecne hasło oraz 6-cyfrowy kod z aplikacji.");
+            return;
+        }
+
         setIsLoading(true);
 
         try {
-            const res = await fetch('/api/admin/security/2fa/disable', { method: 'POST' });
+            const res = await fetch('/api/admin/security/2fa/disable', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: disablePassword, code: disableCode.trim() })
+            });
+
             if (res.ok) {
                 setIsEnabled(false);
                 setRecoveryCodes([]);
+                closeDisableModal();
                 showToast("Zabezpieczenie 2FA zostało wyłączone.", "info");
                 router.refresh();
             } else {
                 const errorData = await res.json();
-                showToast(errorData.message || errorData.error || "Nie udało się wyłączyć 2FA.", "error");
+                setDisableError(errorData.error || "Nie udało się wyłączyć 2FA.");
             }
         } catch {
-            showToast("Błąd połączenia z serwerem.", "error");
+            setDisableError("Błąd połączenia z serwerem.");
         } finally {
             setIsLoading(false);
         }
@@ -170,7 +197,9 @@ export const useSecurityHub = ({ is2FAEnabled }: { is2FAEnabled: boolean }) => {
     return {
         activeTutorial, setActiveTutorial, tutorialStep, handleNext, handlePrev, closeTutorial,
         isEnabled, isLoading, qrCodeData, errorMessage, mobileOS, setMobileOS,
-        verificationCode, setVerificationCode, handleVerifyAndEnable, handleDisable,
+        verificationCode, setVerificationCode, handleVerifyAndEnable,
+        isDisableModalOpen, openDisableModal, closeDisableModal,
+        disablePassword, setDisablePassword, disableCode, setDisableCode, disableError, handleDisable,
         recoveryCodes, isCopied, handleCopyCodes, activeSessions, isSessionsLoading, handleRevokeSession,
         toast, hideToast
     };

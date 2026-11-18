@@ -13,14 +13,16 @@ export default function SecurityHub({ is2FAEnabled, currentSessionId }: { is2FAE
     const {
         activeTutorial, setActiveTutorial, tutorialStep, handleNext, handlePrev, closeTutorial,
         isEnabled, isLoading, qrCodeData, errorMessage, mobileOS, setMobileOS,
-        verificationCode, setVerificationCode, handleVerifyAndEnable, handleDisable,
+        verificationCode, setVerificationCode, handleVerifyAndEnable,
+        isDisableModalOpen, openDisableModal, closeDisableModal,
+        disablePassword, setDisablePassword, disableCode, setDisableCode, disableError, handleDisable,
         recoveryCodes, isCopied, handleCopyCodes, activeSessions, isSessionsLoading, handleRevokeSession,
         toast, hideToast
     } = useSecurityHub({ is2FAEnabled });
 
     return (
         <motion.div className="relative space-y-6 sm:space-y-8" variants={containerVariants} initial="hidden" animate="visible">
-            <Toast toast={toast} onClose={hideToast}/>
+            <Toast toast={toast} onClose={hideToast} />
 
             <motion.header variants={itemVariants} className="mb-6 sm:mb-10 max-w-2xl">
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-sage dark:text-emerald-400 mb-2">
@@ -64,7 +66,7 @@ export default function SecurityHub({ is2FAEnabled, currentSessionId }: { is2FAE
                     </div>
 
                     <button
-                        onClick={() => isEnabled ? handleDisable() : setActiveTutorial('2FA')}
+                        onClick={() => isEnabled ? openDisableModal() : setActiveTutorial('2FA')}
                         disabled={isLoading}
                         className={`w-full md:w-auto px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold uppercase tracking-widest transition-all hover:cursor-pointer whitespace-nowrap shadow-sm disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2 shrink-0 ${
                             isEnabled
@@ -126,6 +128,90 @@ export default function SecurityHub({ is2FAEnabled, currentSessionId }: { is2FAE
                     handleVerifyAndEnable={handleVerifyAndEnable}
                     isLoading={isLoading}
                 />
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {isDisableModalOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-graphite/50 dark:bg-black/70 backdrop-blur-sm z-[150] flex items-center justify-center p-4"
+                        onClick={closeDisableModal}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="bg-white dark:bg-[#262626] border border-beige-dark/20 dark:border-zinc-700 w-full max-w-md rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-2xl"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <h3 className="text-xl font-serif font-bold text-graphite dark:text-white">Wyłącz weryfikację 2FA</h3>
+                            <p className="text-xs sm:text-sm text-graphite/60 dark:text-zinc-400 mt-2 leading-relaxed">
+                                Aby potwierdzić swoją tożsamość i wyłączyć zabezpieczenie dwuetapowe, podaj obecne hasło oraz kod z aplikacji.
+                            </p>
+
+                            <form onSubmit={handleDisable} className="mt-5 space-y-4">
+                                {disableError && (
+                                    <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold dark:bg-red-950/30 dark:border-red-900/50 dark:text-red-400">
+                                        {disableError}
+                                    </div>
+                                )}
+
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-graphite/60 dark:text-zinc-400 mb-1.5">
+                                        Obecne hasło
+                                    </label>
+                                    <input
+                                        type="password"
+                                        autoComplete="current-password"
+                                        required
+                                        value={disablePassword}
+                                        onChange={(e) => setDisablePassword(e.target.value)}
+                                        placeholder="••••••••••••"
+                                        className="w-full px-4 py-2.5 rounded-xl border border-beige-dark/30 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-graphite dark:text-white text-sm focus:outline-none focus:border-sage dark:focus:border-emerald-500"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-graphite/60 dark:text-zinc-400 mb-1.5">
+                                        Kod z aplikacji (6 cyfr)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        autoComplete="one-time-code"
+                                        maxLength={6}
+                                        required
+                                        value={disableCode}
+                                        onChange={(e) => setDisableCode(e.target.value.replace(/\D/g, ""))}
+                                        placeholder="000000"
+                                        className="w-full px-4 py-2.5 rounded-xl border border-beige-dark/30 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-graphite dark:text-white text-sm font-mono tracking-widest focus:outline-none focus:border-sage dark:focus:border-emerald-500"
+                                    />
+                                </div>
+
+                                <div className="pt-3 flex gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={closeDisableModal}
+                                        disabled={isLoading}
+                                        className="flex-1 py-2.5 rounded-xl border border-beige-dark/30 dark:border-zinc-700 text-graphite dark:text-zinc-300 text-xs font-bold uppercase tracking-wider hover:bg-beige-light/40 dark:hover:bg-zinc-800 transition-colors"
+                                    >
+                                        Anuluj
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={isLoading}
+                                        className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        {isLoading && <span className="animate-spin w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full" />}
+                                        {isLoading ? "Wyłączanie..." : "Potwierdź"}
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </motion.div>
+                )}
             </AnimatePresence>
         </motion.div>
     );

@@ -1,10 +1,10 @@
-import NextAuth, {NextAuthOptions} from "next-auth";
+import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import prisma from "@/infrastructure/prisma";
-import {verify} from "otplib";
-import {getFifteenMinutesAgo, parseUserAgent} from "@/utils/auth-helpers";
-import {sendNewDeviceAlertEmail} from "@/utils/email-sender";
+import { verify } from "otplib";
+import { getFifteenMinutesAgo, parseUserAgent } from "@/utils/auth-helpers";
+import { sendNewDeviceAlertEmail } from "@/utils/email-sender";
 
 declare module "next-auth" {
     interface Session {
@@ -18,62 +18,61 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
     interface JWT {
         sessionId?: string;
+        revoked?: boolean;
     }
 }
+
+const DUMMY_HASH = process.env.DUMMY_HASH;
 
 export const authOptions: NextAuthOptions = {
     providers: [
         CredentialsProvider({
             name: "Panel administratora",
             credentials: {
-                email: {label: "Email", type: "email"},
-                password: {label: "Hasło", type: "password"},
-                twoFactorCode: {label: "Kod 2FA", type: "text"}
+                email: { label: "Email", type: "email" },
+                password: { label: "Hasło", type: "password" },
+                twoFactorCode: { label: "Kod 2FA", type: "text" }
             },
             async authorize(e, req) {
                 if (!e?.email || !e?.password) {
                     throw new Error("Proszę podać email i hasło");
                 }
                 const email = e.email.trim().toLowerCase();
+                const rawIp = req?.headers?.['x-forwarded-for'] || req?.headers?.['x-real-ip'] || "unknown-ip";
+                const ipAddress = (Array.isArray(rawIp) ? rawIp[0] : rawIp).split(",")[0].trim();
 
                 const failedAttempts = await prisma.systemLog.count({
                     where: {
                         action: "FAILED_LOGIN",
                         details: email,
+                        ipAddress: ipAddress,
                         createdAt: {
                             gte: getFifteenMinutesAgo()
                         }
                     }
                 });
 
-                if(failedAttempts >= 5) {
+                if (failedAttempts >= 5) {
                     await prisma.systemLog.create({
                         data: {
                             action: "BLOCKED_LOGIN_ATTEMPT",
-                            details: email
-                        }
-                    });
-                    throw new Error("Zbyt wiele nieudanych prób logowania. Spróbuj ponownie za 15 minut.");
-                }
-                const rawIp = req?.headers?.['x-forwarded-for'] || req?.headers?.['x-real-ip'] || "Nieznane IP";
-                const ipAddress = Array.isArray(rawIp) ? rawIp[0] : rawIp;
-
-                const admin = await prisma.admin.findUnique({
-                    where: {email: e.email}
-                })
-                if (!admin) {
-                    await prisma.systemLog.create({
-                        data: {
-                            action: "FAILED_LOGIN",
                             details: email,
                             ipAddress: ipAddress
                         }
                     });
-                    throw new Error("Nieprawidłowy adres e-mail lub hasło.");
+                    throw new Error("Zbyt wiele nieudanych prób logowania. Spróbuj ponownie za 15 minut.");
                 }
-                const isValidPassword = await bcrypt.compare(e.password, admin.password)
 
-                if(!isValidPassword) {
+                const admin = await prisma.admin.findUnique({
+                    where: { email }
+                });
+
+                const passwordToCompare = admin ? admin.password : DUMMY_HASH;
+                const isValidPassword = passwordToCompare
+                                            ? await bcrypt.compare(e.password, passwordToCompare)
+                                            : false;
+
+                if (!admin || !isValidPassword) {
                     await prisma.systemLog.create({
                         data: {
                             action: "FAILED_LOGIN",
@@ -90,31 +89,40 @@ export const authOptions: NextAuthOptions = {
                     if (!code || code === "undefined" || code.trim() === "") {
                         throw new Error("2FA_REQUIRED");
                     }
-                    const recoveryCodes: string[] = JSON.parse(admin.recoveryCodes || "[]");
 
-                    const isRecoveryCode = recoveryCodes.includes(code.trim().toLowerCase());
+                    const normalizedCode = code.trim().toLowerCase();
+                    const recoveryCodes: string[] = JSON.parse(admin.recoveryCodes || "[]");
+                    const isRecoveryCode = recoveryCodes.includes(normalizedCode);
 
                     if (isRecoveryCode) {
-                        const unusedCodes = recoveryCodes.filter(c => c !== code.trim().toLowerCase());
+                        const unusedCodes = recoveryCodes.filter(c => c !== normalizedCode);
                         await prisma.admin.update({
                             where: { id: admin.id },
                             data: { recoveryCodes: JSON.stringify(unusedCodes) }
                         });
 
                         await prisma.systemLog.create({
-                            data: { action: "UZYTY_KOD_ZAPASOWY", details: email }
+                            data: { action: "UZYTY_KOD_ZAPASOWY", details: email, ipAddress }
                         });
                     } else {
                         const isValid2FA = await verify({
-                            token: code,
+                            token: code.trim(),
                             secret: admin.twoFactorSecret!
                         });
 
                         if (!isValid2FA.valid) {
+                            await prisma.systemLog.create({
+                                data: {
+                                    action: "FAILED_LOGIN",
+                                    details: email,
+                                    ipAddress: ipAddress
+                                }
+                            });
                             throw new Error("INVALID_2FA");
                         }
                     }
                 }
+
                 const userAgent = req?.headers?.['user-agent'] || "Nieznane urządzenie";
                 const deviceInfo = parseUserAgent(userAgent);
 
@@ -124,21 +132,23 @@ export const authOptions: NextAuthOptions = {
                         userAgent: userAgent
                     }
                 });
-                if(!pastSession) {
+
+                if (!pastSession) {
                     void sendNewDeviceAlertEmail({
                         adminEmail: email,
                         adminName: admin.email,
                         deviceInfo,
                         ipAddress
-                    })
+                    });
                     await prisma.systemLog.create({
                         data: {
                             action: "LOGOWANIE_NOWE_URZADZENIE",
-                            details: `${email} - ${deviceInfo}`,
+                            details: `${email} (${deviceInfo})`,
                             ipAddress: ipAddress,
                         }
                     });
                 }
+
                 const newDeviceSession = await prisma.deviceSession.create({
                     data: {
                         adminEmail: email,
@@ -146,11 +156,13 @@ export const authOptions: NextAuthOptions = {
                         userAgent,
                         deviceInfo
                     }
-                })
+                });
+
                 await prisma.systemLog.create({
                     data: {
                         action: "LOGIN_SUCCESS",
                         details: email,
+                        ipAddress
                     }
                 });
 
@@ -158,32 +170,34 @@ export const authOptions: NextAuthOptions = {
                     id: admin.id,
                     email: admin.email,
                     sessionId: newDeviceSession.id
-                }
+                };
             }
         })
     ],
     callbacks: {
         async jwt({ token, user }) {
-
-            if(user) {
+            if (user) {
                 token.sessionId = user.sessionId;
+                token.revoked = false;
             }
 
-            if(token.sessionId) {
+            if (token.sessionId) {
                 const dbSession = await prisma.deviceSession.findUnique({
-                    where: { id: token.sessionId }
+                    where: { id: token.sessionId },
+                    select: { isValid: true }
                 });
 
                 if (!dbSession || !dbSession.isValid) {
-                    return {};
+                    return { revoked: true };
                 }
             }
             return token;
         },
         async session({ session, token }) {
-            if (token.sessionId) {
-                session.sessionId = token.sessionId;
+            if (token.revoked || !token.sessionId) {
+                return {} as any;
             }
+            session.sessionId = token.sessionId;
             return session;
         }
     },

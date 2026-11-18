@@ -1,50 +1,56 @@
-import {getServerSession} from "next-auth";
-import {authOptions} from "@/app/api/auth/[...nextauth]/route";
-import {NextResponse} from "next/server";
+import { NextResponse } from "next/server";
 import prisma from "@/infrastructure/prisma";
-
+import { requireAdmin } from "@/lib/requireAdmin";
 
 export async function GET() {
     try {
-        const session = await getServerSession(authOptions);
-        if(!session || !session.user?.email) {
-            return NextResponse.json({error: "Unauthorized"}, {status: 401});
+        const admin = await requireAdmin();
+        if (!admin) {
+            return NextResponse.json({ error: "Brak autoryzacji" }, { status: 401 });
         }
 
         const activeSessions = await prisma.deviceSession.findMany({
             where: {
-                adminEmail: session.user.email,
-                isValid: true
+                adminEmail: admin.email,
+                isValid: true,
             },
-            orderBy: {createdAt: "desc"}
+            orderBy: { createdAt: "desc" },
         });
-        return NextResponse.json({sessions: activeSessions});
-    }catch {
-        return NextResponse.json({error: "Wystąpił błąd"}, {status: 500})
+
+        return NextResponse.json({ sessions: activeSessions });
+    } catch {
+        return NextResponse.json({ error: "Wystąpił błąd serwera" }, { status: 500 });
     }
 }
 
-
-export async function PATCH(req:Request) {
+export async function PATCH(req: Request) {
     try {
-        const session = await getServerSession(authOptions);
-        if(!session || !session.user?.email) {
-            return NextResponse.json({error: "Unauthorized"}, {status: 401});
+        const admin = await requireAdmin();
+        if (!admin) {
+            return NextResponse.json({ error: "Brak autoryzacji" }, { status: 401 });
         }
 
-        const {sessionId} = await req.json();
-        if(!sessionId) {
-            return NextResponse.json({error: "Brak ID sesji"}, {status: 400});
+        const body = await req.json().catch(() => ({}));
+        const sessionId = typeof body?.sessionId === "string" ? body.sessionId.trim() : "";
+
+        if (!sessionId) {
+            return NextResponse.json({ error: "Brak poprawnego ID sesji" }, { status: 400 });
         }
 
-        await prisma.deviceSession.update({
-            where: {id: sessionId},
-            data: {isValid: false}
-        })
+        const updated = await prisma.deviceSession.updateMany({
+            where: {
+                id: sessionId,
+                adminEmail: admin.email,
+            },
+            data: { isValid: false },
+        });
 
-        return NextResponse.json({success: true});
+        if (updated.count === 0) {
+            return NextResponse.json({ error: "Nie znaleziono sesji" }, { status: 404 });
+        }
 
-    }catch  {
-        return NextResponse.json({error: "Wystąpił błąd"}, {status: 500})
+        return NextResponse.json({ success: true });
+    } catch {
+        return NextResponse.json({ error: "Wystąpił błąd serwera" }, { status: 500 });
     }
 }

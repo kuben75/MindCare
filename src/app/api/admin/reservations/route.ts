@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/infrastructure/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { isSlotAvailable } from "@/services/availability.service";
 import { z } from "zod";
+import {requireAdmin} from "@/lib/requireAdmin";
 
 const adminReservationSchema = z.object({
     patientName: z.string().min(2, "Imię i nazwisko jest wymagane"),
@@ -17,8 +16,9 @@ const adminReservationSchema = z.object({
 
 export async function POST(req: Request) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session || !session.user?.email) {
+        const admin = await requireAdmin();
+
+        if (!admin) {
             return NextResponse.json({ error: "Brak autoryzacji" }, { status: 401 });
         }
 
@@ -48,7 +48,6 @@ export async function POST(req: Request) {
             );
         }
 
-        // W prisma.reservation.create:
         const newReservation = await prisma.reservation.create({
             data: {
                 patientName: patientName.trim(),
@@ -71,7 +70,7 @@ export async function POST(req: Request) {
         await prisma.systemLog.create({
             data: {
                 action: "ADMIN_DODANIE_WIZYTY",
-                details: `Admin ${session.user.email} ręcznie dodał wizytę: ${newReservation.id} dla ${newReservation.patientName} (${newReservation.service.name}) ze statusem ${newReservation.status}`,
+                details: `Admin  ręcznie dodał wizytę: ${newReservation.id} dla ${newReservation.patientName} (${newReservation.service.name}) ze statusem ${newReservation.status}`,
             }
         });
 

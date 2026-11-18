@@ -1,13 +1,12 @@
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import prisma from "@/infrastructure/prisma";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { generateUniqueSlug } from "@/utils/slug";
+import {requireAdmin} from "@/lib/requireAdmin";
 
 export async function POST(req: Request) {
-    const session = await getServerSession(authOptions);
+    const admin = await requireAdmin();
 
-    if (!session || !session.user?.email) {
+    if (!admin) {
         return NextResponse.json({ error: "Brak autoryzacji" }, { status: 401 });
     }
 

@@ -1,16 +1,16 @@
-import { getServerSession } from "next-auth";
+
 import { NextResponse } from "next/server";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { put } from "@vercel/blob";
 import path from "node:path";
+import { requireAdmin } from "@/lib/requireAdmin";
 
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 export async function POST(req: Request) {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user?.email) {
-        return NextResponse.json({ success: 0, error: "Brak autoryzacji" }, { status: 401 });
+    const admin = requireAdmin() ;
+    if (!admin) {
+        return NextResponse.json({message: "Invaid credentials"}, {status: 401});
     }
 
     try {
@@ -21,7 +21,6 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: 0, error: "Nie przesłano poprawnego pliku." }, { status: 400 });
         }
 
-        // 1. Walidacja typu MIME
         if (!ALLOWED_MIME_TYPES.includes(file.type)) {
             return NextResponse.json({
                 success: 0,
@@ -29,15 +28,12 @@ export async function POST(req: Request) {
             }, { status: 400 });
         }
 
-        // 2. Walidacja rozmiaru
         if (file.size > MAX_FILE_SIZE) {
             return NextResponse.json({
                 success: 0,
                 error: "Plik jest zbyt duży. Maksymalny rozmiar to 5 MB."
             }, { status: 400 });
         }
-
-        // 3. Bezpieczna nazwa pliku (usunięcie ścieżek ../ i spacji)
         const rawFileName = path.basename(file.name);
         const sanitizedFileName = rawFileName.replace(/[^a-zA-Z0-9.-]/g, "_");
         const blobPath = `uploads/${Date.now()}-${sanitizedFileName}`;

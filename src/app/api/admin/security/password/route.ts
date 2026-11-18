@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/infrastructure/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import bcrypt from "bcryptjs";
+import { requireAdmin } from "@/lib/requireAdmin";
 
 export async function POST(req: Request) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session || !session.user?.email) {
-            return NextResponse.json({ error: "Brak autoryzacji" }, { status: 401 });
+        const adminSession = await requireAdmin();
+        if(!adminSession) {
+         return NextResponse.json({error: "Invalid credentials"}, {status: 401});
         }
 
         const body = await req.json();
@@ -27,7 +26,7 @@ export async function POST(req: Request) {
         }
 
         const admin = await prisma.admin.findUnique({
-            where: { email: session.user.email }
+            where: { email: adminSession.email }
         });
 
         if (!admin || !admin.password) {

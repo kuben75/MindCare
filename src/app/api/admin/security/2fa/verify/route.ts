@@ -1,45 +1,50 @@
-import {getServerSession} from "next-auth";
-import {authOptions} from "@/app/api/auth/[...nextauth]/route";
-import {NextResponse} from "next/server";
+import { NextResponse } from "next/server";
 import prisma from "@/infrastructure/prisma";
-import {verify} from "otplib";
-
+import { verify } from "otplib";
+import { requireAdmin } from "@/lib/requireAdmin";
 
 export async function POST(req: Request) {
-    try{
-        const session = await getServerSession(authOptions);
+    try {
+       const adminSession = await requireAdmin();
+       if(!adminSession) {
+        return NextResponse.json({error: "Invalid credentials"}, {status: 401});
+       }
 
-        if(!session || !session.user?.email) {
-            return NextResponse.json({error: "Unauthorized"}, {status: 401});
+        const body = await req.json().catch(() => ({}));
+        const code = typeof body?.code === "string" ? body.code.trim() : "";
+
+        if (!/^\d{6}$/.test(code)) {
+            return NextResponse.json({ error: "Kod musi składać się z 6 cyfr" }, { status: 400 });
         }
 
-        const body = await req.json();
-        const {code} = body;
-
         const admin = await prisma.admin.findUnique({
-            where: {email: session.user.email}
-        })
+            where: { email: adminSession.email },
+        });
 
-        if(!admin || !admin.twoFactorSecret) {
-            return NextResponse.json({error: "Brak konfiguracji 2FA"}, {status: 400})
+        if (!admin || !admin.twoFactorSecret) {
+            return NextResponse.json({ error: "Brak aktywnej konfiguracji 2FA" }, { status: 400 });
+        }
+
+        if (admin.twoFactorEnabled) {
+            return NextResponse.json({ error: "2FA jest już włączone" }, { status: 409 });
         }
 
         const result = await verify({
             token: code,
-            secret: admin.twoFactorSecret
+            secret: admin.twoFactorSecret,
         });
 
-        if(!result.valid) {
-            return NextResponse.json({error: "Nieprawidłowy kod. Spróbuj ponownie"}, {status: 400})
+        if (!result.valid) {
+            return NextResponse.json({ error: "Nieprawidłowy kod. Spróbuj ponownie" }, { status: 400 });
         }
 
         await prisma.admin.update({
-            where: {email: admin.email},
-            data: {twoFactorEnabled: true}
+            where: { email: admin.email },
+            data: { twoFactorEnabled: true },
         });
 
-        return NextResponse.json({success: true});
-    }catch  {
-        return NextResponse.json({error: "Wystąpił błąd"}, {status: 500})
+        return NextResponse.json({ success: true });
+    } catch {
+        return NextResponse.json({ error: "Wystąpił błąd serwera" }, { status: 500 });
     }
 }

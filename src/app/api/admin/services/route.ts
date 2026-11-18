@@ -1,14 +1,12 @@
-import {getServerSession} from "next-auth";
-import {authOptions} from "@/app/api/auth/[...nextauth]/route";
 import {NextResponse} from "next/server";
 import prisma from "@/infrastructure/prisma";
-
+import {requireAdmin} from "@/lib/requireAdmin";
 
 export async function GET() {
     try{
-        const session = await getServerSession(authOptions);
-        if(!session) {
-            return NextResponse.json({error: "Unauthorized"}, {status: 401});
+        const admin = requireAdmin();
+        if (!admin) {
+            return NextResponse.json({message: "Invalid credentials"}, {status: 401});
         }
 
         const services = await prisma.service.findMany({
@@ -22,9 +20,9 @@ export async function GET() {
 
 export async function POST(req:Request) {
     try {
-        const session = await getServerSession(authOptions);
-        if(!session) {
-            return NextResponse.json({error: "Unauthorized"}, {status: 401});
+        const admin = requireAdmin();
+        if (!admin) {
+            return NextResponse.json({message: "Invalid credentials"}, {status: 401});
         }
         const body = await req.json();
         const {name, duration, price} = body;

@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/infrastructure/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { DateTime } from "luxon";
+import {requireAdmin} from "@/lib/requireAdmin"
+
 
 export async function GET() {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user?.email) {
+    const admin = await requireAdmin();
+
+    if (!admin) {
         return NextResponse.json({ error: "Brak autoryzacji" }, { status: 401 });
     }
 
@@ -28,8 +29,9 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user?.email) {
+    const admin = await requireAdmin();
+
+    if (!admin) {
         return NextResponse.json({ error: "Brak autoryzacji" }, { status: 401 });
     }
 
@@ -79,7 +81,7 @@ export async function POST(req: Request) {
         await prisma.systemLog.create({
             data: {
                 action: "DODANIE_BLOKADY",
-                details: `Admin ${session.user.email} zablokował termin: ${startDateTime.toISOString()} - ${endDateTime.toISOString()} (${reason || 'brak powodu'})`
+                details: `Admin zablokował termin: ${startDateTime.toISOString()} - ${endDateTime.toISOString()} (${reason || 'brak powodu'})`
             }
         });
 

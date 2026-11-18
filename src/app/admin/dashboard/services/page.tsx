@@ -1,15 +1,10 @@
 import prisma from "@/infrastructure/prisma";
 import ServiceManager from "@/app/admin/dashboard/services/ServiceManager";
-import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/requireAdmin";
+
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminServicesPage() {
-    const admin = await requireAdmin();
-    if (!admin) {
-        return NextResponse.json({message: "Invaid credentials"}, {status: 401});
-    }
 
 
     const initialServices = await prisma.service.findMany({

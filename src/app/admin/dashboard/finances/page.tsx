@@ -1,14 +1,10 @@
 import FinancesClient from "./FinancesClient";
 import {getFinancesData} from "@/services/fincences.service";
-import { requireAdmin } from "@/lib/requireAdmin";
-import { NextResponse } from "next/server"; 
+
 export const dynamic = 'force-dynamic';
 
 export default async function FinancesPage() {
-    const admin = await requireAdmin();
-if (!admin) {
-    return NextResponse.json({message: "Invaid credentials"}, {status: 401});
-}
+
 
     const {
         totalRevenue,

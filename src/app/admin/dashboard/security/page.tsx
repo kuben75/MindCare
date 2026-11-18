@@ -1,14 +1,13 @@
 import prisma from "@/infrastructure/prisma";
 import { redirect } from "next/navigation";
 import SecurityHub from "@/app/admin/dashboard/security/SecurityHub";
-import { requireAdmin } from "@/lib/requireAdmin";
-import { NextResponse } from "next/server";     
+import { requireAdmin } from "@/lib/requireAdmin";  
 export const dynamic = 'force-dynamic';
 
 export default async function SecurityPage() {
     const sessionAdmin = await requireAdmin();
 if (!sessionAdmin) {
-    return NextResponse.json({message: "Invaid credentials"}, {status: 401});
+   redirect("/admin/login");
 }
 
     const admin = await prisma.admin.findUnique({

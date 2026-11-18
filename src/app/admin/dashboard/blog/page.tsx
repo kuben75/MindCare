@@ -1,15 +1,11 @@
 import prisma from "@/infrastructure/prisma";
 import Link from "next/link";
 import BlogListClient from "./BlogListClient";
-import { requireAdmin } from "@/lib/requireAdmin";
-import { NextResponse } from "next/server";
+
 export const dynamic = 'force-dynamic';
 
 export default async function AdminBlogPage() {
-    const admin = await requireAdmin();
-    if (!admin) {
-        return NextResponse.json({message: "Invaid credentials"}, {status: 401});
-    }
+
     const posts = await prisma.post.findMany({
         orderBy: [
             { order: "asc" },

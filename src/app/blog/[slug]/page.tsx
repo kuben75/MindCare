@@ -3,6 +3,7 @@ import prisma from "@/infrastructure/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { sanitizeBlogHtml } from "@/lib/sanitize-blog";
 
 const edjsParser = edjsHTML();
 
@@ -65,14 +66,17 @@ export default async function BlogPostPage({ params }: PageProps) {
         notFound();
     }
 
-    let parsedContent: string[] = [];
+    let rawHtml = "";
     try {
-        const jsonContent = typeof post.content === 'string' ? JSON.parse(post.content) : post.content;
+        const jsonContent = typeof post.content === "string" ? JSON.parse(post.content) : post.content;
         const parsed = edjsParser.parse(jsonContent);
-        parsedContent = Array.isArray(parsed) ? parsed : [parsed as unknown as string];
+        const chunks = Array.isArray(parsed) ? parsed : [parsed as unknown as string];
+        rawHtml = chunks.join("");
     } catch {
-        parsedContent = [`<p>${typeof post.content === 'string' ? post.content : "Błąd ładowania."}</p>`];
+        rawHtml = `<p>${typeof post.content === "string" ? post.content : "Błąd ładowania."}</p>`;
     }
+
+    const safeHtml = sanitizeBlogHtml(rawHtml);
 
     return (
         <main className="min-h-screen pt-32 pb-24 px-4 sm:px-6 md:px-8 bg-beige-light/30 dark:bg-[#121212] transition-colors duration-500 overflow-hidden">
@@ -113,11 +117,11 @@ export default async function BlogPostPage({ params }: PageProps) {
 
                 <header className="mb-12 sm:mb-16">
                     <p className="text-sage dark:text-emerald-400 font-bold text-[10px] mb-4 sm:mb-6 uppercase tracking-widest">
-                        {new Date(post.createdAt).toLocaleDateString('pl-PL', {
-                            timeZone: 'Europe/Warsaw',
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric'
+                        {new Date(post.createdAt).toLocaleDateString("pl-PL", {
+                            timeZone: "Europe/Warsaw",
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric"
                         })}
                     </p>
                     <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif text-graphite dark:text-zinc-100 mb-8 leading-[1.15] break-words">
@@ -133,7 +137,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                         prose-img:max-w-[500px] prose-img:shadow-xl
                         prose-blockquote:border-l-sage prose-blockquote:bg-sage/5 prose-blockquote:py-4 prose-blockquote:px-6 sm:prose-blockquote:px-8 prose-blockquote:rounded-r-2xl prose-blockquote:text-graphite dark:prose-blockquote:text-zinc-200 prose-blockquote:not-italic prose-blockquote:font-medium
                         prose-strong:text-graphite dark:prose-strong:text-zinc-100 break-words"
-                    dangerouslySetInnerHTML={{ __html: parsedContent.join('') }}
+                    dangerouslySetInnerHTML={{ __html: safeHtml }}
                 />
 
                 <footer className="mt-16 sm:mt-24 pt-10 sm:pt-12 border-t border-beige-dark/20 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center gap-5 sm:gap-6">

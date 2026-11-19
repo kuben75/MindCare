@@ -1,7 +1,8 @@
 import prisma from "@/infrastructure/prisma";
 import { NextResponse } from "next/server";
 import { generateUniqueSlug } from "@/utils/slug";
-import {requireAdmin} from "@/lib/requireAdmin";
+import { requireAdmin } from "@/lib/requireAdmin";
+import { validateAndSanitizePostContent } from "@/lib/sanitize-blog";
 
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
     const admin = await requireAdmin();
@@ -36,8 +37,13 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
         const body = await req.json();
         const { title, content, isPublished } = body;
 
-        if (!title || !content) {
+        if (!title || typeof title !== "string" || !title.trim() || !content) {
             return NextResponse.json({ error: "Tytuł i treść są wymagane" }, { status: 400 });
+        }
+
+        const validation = validateAndSanitizePostContent(content);
+        if (!validation.ok) {
+            return NextResponse.json({ error: validation.error }, { status: 400 });
         }
 
         const existingPost = await prisma.post.findUnique({
@@ -57,7 +63,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
             where: { id },
             data: {
                 title: title.trim(),
-                content,
+                content: validation.sanitized as string,
                 slug,
                 isPublished: isPublished ?? existingPost.isPublished
             }

@@ -1,14 +1,12 @@
 import prisma from "@/infrastructure/prisma";
 import {sendPatientReminderEmail} from "@/utils/email-sender";
+import {isAuthorizedCron} from "@/lib/request-security";
 import {NextResponse} from "next/server";
 import {getWarsawStartOfDay} from "@/utils/warsaw-time";
 
 
 export async function GET(req:Request) {
-    const cronSecret = process.env.CRON_SECRET;
-    const authHeader = req.headers.get('authorization');
-
-    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    if (!isAuthorizedCron(req)) {
         return new Response('Unauthorized', { status: 401 });
     }
     try {

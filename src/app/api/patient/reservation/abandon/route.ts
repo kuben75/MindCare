@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import prisma from "@/infrastructure/prisma";
+import { parseMagicToken } from "@/lib/request-security";
 
 export async function POST(req: Request) {
     try {
-        const { token } = await req.json();
+        const body = await req.json().catch(() => null);
+        const token = parseMagicToken(body?.token);
 
         if (!token) return NextResponse.json({ message: "Brak tokenu" }, { status: 400 });
 

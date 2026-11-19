@@ -73,7 +73,8 @@ export const useHeroForm = ({ initialData }: { initialData?: THeroProps }) => {
                     router.refresh();
                 }, 1000);
             } else {
-                showToast("Błąd podczas zapisywania szablonu do bazy.", "error");
+                const data = await response.json().catch(() => null);
+                showToast(data?.error || "Błąd podczas zapisywania szablonu do bazy.", "error");
             }
         } catch  {
             showToast("Wystąpił błąd wgrywania zdjęcia lub zapisu.", "error");

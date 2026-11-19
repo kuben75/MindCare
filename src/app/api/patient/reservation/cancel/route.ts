@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/infrastructure/prisma";
+import { parseMagicToken } from "@/lib/request-security";
 import { sendCancellationEmail } from "@/utils/email-sender";
 import { stripe } from "@/infrastructure/stripe";
 
 export async function POST(req: Request) {
     try {
-        const { token } = await req.json();
+        const body = await req.json().catch(() => null);
+        const token = parseMagicToken(body?.token);
 
         if (!token) {
             return NextResponse.json({ message: "Token jest wymagany" }, { status: 400 });

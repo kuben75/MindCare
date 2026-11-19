@@ -5,7 +5,7 @@ import { requireAdmin } from "@/lib/requireAdmin";
 
 export async function PATCH(req: Request, {params}: {params: Promise<{id: string}>}) {
     try{
-        const admin = requireAdmin();
+        const admin = await requireAdmin();
         if (!admin) {
             return NextResponse.json({message: "Invalid credentials"}, {status: 401});
         }
@@ -31,7 +31,7 @@ export async function PATCH(req: Request, {params}: {params: Promise<{id: string
 
 export async function DELETE(req: Request, {params}: {params: Promise<{id: string}>}) {
     try {
-         const admin = requireAdmin();
+         const admin = await requireAdmin();
         if (!admin) {
             return NextResponse.json({message: "Invalid credentials"}, {status: 401});
         }

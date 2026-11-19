@@ -3,12 +3,13 @@ import { NextResponse } from "next/server";
 import { put } from "@vercel/blob";
 import path from "node:path";
 import { requireAdmin } from "@/lib/requireAdmin";
+import { detectImageType } from "@/lib/image-type";
 
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 export async function POST(req: Request) {
-    const admin = requireAdmin() ;
+    const admin = await requireAdmin();
     if (!admin) {
         return NextResponse.json({message: "Invaid credentials"}, {status: 401});
     }
@@ -34,12 +35,24 @@ export async function POST(req: Request) {
                 error: "Plik jest zbyt duży. Maksymalny rozmiar to 5 MB."
             }, { status: 400 });
         }
-        const rawFileName = path.basename(file.name);
-        const sanitizedFileName = rawFileName.replace(/[^a-zA-Z0-9.-]/g, "_");
-        const blobPath = `uploads/${Date.now()}-${sanitizedFileName}`;
+        // The browser-supplied MIME type and file name are attacker-controlled: detect the real
+        // format from the file's magic bytes and derive extension + Content-Type from it.
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const detected = detectImageType(buffer);
+        if (!detected) {
+            return NextResponse.json({
+                success: 0,
+                error: "Plik nie jest poprawnym obrazem JPG, PNG, WEBP ani GIF."
+            }, { status: 400 });
+        }
 
-        const blob = await put(blobPath, file, {
+        const baseName = path.basename(file.name).replace(/\.[^.]*$/, "");
+        const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9-]/g, "_").slice(0, 80) || "image";
+        const blobPath = `uploads/${Date.now()}-${sanitizedBaseName}.${detected.ext}`;
+
+        const blob = await put(blobPath, buffer, {
             access: "public",
+            contentType: detected.mime,
         });
 
         return NextResponse.json({

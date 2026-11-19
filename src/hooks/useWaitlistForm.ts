@@ -13,6 +13,8 @@ export const useWaitlistForm = ({services}: IWaitlistFormData) => {
 
     const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
     const [errorMessage, setErrorMessage] = useState("");
+    const [turnstileToken, setTurnstileToken] = useState("");
+    const [turnstileKey, setTurnstileKey] = useState(0);
 
     useEffect(() => {
         if(services.length > 0 && !formData.serviceId) {
@@ -29,9 +31,12 @@ export const useWaitlistForm = ({services}: IWaitlistFormData) => {
             const res = await fetch('/api/waitlist', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json',},
-                body: JSON.stringify(formData),
+                body: JSON.stringify({...formData, turnstileToken}),
             });
             const data = await res.json();
+            // Turnstile tokens are single-use — remount the widget for the next submission.
+            setTurnstileToken("");
+            setTurnstileKey(k => k + 1);
             if(res.ok) {
                 setStatus('success');
             } else {
@@ -49,6 +54,9 @@ export const useWaitlistForm = ({services}: IWaitlistFormData) => {
         status,
         errorMessage,
         handleSubmit,
-        setStatus
+        setStatus,
+        turnstileToken,
+        setTurnstileToken,
+        turnstileKey
     }
 }

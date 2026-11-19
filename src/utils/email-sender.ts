@@ -52,6 +52,12 @@ async function sendEmailBase(
     }
 }
 
+/** Clinic contact address from settings, falling back to the admin notification address. */
+export async function getClinicNotificationEmail(): Promise<string> {
+    const settings = await prisma.clinicSettings.findUnique({ where: { id: "global" }, select: { email: true } });
+    return settings?.email?.trim().toLowerCase() || getAdminNotificationEmail();
+}
+
 export async function getAdminNotificationEmail(): Promise<string> {
     if (process.env.ADMIN_NOTIFICATION_EMAIL) {
         return process.env.ADMIN_NOTIFICATION_EMAIL.trim().toLowerCase();

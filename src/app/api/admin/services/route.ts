@@ -4,7 +4,7 @@ import {requireAdmin} from "@/lib/requireAdmin";
 
 export async function GET() {
     try{
-        const admin = requireAdmin();
+        const admin = await requireAdmin();
         if (!admin) {
             return NextResponse.json({message: "Invalid credentials"}, {status: 401});
         }
@@ -20,7 +20,7 @@ export async function GET() {
 
 export async function POST(req:Request) {
     try {
-        const admin = requireAdmin();
+        const admin = await requireAdmin();
         if (!admin) {
             return NextResponse.json({message: "Invalid credentials"}, {status: 401});
         }

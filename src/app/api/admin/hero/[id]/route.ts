@@ -1,6 +1,7 @@
 import {NextResponse} from "next/server";
 import prisma from "@/infrastructure/prisma";
 import {requireAdmin} from "@/lib/requireAdmin"
+import {heroTemplateSchema} from "@/schemas/hero"
 
 export async function PUT(req: Request, {params}: {params: Promise<{id: string}>}) {
     const admin = await requireAdmin();
@@ -9,20 +10,15 @@ export async function PUT(req: Request, {params}: {params: Promise<{id: string}>
     }
     try{
         const {id} = await params;
-        const body = await req.json();
+        const body = await req.json().catch(() => null);
+        const validation = heroTemplateSchema.safeParse(body);
+        if (!validation.success) {
+            const message = validation.error.issues[0]?.message || "Nieprawidłowe dane szablonu";
+            return NextResponse.json({ error: message }, { status: 400 });
+        }
         const updatedTemplate = await prisma.heroTemplate.update({
             where: {id},
-            data: {
-                title: body.title,
-                subtitle: body.subtitle,
-                imageUrl: body.imageUrl,
-                layout: body.layout,
-                imageStyle: body.imageStyle,
-                showPrimaryButton: body.showPrimaryButton,
-                primaryButtonText: body.primaryButtonText,
-                primaryButtonLink: body.primaryButtonLink,
-                showZnanyLekarz: body.showZnanyLekarz,
-            }
+            data: validation.data
         });
         return NextResponse.json(updatedTemplate);
     }catch  {

@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/requireAdmin";
 
 export async function GET() {
-    const admin = requireAdmin() ;
+    const admin = await requireAdmin();
     if (!admin) {
         return NextResponse.json({message: "Invaid credentials"}, {status: 401});
     }
@@ -35,7 +35,7 @@ export async function GET() {
 }
 
 export async function PUT(req: Request) {
-    const admin = requireAdmin() ;
+    const admin = await requireAdmin();
     if (!admin) {
         return NextResponse.json({message: "Invaid credentials"}, {status: 401});
     }

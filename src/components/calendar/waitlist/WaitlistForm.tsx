@@ -3,6 +3,7 @@
 import {IWaitlistFormData} from "@/types/waitlist";
 import React from "react";
 import {useWaitlistForm} from "@/hooks/useWaitlistForm";
+import {TurnstileWidget, isTurnstileEnabled} from "@/components/ui/TurnstileWidget";
 
 export default function WaitlistForm({services}: IWaitlistFormData) {
     const {
@@ -11,7 +12,10 @@ export default function WaitlistForm({services}: IWaitlistFormData) {
         status,
         errorMessage,
         handleSubmit,
-        setStatus
+        setStatus,
+        turnstileToken,
+        setTurnstileToken,
+        turnstileKey
     } = useWaitlistForm({services});
     if (status === 'success') {
         return (
@@ -75,7 +79,8 @@ export default function WaitlistForm({services}: IWaitlistFormData) {
                         className="w-full px-4 py-3 rounded-xl border border-beige-dark/80 bg-beige-light/10 text-sm focus:ring-2 focus:ring-sage focus:outline-none transition-all resize-y"
                     />
                 </div>
-            <button type="submit" disabled={status === 'loading'}
+            <TurnstileWidget key={turnstileKey} onToken={setTurnstileToken}/>
+            <button type="submit" disabled={status === 'loading' || (isTurnstileEnabled && !turnstileToken)}
                 className={`w-full py-3.5 bg-sage text-white rounded-xl text-sm font-bold tracking-wide hover:bg-opacity-90 transition-all shadow-md mt-2 disabled:opacity-50 hover:cursor-pointer ${status === 'loading' ? 'cursor-not-allowed' : ''}`}>
                 {status === 'loading' ? 'Zapisywanie...' : 'Zapisz mnie na listę'}
             </button>

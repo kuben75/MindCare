@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import prisma from "@/infrastructure/prisma";
 import bcrypt from "bcryptjs";
-import { verify } from "otplib";
 import {requireAdmin} from "@/lib/requireAdmin";
+import { countRecentFailures, verifyAndConsumeTotp } from "@/lib/two-factor";
+
+const FAILED_ACTION = "FAILED_2FA_DISABLE";
+const MAX_FAILURES = 5;
 
 export async function POST(req: Request) {
     try {
@@ -30,13 +33,15 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "2FA nie jest włączone" }, { status: 400 });
         }
 
-        const isPasswordValid = await bcrypt.compare(password, admin.password);
-        const totpResult = await verify({
-            token: code,
-            secret: admin.twoFactorSecret,
-        });
+        if (await countRecentFailures(FAILED_ACTION, admin.email) >= MAX_FAILURES) {
+            return NextResponse.json({ error: "Zbyt wiele nieudanych prób. Spróbuj ponownie za 15 minut." }, { status: 429 });
+        }
 
-        if (!isPasswordValid || !totpResult.valid) {
+        const isPasswordValid = await bcrypt.compare(password, admin.password);
+        const isTotpValid = isPasswordValid && await verifyAndConsumeTotp(admin, code);
+
+        if (!isPasswordValid || !isTotpValid) {
+            await prisma.systemLog.create({ data: { action: FAILED_ACTION, details: admin.email } });
             return NextResponse.json(
                 { error: "Nieprawidłowe hasło lub kod weryfikacyjny" },
                 { status: 403 }
@@ -49,6 +54,7 @@ export async function POST(req: Request) {
                 twoFactorEnabled: false,
                 twoFactorSecret: null,
                 recoveryCodes: "[]",
+                lastTotpTimeStep: null,
             },
         });
 

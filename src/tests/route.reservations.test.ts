@@ -4,13 +4,16 @@ import { POST } from "@/app/api/reservations/route";
 import { isSlotAvailable } from '@/services/availability.service';
 import { Reservation, Service } from "@prisma/client";
 
-vi.mock('@/infrastructure/prisma', () => ({
-    default: {
+vi.mock('@/infrastructure/prisma', () => {
+    const mockPrisma = {
         service: { findUnique: vi.fn() },
-        reservation: { create: vi.fn() },
-        systemLog: { create: vi.fn() }
-    }
-}));
+        reservation: { count: vi.fn(), create: vi.fn() },
+        clinicSettings: { findFirst: vi.fn() },
+        systemLog: { count: vi.fn(), create: vi.fn() },
+        $transaction: vi.fn(),
+    };
+    return { default: mockPrisma };
+});
 
 vi.mock('@/services/availability.service', () => ({
     isSlotAvailable: vi.fn()
@@ -26,6 +29,15 @@ describe('Endpoint POST /api/reservations', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
+        vi.mocked(prisma.systemLog.count).mockResolvedValue(0);
+        vi.mocked(prisma.reservation.count).mockResolvedValue(0);
+        vi.mocked(prisma.clinicSettings.findFirst).mockResolvedValue(null);
+        vi.mocked(prisma.$transaction).mockImplementation(async (fn: unknown) => {
+            if (typeof fn === 'function') {
+                return fn(prisma);
+            }
+            return Promise.all(fn as Promise<unknown>[]);
+        });
     });
 
     it('Zwraca 409 Conflict jeśli wybrany termin nakłada się na inną wizytę (Overbooking Protection)', async () => {
@@ -58,7 +70,7 @@ describe('Endpoint POST /api/reservations', () => {
         const data = await res.json();
 
         expect(res.status).toBe(409);
-        expect(data.error).toContain('ten termin został właśnie zajęty');
+        expect(data.error).toContain('ten termin jest niedostępny lub został właśnie zajęty');
     });
 
     it('Tworzy rezerwację PENDING i natychmiast odsyła pacjenta do strony sukcesu (bez bramki Stripe)', async () => {
@@ -70,7 +82,6 @@ describe('Endpoint POST /api/reservations', () => {
             isActive: true
         } as Service);
 
-        // Symulacja: slot jest wolny
         vi.mocked(isSlotAvailable).mockResolvedValue(true);
 
         const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();

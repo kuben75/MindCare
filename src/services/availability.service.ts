@@ -1,43 +1,101 @@
+import { Prisma } from "@prisma/client";
 import prisma from "@/infrastructure/prisma";
+import { getWarsawNow } from "@/utils/warsaw-time";
 import { DateTime } from "luxon";
 
+type DbClient = Prisma.TransactionClient | typeof prisma;
+
+const FALLBACK_SCHEDULES = [
+    { dayOfWeek: 1, startTime: "17:00", endTime: "20:00", isActive: true },
+    { dayOfWeek: 2, startTime: "17:00", endTime: "20:00", isActive: true },
+    { dayOfWeek: 3, startTime: "17:00", endTime: "20:00", isActive: true },
+    { dayOfWeek: 4, startTime: "17:00", endTime: "20:00", isActive: true },
+    { dayOfWeek: 5, startTime: "09:00", endTime: "18:00", isActive: true },
+    { dayOfWeek: 6, startTime: "10:00", endTime: "16:00", isActive: true },
+    { dayOfWeek: 0, startTime: "00:00", endTime: "00:00", isActive: false },
+];
+
 export async function isSlotAvailable(
-    dateParam: string | Date,
-    serviceDurationMinutes: number = 60,
-    ignoreReservationId?: string
+    date: Date | string,
+    durationMinutes: number,
+    db: DbClient = prisma
 ): Promise<boolean> {
-    const requestedDt = DateTime.fromJSDate(new Date(dateParam)).setZone("Europe/Warsaw");
-    const requestedStart = requestedDt.toJSDate();
-    const requestedEnd = requestedDt.plus({ minutes: serviceDurationMinutes }).toJSDate();
+    const parsedDate = date instanceof Date ? date : new Date(date);
+    if (Number.isNaN(parsedDate.getTime())) {
+        return false;
+    }
 
-    const dayStart = requestedDt.startOf("day").toJSDate();
-    const dayEnd = requestedDt.endOf("day").toJSDate();
+    const warsawNow = getWarsawNow();
+    const slotStart = DateTime.fromJSDate(parsedDate).setZone("Europe/Warsaw");
 
-    const existingReservations = await prisma.reservation.findMany({
+    if (!slotStart.isValid) {
+        return false;
+    }
+
+    const maxHorizon = warsawNow.plus({ days: 30 }).endOf("day");
+    if (slotStart < warsawNow || slotStart > maxHorizon) {
+        return false;
+    }
+
+    if (slotStart.minute !== 0 || slotStart.second !== 0) {
+        return false;
+    }
+
+    const slotEnd = slotStart.plus({ minutes: durationMinutes });
+
+    const dayOfWeek = slotStart.weekday === 7 ? 0 : slotStart.weekday;
+    const dbSchedules = await db.weeklySchedule.findMany();
+    const schedules = dbSchedules.length > 0 ? dbSchedules : FALLBACK_SCHEDULES;
+    const dayConfig = schedules.find((s) => s.dayOfWeek === dayOfWeek);
+
+    if (!dayConfig || !dayConfig.isActive) {
+        return false;
+    }
+
+    const [startHour, startMinute = 0] = dayConfig.startTime.split(":").map(Number);
+    const [endHour, endMinute = 0] = dayConfig.endTime.split(":").map(Number);
+
+    const dayWorkStart = slotStart.set({ hour: startHour, minute: startMinute, second: 0, millisecond: 0 });
+    const dayWorkEnd = slotStart.set({ hour: endHour, minute: endMinute, second: 0, millisecond: 0 });
+
+    if (slotStart < dayWorkStart || slotEnd > dayWorkEnd) {
+        return false;
+    }
+
+    const jsSlotStart = slotStart.toJSDate();
+    const jsSlotEnd = slotEnd.toJSDate();
+
+    const overlappingBlock = await db.blockedTime.findFirst({
         where: {
-            date: {
-                gte: dayStart,
-                lte: dayEnd,
-            },
-            status: {
-                not: "CANCELLED",
-            },
-            ...(ignoreReservationId ? { id: { not: ignoreReservationId } } : {}),
+            startDate: { lt: jsSlotEnd },
+            endDate: { gt: jsSlotStart },
+        },
+        select: { id: true },
+    });
+
+    if (overlappingBlock) {
+        return false;
+    }
+
+    const dayStart = slotStart.startOf("day").toJSDate();
+    const dayEnd = slotStart.endOf("day").toJSDate();
+
+    const existingReservations = await db.reservation.findMany({
+        where: {
+            date: { gte: dayStart, lte: dayEnd },
+            status: { not: "CANCELLED" },
         },
         include: {
-            service: true,
+            service: { select: { duration: true } },
         },
     });
 
-    for (const res of existingReservations) {
-        const existingStart = new Date(res.date);
-        const duration = res.service?.duration || 60;
-        const existingEnd = new Date(existingStart.getTime() + duration * 60 * 1000);
+    const hasCollision = existingReservations.some((res) => {
+        const resStart = res.date.getTime();
+        const resDuration = res.service?.duration ?? 60;
+        const resEnd = resStart + resDuration * 60 * 1000;
+        return resStart < jsSlotEnd.getTime() && resEnd > jsSlotStart.getTime();
+    });
 
-        if (requestedStart < existingEnd && requestedEnd > existingStart) {
-            return false;
-        }
-    }
-
-    return true;
+    return !hasCollision;
 }

@@ -93,7 +93,7 @@ export default function SettingsClient({ initialSettings }: IInitialSettings ) {
                             <h2 className="text-xl font-serif font-bold text-graphite dark:text-zinc-100 tracking-tight">Finanse i rozliczenia</h2>
                             <InfoTooltip
                                 title="Przelewy tradycyjne"
-                                description="Numer konta jest dołączany do maila z potwierdzeniem tylko wtedy, gdy ręcznie dodasz wizytę dla pacjenta w panelu (np. po rezerwacji telefonicznej). Informuje to pacjenta, że musi opłacić wizytę przelewem, pomijając system Stripe."
+                                description="Numer konta jest widoczny w stopce strony. Pacjenci po rezerwacji dostają prośbę o kontakt w sprawie płatności (telefon i e-mail z tych ustawień), a po otrzymaniu wpłaty zmieniasz status wizyty na „Opłacona” w panelu rezerwacji."
                                 images={[ "/screenshots/tooltip-iban-2.png", "/screenshots/tooltip-iban.png"]}
                             />
                         </div>

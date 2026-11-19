@@ -98,7 +98,6 @@ export async function POST(req: Request) {
             }
         );
 
-        const clinicSettings = await prisma.clinicSettings.findFirst();
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
         try {
@@ -108,7 +107,7 @@ export async function POST(req: Request) {
                 serviceName: newReservation.service.name,
                 date: newReservation.date,
                 magicToken: newReservation.magicToken,
-                bankAccount: clinicSettings?.bankAccount || "Zostanie przesłany w kolejnej wiadomości",
+                status: "PENDING",
                 price: newReservation.service.price,
             });
 
@@ -144,7 +143,7 @@ export async function POST(req: Request) {
         if (error instanceof Error) {
             if (error.message === "TOO_MANY_PENDING") {
                 return NextResponse.json(
-                    { error: "Masz już nieopłacone rezerwacje oczekujące na przelew." },
+                    { error: "Masz już nieopłacone rezerwacje. Skontaktuj się z gabinetem w sprawie płatności lub poczekaj na ich rozliczenie." },
                     { status: 429 }
                 );
             }

@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import prisma from "@/infrastructure/prisma";
 import { parseMagicToken } from "@/lib/request-security";
 import { sendCancellationEmail } from "@/utils/email-sender";
-import { stripe } from "@/infrastructure/stripe";
 
 export async function POST(req: Request) {
     try {
@@ -32,7 +31,6 @@ export async function POST(req: Request) {
         const hoursDiff = timeDiff / (1000 * 60 * 60);
 
         const isEligibleForRefund = hoursDiff >= 24;
-        let refundSuccessful = false;
         let cancellationReason = "Odwołano przez pacjenta";
 
         if (reservation.status === 'PENDING') {
@@ -55,42 +53,13 @@ export async function POST(req: Request) {
                     }
                 });
             } else {
-                if (reservation.stripePaymentIntentId) {
-                    try {
-                        await stripe.refunds.create({
-                            payment_intent: reservation.stripePaymentIntentId,
-                            reason: 'requested_by_customer'
-                        }, {
-                            idempotencyKey: `refund_${reservation.id}`
-                        });
-                        refundSuccessful = true;
-                        cancellationReason = "Odwołano przez pacjenta. Środki zostały zwrócone na rachunek karty.";
-
-                        await prisma.systemLog.create({
-                            data: {
-                                action: "ZWROT_ŚRODKÓW_STRIPE",
-                                details: `Pomyślnie zwrócono środki dla rezerwacji ${reservation.id} (${reservation.service.price} zł)`
-                            }
-                        });
-                    } catch (stripeError) {
-                        const error = stripeError instanceof Error ? stripeError.message : "Nieznany błąd";
-                        await prisma.systemLog.create({
-                            data: {
-                                action: "BŁĄD_ZWROTU_STRIPE",
-                                details: `Nie udało się automatycznie zwrócić środków dla ${reservation.id}. Błąd: ${error}`
-                            }
-                        });
-                        cancellationReason = "Odwołano przez pacjenta. Prosimy o kontakt z gabinetem w sprawie zwrotu.";
+                cancellationReason = "Odwołano przez pacjenta z prawem do zwrotu (ponad 24h przed terminem). Gabinet skontaktuje się z Tobą w sprawie zwrotu opłaty.";
+                await prisma.systemLog.create({
+                    data: {
+                        action: "WYMAGANY_ZWROT_RĘCZNY",
+                        details: `Pacjent odwołał opłaconą rezerwację ${reservation.id} (${reservation.patientName}, ${reservation.email}) ponad 24h przed terminem. Wymagany ręczny zwrot ${reservation.service.price} zł.`
                     }
-                } else {
-                    cancellationReason = "Odwołano przez pacjenta z prawem do zwrotu (>24h). Gabinet dokona zwrotu zgodnie z regulaminem.";
-                    await prisma.systemLog.create({
-                        data: {
-                            action: "WYMAGANY_ZWROT_RĘCZNY",
-                            details: `Rezerwacja ${reservation.id} opłacona poza Stripe została anulowana >24h przed terminem. Wymagany zwrot na konto pacjenta.`
-                        }
-                    });
-                }
+                });
             }
         }
 

@@ -1,10 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { generate, generateSecret } from "otplib";
 import prisma from "@/infrastructure/prisma";
-import { stripe } from "@/infrastructure/stripe";
-import { sendMagicLinkEmail, sendRescheduleRequestConfirmation } from "@/utils/email-sender";
+import { sendRescheduleRequestConfirmation } from "@/utils/email-sender";
 import { requireAdmin } from "@/lib/requireAdmin";
-import { POST as stripeWebhook } from "@/app/api/webhooks/stripe/route";
 import { POST as waitlistPost } from "@/app/api/waitlist/route";
 import { POST as reschedulePost } from "@/app/api/patient/reservation/reschedule/route";
 import { POST as cancelPost } from "@/app/api/patient/reservation/cancel/route";
@@ -32,9 +30,6 @@ vi.mock("@/infrastructure/prisma", () => ({
         clinicSettings: { findUnique: vi.fn() },
     },
 }));
-vi.mock("@/infrastructure/stripe", () => ({
-    stripe: { webhooks: { constructEvent: vi.fn() }, refunds: { create: vi.fn() } },
-}));
 vi.mock("@/utils/email-sender", () => ({
     sendMagicLinkEmail: vi.fn(),
     sendNewReservationAdminAlert: vi.fn(),
@@ -56,77 +51,6 @@ const post = (body: unknown, headers: Record<string, string> = {}) =>
 beforeEach(() => {
     vi.clearAllMocks();
     process.env.NEXTAUTH_SECRET = "test-secret-at-least-32-characters-long";
-    process.env.STRIPE_WEBHOOK_SECRET = "whsec_test";
-});
-
-// ---------------------------------------------------------------- Stripe webhook
-describe("Stripe webhook", () => {
-    const reservation = {
-        id: "res1", status: "PENDING", email: "p@x.pl", patientName: "Jan Kowalski",
-        date: new Date(), magicToken: TOKEN, service: { name: "Konsultacja", price: 150 },
-    };
-    const event = (overrides: Record<string, unknown> = {}, type = "checkout.session.completed") => ({
-        id: "evt_1", type,
-        data: { object: { id: "cs_1", client_reference_id: "res1", payment_status: "paid", amount_total: 15000, currency: "pln", payment_intent: "pi_1", ...overrides } },
-    });
-    const deliver = () => stripeWebhook(new Request("http://localhost", { method: "POST", body: "{}", headers: { "stripe-signature": "sig" } }));
-
-    it("rejects a bad signature without writing to the audit log", async () => {
-        vi.mocked(stripe.webhooks.constructEvent).mockImplementation(() => { throw new Error("bad sig"); });
-        const res = await deliver();
-        expect(res.status).toBe(400);
-        expect(prisma.systemLog.create).not.toHaveBeenCalled();
-    });
-
-    it("marks a PENDING reservation as PAID when paid with the right amount", async () => {
-        vi.mocked(stripe.webhooks.constructEvent).mockReturnValue(event() as never);
-        vi.mocked(prisma.reservation.findUnique).mockResolvedValue(reservation as never);
-        vi.mocked(prisma.reservation.updateMany).mockResolvedValue({ count: 1 });
-        expect((await deliver()).status).toBe(200);
-        expect(prisma.reservation.updateMany).toHaveBeenCalledWith({
-            where: { id: "res1", status: "PENDING" },
-            data: { status: "PAID", stripePaymentIntentId: "pi_1" },
-        });
-        expect(sendMagicLinkEmail).toHaveBeenCalledOnce();
-    });
-
-    it("ignores sessions that are not paid yet (async payment methods)", async () => {
-        vi.mocked(stripe.webhooks.constructEvent).mockReturnValue(event({ payment_status: "unpaid" }) as never);
-        await deliver();
-        expect(prisma.reservation.updateMany).not.toHaveBeenCalled();
-    });
-
-    it("handles checkout.session.async_payment_succeeded", async () => {
-        vi.mocked(stripe.webhooks.constructEvent).mockReturnValue(event({}, "checkout.session.async_payment_succeeded") as never);
-        vi.mocked(prisma.reservation.findUnique).mockResolvedValue(reservation as never);
-        vi.mocked(prisma.reservation.updateMany).mockResolvedValue({ count: 1 });
-        await deliver();
-        expect(prisma.reservation.updateMany).toHaveBeenCalledOnce();
-    });
-
-    it("does not mark as PAID when the amount does not match the service price", async () => {
-        vi.mocked(stripe.webhooks.constructEvent).mockReturnValue(event({ amount_total: 100 }) as never);
-        vi.mocked(prisma.reservation.findUnique).mockResolvedValue(reservation as never);
-        await deliver();
-        expect(prisma.reservation.updateMany).not.toHaveBeenCalled();
-        expect(vi.mocked(prisma.systemLog.create).mock.calls[0][0].data.action).toBe("BŁĄD_WEBHOOK_KWOTA");
-    });
-
-    it("refunds instead of resurrecting a CANCELLED reservation", async () => {
-        vi.mocked(stripe.webhooks.constructEvent).mockReturnValue(event() as never);
-        vi.mocked(prisma.reservation.findUnique).mockResolvedValue({ ...reservation, status: "CANCELLED" } as never);
-        await deliver();
-        expect(prisma.reservation.updateMany).not.toHaveBeenCalled();
-        expect(stripe.refunds.create).toHaveBeenCalledOnce();
-    });
-
-    it("is idempotent for an already PAID reservation (no duplicate e-mails)", async () => {
-        vi.mocked(stripe.webhooks.constructEvent).mockReturnValue(event() as never);
-        vi.mocked(prisma.reservation.findUnique).mockResolvedValue({ ...reservation, status: "PAID" } as never);
-        expect((await deliver()).status).toBe(200);
-        expect(prisma.reservation.updateMany).not.toHaveBeenCalled();
-        expect(sendMagicLinkEmail).not.toHaveBeenCalled();
-    });
 });
 
 // ---------------------------------------------------------------- Waitlist

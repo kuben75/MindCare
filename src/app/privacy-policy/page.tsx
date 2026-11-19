@@ -43,9 +43,8 @@ export default function PrivacyPolicyPage() {
 
                     <section>
                         <h2 className="text-xl font-serif text-graphite dark:text-zinc-100 mb-3">3. Odbiorcy danych (Procesorzy)</h2>
-                        <p>W celu prawidłowego funkcjonowania systemu rezerwacji oraz obsługi płatności, Twoje dane mogą być przekazywane zaufanym podmiotom zewnętrznym:</p>
+                        <p>W celu prawidłowego funkcjonowania systemu rezerwacji Twoje dane mogą być przekazywane zaufanym podmiotom zewnętrznym:</p>
                         <ul className="list-disc pl-5 mt-2 space-y-1">
-                            <li><strong>Stripe Payments Europe, Ltd.</strong> — w celu bezpiecznej autoryzacji i przetwarzania płatności bezgotówkowych online.</li>
                             <li>Dostawcom usług hostingu oraz systemów powiadomień e-mail/SMS obsługujących infrastrukturę techniczną gabinetu.</li>
                         </ul>
                     </section>

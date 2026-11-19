@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/infrastructure/prisma";
-import { sendCancellationEmail } from "@/utils/email-sender";
-import { stripe } from "@/infrastructure/stripe";
+import { sendCancellationEmail, sendMagicLinkEmail } from "@/utils/email-sender";
 import {requireAdmin} from "@/lib/requireAdmin";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -39,38 +38,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             return NextResponse.json({ error: 'Zakończona wizyta nie może zmienić statusu na wcześniejszy.' }, { status: 400 });
         }
 
-        let refundSuccessful = false;
-
-        if (status === 'CANCELLED' && currentReservation.status === 'PAID' && currentReservation.stripePaymentIntentId) {
-            try {
-                // Same idempotency key as the patient-initiated refund, so a concurrent
-                // admin + patient cancellation can never refund twice.
-                await stripe.refunds.create({
-                    payment_intent: currentReservation.stripePaymentIntentId,
-                    reason: 'requested_by_customer'
-                }, {
-                    idempotencyKey: `refund_${currentReservation.id}`
-                });
-
-                refundSuccessful = true;
-
-                await prisma.systemLog.create({
-                    data: {
-                        action: "ZWROT_ŚRODKÓW_ADMIN",
-                        details: `Admin anulował wizytę ${currentReservation.id}. Pomyślnie zwrócono środki (${currentReservation.service.price} zł)`
-                    }
-                });
-            } catch (stripeError) {
-                const error = stripeError instanceof Error ? stripeError.message : "Nieznany błąd";
-                await prisma.systemLog.create({
-                    data: {
-                        action: "BŁĄD_ZWROTU_ADMIN",
-                        details: `Admin anulował wizytę, ale zwrot środków na Stripe zawiódł. ID: ${currentReservation.id}. Błąd: ${error}`
-                    }
-                });
-                return NextResponse.json({ error: "Nie można wykonać zwrotu na Stripe. Status nie został zmieniony." }, { status: 500 });
-            }
-        }
+        const wasPaid = currentReservation.status === 'PAID';
 
         const updatedReservation = await prisma.reservation.update({
             where: { id: resolvedReservationId },
@@ -78,9 +46,37 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             include: { service: true }
         });
 
+        if (status === 'PAID' && currentReservation.status === 'PENDING') {
+            // Payment is settled outside the app (after contacting the clinic) — confirm it to the patient.
+            await prisma.systemLog.create({
+                data: {
+                    action: "PŁATNOŚĆ_ZAKSIĘGOWANA_RĘCZNIE",
+                    details: `Admin oznaczył rezerwację ${updatedReservation.id} (${updatedReservation.patientName}) jako opłaconą.`
+                }
+            });
+
+            await sendMagicLinkEmail({
+                email: updatedReservation.email,
+                patientName: updatedReservation.patientName,
+                date: updatedReservation.date,
+                serviceName: updatedReservation.service.name,
+                magicToken: updatedReservation.magicToken,
+                status: "PAID"
+            });
+        }
+
         if (status === 'CANCELLED') {
-            const cancellationReason = refundSuccessful
-                ? "Odwołano przez gabinet. Środki zostały zwrócone na Twoje konto."
+            if (wasPaid) {
+                await prisma.systemLog.create({
+                    data: {
+                        action: "WYMAGANY_ZWROT_RĘCZNY",
+                        details: `Admin anulował opłaconą wizytę ${updatedReservation.id} (${updatedReservation.patientName}). Pamiętaj o ręcznym zwrocie ${updatedReservation.service.price} zł.`
+                    }
+                });
+            }
+
+            const cancellationReason = wasPaid
+                ? "Odwołano przez gabinet. Skontaktujemy się z Tobą w sprawie zwrotu opłaty."
                 : "Odwołano przez gabinet";
 
             await sendCancellationEmail({

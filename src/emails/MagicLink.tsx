@@ -13,6 +13,7 @@ import {
 import * as React from "react";
 import { emailTheme } from "@/emails/theme";
 import { IMagicLinkEmailProps } from "@/types/email";
+import { PENDING_HOLD_HOURS } from "@/constants/reservations";
 
 export const MagicLinkEmail = ({
                                    patientName = "Pacjencie",
@@ -21,7 +22,9 @@ export const MagicLinkEmail = ({
                                    serviceName = "Konsultacja psychologiczna",
                                    magicLink = "https://paulinakmirek.pl",
                                    status,
-                                   bankAccount
+                                   clinicPhone,
+                                   clinicEmail,
+                                   price
                                }: IMagicLinkEmailProps) => {
 
     const firstName = patientName.split(' ')[0];
@@ -31,7 +34,7 @@ export const MagicLinkEmail = ({
         <Html>
             <Head />
             <Preview>
-                {isPending ? "Wymagana płatność za wizytę - Paulina Kawka-Mirek" : "Potwierdzenie rezerwacji wizyty - Paulina Kawka-Mirek"}
+                {isPending ? "Rezerwacja wstępna – skontaktuj się w sprawie płatności - Paulina Kawka-Mirek" : "Potwierdzenie rezerwacji wizyty - Paulina Kawka-Mirek"}
             </Preview>
             <Body style={emailTheme.main}>
                 <Container style={emailTheme.container}>
@@ -48,8 +51,8 @@ export const MagicLinkEmail = ({
 
                         <Text style={emailTheme.paragraph}>
                             {isPending
-                                ? "Dziękuję za rezerwację terminu. Twoja wizyta została wstępnie zapisana w moim kalendarzu. Aby ją w pełni potwierdzić, prosimy o uregulowanie opłaty. Poniżej znajdziesz szczegóły:"
-                                : "Dziękuję za rezerwację terminu. Twoja wizyta została pomyślnie zapisana w moim kalendarzu. Poniżej znajdziesz jej szczegóły:"
+                                ? "Dziękuję za rezerwację terminu. Twoja wizyta została wstępnie zapisana w moim kalendarzu. Aby ją w pełni potwierdzić, potrzebna jest płatność. Poniżej znajdziesz szczegóły:"
+                                : "Dziękuję! Płatność została zaksięgowana, a Twoja wizyta jest potwierdzona. Poniżej znajdziesz jej szczegóły:"
                             }
                         </Text>
 
@@ -59,19 +62,27 @@ export const MagicLinkEmail = ({
                             <Text style={emailTheme.detailsText}><strong>Godzina:</strong> {time}</Text>
                         </Section>
 
-                        {isPending && bankAccount && (
+                        {isPending && (
                             <Section style={{ backgroundColor: "#fffbeb", padding: "16px", borderRadius: "12px", border: "1px solid #fde68a", marginTop: "16px", marginBottom: "16px" }}>
                                 <Text style={{ margin: 0, fontWeight: "bold", color: "#b45309", fontSize: "16px" }}>
-                                    Wymagana opłata za wizytę
+                                    Płatność za wizytę
                                 </Text>
                                 <Text style={{ margin: "8px 0 0 0", color: "#4b5563", fontSize: "14px", lineHeight: "1.5" }}>
-                                    Aby w pełni potwierdzić ten termin, proszę o opłacenie wizyty przelewem tradycyjnym na poniższe konto:
+                                    Aby potwierdzić ten termin, skontaktuj się ze mną w sprawie płatności{price ? ` (${price} zł)` : ""}
+                                    {clinicPhone || clinicEmail ? ":" : " – wystarczy odpowiedzieć na tę wiadomość."}
                                 </Text>
-                                <Text style={{ margin: "12px 0 0 0", fontFamily: "monospace", fontSize: "16px", fontWeight: "bold", color: "#1f2937", letterSpacing: "1px" }}>
-                                    {bankAccount}
-                                </Text>
-                                <Text style={{ margin: "8px 0 0 0", color: "#4b5563", fontSize: "12px" }}>
-                                    W tytule przelewu proszę wpisać: &quot;Konsultacja - {firstName} {patientName.split(' ')[1] || ''}&quot;.
+                                {clinicPhone && (
+                                    <Text style={{ margin: "8px 0 0 0", color: "#1f2937", fontSize: "15px", fontWeight: "bold" }}>
+                                        Telefon: {clinicPhone}
+                                    </Text>
+                                )}
+                                {clinicEmail && (
+                                    <Text style={{ margin: "4px 0 0 0", color: "#1f2937", fontSize: "15px", fontWeight: "bold" }}>
+                                        E-mail: {clinicEmail}
+                                    </Text>
+                                )}
+                                <Text style={{ margin: "12px 0 0 0", color: "#4b5563", fontSize: "12px", lineHeight: "1.5" }}>
+                                    Po zaksięgowaniu płatności otrzymasz osobny e-mail z potwierdzeniem wizyty. Nieopłacona rezerwacja zostanie automatycznie anulowana po {PENDING_HOLD_HOURS} godzinach.
                                 </Text>
                             </Section>
                         )}

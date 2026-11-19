@@ -98,7 +98,7 @@ export default function PatientActions({ token, status, isRescheduleRequested, r
                             </div>
                         ) : (
                             <p className="text-xs text-emerald-600 dark:text-emerald-500 font-medium">
-                                Do wizyty zostało ponad 24h. Ewentualny zwrot środków nastąpi zgodnie z regulaminem gabinetu.
+                                Do wizyty zostało ponad 24h. Gabinet skontaktuje się z Tobą w sprawie zwrotu opłaty.
                             </p>
                         )}
                     </div>

@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import prisma from "@/infrastructure/prisma";
 import { getWarsawNow } from "@/utils/warsaw-time";
 import { DateTime } from "luxon";
+import { PENDING_HOLD_MS } from "@/constants/reservations";
 
 type DbClient = Prisma.TransactionClient | typeof prisma;
 
@@ -15,8 +16,6 @@ const FALLBACK_SCHEDULES = [
     { dayOfWeek: 0, startTime: "00:00", endTime: "00:00", isActive: false },
 ];
 
-/** Unpaid reservations stop holding a slot after this long (matches the cleanup cron). */
-export const PENDING_HOLD_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Reservations that still occupy their slot: everything except CANCELLED, and except PENDING

@@ -4,6 +4,7 @@ import { parseMagicToken } from "@/lib/request-security";
 import Link from "next/link";
 import { formatDateTime } from "@/utils/calendar-utils";
 import PatientActions from "@/app/reservation/success/PatientActions";
+import { PENDING_HOLD_HOURS, realClinicPhone } from "@/constants/reservations";
 
 export const dynamic = 'force-dynamic';
 
@@ -33,6 +34,12 @@ export default async function SuccessReservationPage({ searchParams }: { searchP
     }
 
     const { formattedDate, formattedTime } = formatDateTime(reservation.date);
+
+    const clinicSettings = reservation.status === 'PENDING'
+        ? await prisma.clinicSettings.findUnique({ where: { id: "global" }, select: { phone: true, email: true } })
+        : null;
+    const clinicPhone = realClinicPhone(clinicSettings?.phone);
+    const clinicEmail = clinicSettings?.email?.trim() || null;
 
     const getHeading = () => {
         if (reservation.status === 'PENDING') return "Rezerwacja wstępna przyjęta";
@@ -78,7 +85,21 @@ export default async function SuccessReservationPage({ searchParams }: { searchP
                                 Informacja o płatności
                             </p>
                             <p className="text-amber-900/80 leading-relaxed text-xs sm:text-sm">
-                                Bezpośrednia bramka płatności online jest w trakcie finalnej konfiguracji. Twój termin został wstępnie zablokowany w kalendarzu. Szczegóły dotyczące opłacenia wizyty (link płatniczy lub dane do przelewu tradycyjnego) otrzymasz wkrótce w wiadomości e-mail od gabinetu.
+                                Twój termin został wstępnie zablokowany w kalendarzu. Aby go potwierdzić, skontaktuj się z Pauliną w sprawie płatności
+                                {clinicPhone || clinicEmail ? ":" : " – odpowiadając na e-mail z potwierdzeniem rezerwacji."}
+                            </p>
+                            {(clinicPhone || clinicEmail) && (
+                                <ul className="mt-2 space-y-1 text-amber-950 font-medium text-xs sm:text-sm">
+                                    {clinicPhone && (
+                                        <li>Telefon: <a href={`tel:${clinicPhone.replace(/\s/g, "")}`} className="underline hover:text-sage">{clinicPhone}</a></li>
+                                    )}
+                                    {clinicEmail && (
+                                        <li>E-mail: <a href={`mailto:${clinicEmail}`} className="underline hover:text-sage">{clinicEmail}</a></li>
+                                    )}
+                                </ul>
+                            )}
+                            <p className="mt-2 text-amber-900/70 leading-relaxed text-xs">
+                                Po zaksięgowaniu płatności status wizyty zmieni się na „Opłacona” i otrzymasz e-mail z potwierdzeniem. Nieopłacona rezerwacja zostanie anulowana po {PENDING_HOLD_HOURS} godzinach.
                             </p>
                         </div>
                     )}

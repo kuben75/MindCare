@@ -138,7 +138,7 @@ export default function ReservationsManager({ initialReservations, services }: {
                                         <h2 className="text-lg sm:text-2xl font-serif font-bold text-graphite dark:text-white">Nowa wizyta</h2>
                                         <InfoTooltip
                                             title="Ręczne dodawanie rezerwacji"
-                                            description="Wizyta dodana z tego poziomu omija system płatności online. Pacjent otrzyma e-mail z danymi do tradycyjnego przelewu."
+                                            description="Wizyta dodana ręcznie (np. po rezerwacji telefonicznej). Pacjent nie dostaje automatycznego e-maila – status płatności zmieniasz w panelu."
                                         />
                                     </div>
                                     <button onClick={() => setIsOpenModal(false)} className="p-2 bg-white dark:bg-zinc-700 shadow-sm rounded-full text-graphite/40 dark:text-zinc-400 hover:text-graphite dark:hover:text-white transition-colors active:scale-95">

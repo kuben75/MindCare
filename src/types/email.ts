@@ -5,7 +5,9 @@ export interface ISendMagicLinkParams {
     date: Date;
     magicToken: string;
     status?: string;
-    bankAccount?: string | null;
+    /** Clinic contact shown in the PENDING e-mail so the patient can arrange payment. */
+    clinicPhone?: string | null;
+    clinicEmail?: string | null;
     price?: number;
 }
 

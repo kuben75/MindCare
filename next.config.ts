@@ -7,12 +7,12 @@ const blobHostname = blobStoreId
 
 const contentSecurityPolicy = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' https://js.stripe.com https://challenges.cloudflare.com",
+    "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
     "style-src 'self' 'unsafe-inline'",
     `img-src 'self' data: blob: https://${blobHostname}`,
     "font-src 'self' data:",
-    "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://js.stripe.com https://challenges.cloudflare.com",
-    `connect-src 'self' https://api.stripe.com https://${blobHostname} https://challenges.cloudflare.com`,
+    "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://challenges.cloudflare.com",
+    `connect-src 'self' https://${blobHostname} https://challenges.cloudflare.com`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -37,7 +37,7 @@ const nextConfig: NextConfig = {
                     { key: "X-Frame-Options", value: "DENY" },
                     { key: "X-Content-Type-Options", value: "nosniff" },
                     { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-                    { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(self)" },
+                    { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
                 ],
             },
             {

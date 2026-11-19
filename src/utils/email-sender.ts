@@ -1,4 +1,5 @@
 import { resend } from "@/infrastructure/resend";
+import { realClinicPhone } from "@/constants/reservations";
 import { render } from "@react-email/render";
 import { formatDateTime } from "@/utils/calendar-utils";
 import { ISendMagicLinkParams } from "@/types/email";
@@ -52,6 +53,15 @@ async function sendEmailBase(
     }
 }
 
+/** Phone / e-mail patients should use to arrange payment (from clinic settings). */
+async function getClinicContact(): Promise<{ clinicPhone: string | null; clinicEmail: string | null }> {
+    const settings = await prisma.clinicSettings.findUnique({ where: { id: "global" }, select: { phone: true, email: true } });
+    return {
+        clinicPhone: realClinicPhone(settings?.phone),
+        clinicEmail: settings?.email?.trim() || null,
+    };
+}
+
 /** Clinic contact address from settings, falling back to the admin notification address. */
 export async function getClinicNotificationEmail(): Promise<string> {
     const settings = await prisma.clinicSettings.findUnique({ where: { id: "global" }, select: { email: true } });
@@ -72,14 +82,19 @@ export async function getAdminNotificationEmail(): Promise<string> {
 }
 
 export async function sendMagicLinkEmail({
-                                             email, patientName, date, serviceName, magicToken, status, bankAccount
+                                             email, patientName, date, serviceName, magicToken, status, clinicPhone, clinicEmail, price
                                          }: ISendMagicLinkParams) {
     const { formattedDate, formattedTime } = formatDateTime(date);
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const contact = status === "PENDING" && !clinicPhone && !clinicEmail
+        ? await getClinicContact()
+        : { clinicPhone, clinicEmail };
 
     return sendEmailBase(
         email,
-        `Potwierdzenie zgłoszenia rezerwacji: ${formattedDate}`,
+        status === "PENDING"
+            ? `Rezerwacja wstępna – skontaktuj się w sprawie płatności (${formattedDate})`
+            : `Wizyta potwierdzona: ${formattedDate}`,
         MagicLinkEmail({
             patientName,
             date: formattedDate,
@@ -87,7 +102,8 @@ export async function sendMagicLinkEmail({
             serviceName,
             magicLink: `${baseUrl}/reservation/success?token=${magicToken}`,
             status,
-            bankAccount
+            ...contact,
+            price
         })
     );
 }
@@ -124,7 +140,8 @@ export async function sendRescheduleEmail({
             time: formattedTime,
             serviceName,
             magicLink: link,
-            status: status || "PENDING"
+            status: status || "PENDING",
+            ...(status === "PAID" || status === "COMPLETED" ? {} : await getClinicContact())
         })
     );
 }

@@ -33,10 +33,10 @@ export default function TermsOfServicePage() {
 
                     <section>
                         <h2 className="text-xl font-serif text-graphite dark:text-zinc-100 mb-3">§ 2. Płatności i Metody Zakupu</h2>
-                        <p>Gabinet obsługuje dwa oficjalne kanały sprzedaży i autoryzacji usług:</p>
+                        <p>Gabinet obsługuje dwa kanały rezerwacji wizyt:</p>
                         <ul className="list-disc pl-5 mt-2 space-y-2">
-                            <li><strong>Automatyczna rezerwacja online:</strong> Płatność realizowana jest natychmiastowo z góry podczas zapisu na stronie za pośrednictwem bezpiecznego operatora płatności <strong>Stripe</strong> (karta płatnicza, BLIK, szybki przelew, Revolut Pay).</li>
-                            <li><strong>Ręczna rezerwacja (Telefoniczna/Administracyjna):</strong> W przypadku ręcznego wprowadzenia wizyty przez administratora, pacjent otrzymuje powiadomienie e-mail ze statusem <em>Oczekująca</em>. Pacjent zobowiązany jest do opłacenia wizyty metodą <strong>tradycyjnego przelewu bankowego (IBAN)</strong> na numer konta podany w treści wiadomości, w tytule wpisując imię, nazwisko oraz datę wizyty.</li>
+                            <li><strong>Rezerwacja online:</strong> Po zapisie przez stronę wizyta otrzymuje status <em>Oczekująca</em>, a pacjent dostaje wiadomość e-mail z prośbą o kontakt z gabinetem w celu ustalenia formy i terminu płatności. Wizyta zostaje potwierdzona (status <em>Opłacona</em>) po zaksięgowaniu płatności przez gabinet, o czym pacjent jest informowany e-mailem. Rezerwacja nieopłacona w ciągu 72 godzin od zapisu zostaje automatycznie anulowana, a termin zwolniony.</li>
+                            <li><strong>Rezerwacja telefoniczna lub bezpośrednia:</strong> Wizytę wprowadza do systemu gabinet. Forma i termin płatności ustalane są indywidualnie podczas kontaktu z pacjentem.</li>
                         </ul>
                     </section>
 
@@ -57,7 +57,7 @@ export default function TermsOfServicePage() {
                                 <tr>
                                     <td className="p-3 font-medium">Powyżej 24 godzin przed</td>
                                     <td className="p-3 text-emerald-600 dark:text-emerald-400 font-bold">0 zł (Bezpłatnie)</td>
-                                    <td className="p-3">100% zwrotu automatycznie przez Stripe / przelew</td>
+                                    <td className="p-3">100% zwrotu przelewem lub w uzgodniony sposób</td>
                                 </tr>
                                 <tr>
                                     <td className="p-3 font-medium">Poniżej 24 godzin lub No-show</td>
@@ -69,7 +69,7 @@ export default function TermsOfServicePage() {
                         </div>
 
                         <ul className="list-disc pl-5 space-y-2 text-sm">
-                            <li>W przypadku terminowego anulowania wizyty (powyżej 24 godzin), system generuje automatyczny zwrot. Środki wracają na konto pacjenta tą samą drogą, którą dokonano płatności (w przypadku Stripe zwrot księguje się zazwyczaj w ciągu 2-5 dni roboczych).</li>
+                            <li>W przypadku terminowego anulowania opłaconej wizyty (powyżej 24 godzin przed terminem) gabinet kontaktuje się z pacjentem i zwraca pełną opłatę przelewem lub w inny uzgodniony sposób. Anulowanie nieopłaconej rezerwacji jest zawsze bezpłatne.</li>
                             <li>W sytuacjach losowych, w których wizyta zostanie odwołana z winy terapeuty, pacjentowi przysługuje natychmiastowy pełny zwrot kosztów lub pierwszeństwo w bezpłatnym wyborze nowego, dogodnego terminu.</li>
                         </ul>
                     </section>

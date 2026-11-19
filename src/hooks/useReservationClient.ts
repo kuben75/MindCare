@@ -39,7 +39,7 @@ export const useReservationClient = ({ initialDate, initialTime, services }: IRe
                 if (data.url) {
                     window.location.href = data.url;
                 } else {
-                    setErrorMessage("Błąd systemu płatności.");
+                    setErrorMessage("Nie udało się dokończyć rezerwacji. Spróbuj ponownie.");
                 }
             } else {
                 const errorData = await response.json();

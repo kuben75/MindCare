@@ -43,9 +43,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
         if (status === 'CANCELLED' && currentReservation.status === 'PAID' && currentReservation.stripePaymentIntentId) {
             try {
+                // Same idempotency key as the patient-initiated refund, so a concurrent
+                // admin + patient cancellation can never refund twice.
                 await stripe.refunds.create({
                     payment_intent: currentReservation.stripePaymentIntentId,
                     reason: 'requested_by_customer'
+                }, {
+                    idempotencyKey: `refund_${currentReservation.id}`
                 });
 
                 refundSuccessful = true;

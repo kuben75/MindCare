@@ -3,6 +3,7 @@ import prisma from "@/infrastructure/prisma";
 import { generateSecret, generateURI } from "otplib";
 import QRCode from "qrcode";
 import { generateRecoveryCodes } from "@/utils/auth-helpers";
+import { encryptTotpSecret, hashRecoveryCode } from "@/lib/two-factor";
 import { requireAdmin } from "@/lib/requireAdmin";
 
 export async function POST() {
@@ -33,8 +34,9 @@ export async function POST() {
         await prisma.admin.update({
             where: { email: admin.email },
             data: {
-                twoFactorSecret: secret,
-                recoveryCodes: JSON.stringify(recoveryCodes),
+                twoFactorSecret: encryptTotpSecret(secret),
+                recoveryCodes: JSON.stringify(recoveryCodes.map(hashRecoveryCode)),
+                lastTotpTimeStep: null,
             },
         });
 

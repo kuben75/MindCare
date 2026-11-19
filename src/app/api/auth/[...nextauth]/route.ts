@@ -2,8 +2,9 @@ import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import prisma from "@/infrastructure/prisma";
-import { verify } from "otplib";
 import { getFifteenMinutesAgo, parseUserAgent } from "@/utils/auth-helpers";
+import { getClientIp } from "@/lib/request-security";
+import { consumeRecoveryCode, verifyAndConsumeTotp } from "@/lib/two-factor";
 import { sendNewDeviceAlertEmail } from "@/utils/email-sender";
 
 declare module "next-auth" {
@@ -22,7 +23,15 @@ declare module "next-auth/jwt" {
     }
 }
 
-const DUMMY_HASH = process.env.DUMMY_HASH;
+// Valid bcrypt hash (cost 12, matching real admin hashes) of a random throwaway value, so a login
+// for a non-existent email costs the same time as a real one (no user enumeration by timing).
+const DUMMY_HASH = process.env.DUMMY_HASH || "$2b$12$HtA9A5RD0ZDTfqspRLqbf.JPOKrG39saUwYC4.OiB4W5eUjaOT/yq";
+
+// Per (email, IP) — stops a single source quickly.
+const MAX_FAILED_PER_IP = 5;
+// Per account regardless of IP — stops distributed brute force. Kept higher so a third party
+// cannot trivially lock the owner out.
+const MAX_FAILED_PER_ACCOUNT = 20;
 
 export const authOptions: NextAuthOptions = {
     providers: [
@@ -37,22 +46,28 @@ export const authOptions: NextAuthOptions = {
                 if (!e?.email || !e?.password) {
                     throw new Error("Proszę podać email i hasło");
                 }
-                const email = e.email.trim().toLowerCase();
-                const rawIp = req?.headers?.['x-forwarded-for'] || req?.headers?.['x-real-ip'] || "unknown-ip";
-                const ipAddress = (Array.isArray(rawIp) ? rawIp[0] : rawIp).split(",")[0].trim();
+                const email = e.email.trim().toLowerCase().slice(0, 254);
+                const ipAddress = getClientIp(req?.headers);
 
-                const failedAttempts = await prisma.systemLog.count({
-                    where: {
-                        action: "FAILED_LOGIN",
-                        details: email,
-                        ipAddress: ipAddress,
-                        createdAt: {
-                            gte: getFifteenMinutesAgo()
+                const [failedFromIp, failedForAccount] = await Promise.all([
+                    prisma.systemLog.count({
+                        where: {
+                            action: "FAILED_LOGIN",
+                            details: email,
+                            ipAddress: ipAddress,
+                            createdAt: { gte: getFifteenMinutesAgo() }
                         }
-                    }
-                });
+                    }),
+                    prisma.systemLog.count({
+                        where: {
+                            action: "FAILED_LOGIN",
+                            details: email,
+                            createdAt: { gte: getFifteenMinutesAgo() }
+                        }
+                    })
+                ]);
 
-                if (failedAttempts >= 5) {
+                if (failedFromIp >= MAX_FAILED_PER_IP || failedForAccount >= MAX_FAILED_PER_ACCOUNT) {
                     await prisma.systemLog.create({
                         data: {
                             action: "BLOCKED_LOGIN_ATTEMPT",
@@ -67,10 +82,7 @@ export const authOptions: NextAuthOptions = {
                     where: { email }
                 });
 
-                const passwordToCompare = admin ? admin.password : DUMMY_HASH;
-                const isValidPassword = passwordToCompare
-                                            ? await bcrypt.compare(e.password, passwordToCompare)
-                                            : false;
+                const isValidPassword = await bcrypt.compare(e.password, admin ? admin.password : DUMMY_HASH);
 
                 if (!admin || !isValidPassword) {
                     await prisma.systemLog.create({
@@ -90,27 +102,16 @@ export const authOptions: NextAuthOptions = {
                         throw new Error("2FA_REQUIRED");
                     }
 
-                    const normalizedCode = code.trim().toLowerCase();
-                    const recoveryCodes: string[] = JSON.parse(admin.recoveryCodes || "[]");
-                    const isRecoveryCode = recoveryCodes.includes(normalizedCode);
+                    const usedRecoveryCode = await consumeRecoveryCode(admin.id, admin.recoveryCodes, code);
 
-                    if (isRecoveryCode) {
-                        const unusedCodes = recoveryCodes.filter(c => c !== normalizedCode);
-                        await prisma.admin.update({
-                            where: { id: admin.id },
-                            data: { recoveryCodes: JSON.stringify(unusedCodes) }
-                        });
-
+                    if (usedRecoveryCode) {
                         await prisma.systemLog.create({
                             data: { action: "UZYTY_KOD_ZAPASOWY", details: email, ipAddress }
                         });
                     } else {
-                        const isValid2FA = await verify({
-                            token: code.trim(),
-                            secret: admin.twoFactorSecret!
-                        });
+                        const isValid2FA = await verifyAndConsumeTotp(admin, code);
 
-                        if (!isValid2FA.valid) {
+                        if (!isValid2FA) {
                             await prisma.systemLog.create({
                                 data: {
                                     action: "FAILED_LOGIN",

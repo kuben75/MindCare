@@ -1,14 +1,12 @@
 import prisma from "@/infrastructure/prisma";
-import {sendAdminDailyReportEmail} from "@/utils/email-sender";
+import {getClinicNotificationEmail, sendAdminDailyReportEmail} from "@/utils/email-sender";
+import {isAuthorizedCron} from "@/lib/request-security";
 import {NextResponse} from "next/server";
 import {getWarsawStartOfDay} from "@/utils/warsaw-time";
 
 
 export async function GET(req: Request) {
-    const cronSecret = process.env.CRON_SECRET;
-    const authHeader = req.headers.get('authorization');
-
-    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    if (!isAuthorizedCron(req)) {
         return new Response('Unauthorized', { status: 401 });
     }
     try{
@@ -32,11 +30,7 @@ export async function GET(req: Request) {
             }
         });
         if(todayAppointments.length > 0) {
-            const settings = await prisma.clinicSettings.findUnique({
-                where: { id: "global" }
-            });
-
-            const adminEmail = settings?.email || "jakub.lawniczak753@gmail.com";
+            const adminEmail = await getClinicNotificationEmail();
 
             await sendAdminDailyReportEmail({
                 adminEmail: adminEmail,

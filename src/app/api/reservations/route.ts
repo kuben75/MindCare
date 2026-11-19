@@ -4,23 +4,16 @@ import prisma from "@/infrastructure/prisma";
 import { reservationSchema } from "@/schemas/reservation";
 import { isSlotAvailable } from "@/services/availability.service";
 import { checkReservationRateLimit } from "@/lib/rate-limit";
+import { getClientIp, verifyTurnstile } from "@/lib/request-security";
 import {
     sendMagicLinkEmail,
     sendNewReservationAdminAlert,
     getAdminNotificationEmail,
 } from "@/utils/email-sender";
 
-function extractClientIp(req: Request): string {
-    const forwarded = req.headers.get("x-forwarded-for");
-    if (forwarded) {
-        return forwarded.split(",")[0].trim();
-    }
-    return req.headers.get("x-real-ip") || "unknown-ip";
-}
-
 export async function POST(req: Request) {
     try {
-        const clientIp = extractClientIp(req);
+        const clientIp = getClientIp(req.headers);
 
         const rateLimit = await checkReservationRateLimit(clientIp);
         if (!rateLimit.success) {
@@ -39,6 +32,13 @@ export async function POST(req: Request) {
         }
 
         const { patientName, email, phone, serviceId, date, termsAccepted } = validation.data;
+
+        if (!(await verifyTurnstile((body as { turnstileToken?: unknown })?.turnstileToken, clientIp))) {
+            return NextResponse.json(
+                { error: "Weryfikacja antyspamowa nie powiodła się. Odśwież stronę i spróbuj ponownie." },
+                { status: 400 }
+            );
+        }
 
         if (!termsAccepted) {
             return NextResponse.json(

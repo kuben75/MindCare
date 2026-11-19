@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
+import { Fragment, type ReactNode } from "react";
 import { THeroProps } from "@/types/hero";
 import { useSettings } from "@/context/SettingsContext";
 
@@ -24,11 +25,28 @@ export const HeroPreview = ({
         return "aspect-[3/2]";
     };
 
-    const parseTitle = (rawText: string) => {
+    // Renders the title as React nodes (never raw HTML): `*text*` → emphasis, `\n` → <br/>.
+    const renderTitle = (rawText: string): ReactNode => {
         if (!rawText) return "Wpisz tytuł...";
-        return rawText
-            .replace(/\n/g, "<br/>")
-            .replace(/\*(.*?)\*/g, "<span class='text-sage font-medium italic'>$1</span>");
+
+        const withLineBreaks = (text: string, keyPrefix: string) =>
+            text.split("\n").map((line, i) => (
+                <Fragment key={`${keyPrefix}-${i}`}>
+                    {i > 0 && <br/>}
+                    {line}
+                </Fragment>
+            ));
+
+        // With a capture group, split() puts the emphasized fragments at odd indices.
+        return rawText.split(/\*([\s\S]*?)\*/).map((part, i) =>
+            i % 2 === 1 ? (
+                <span key={i} className="text-sage font-medium italic">
+                    {withLineBreaks(part, `e${i}`)}
+                </span>
+            ) : (
+                <Fragment key={i}>{withLineBreaks(part, `t${i}`)}</Fragment>
+            )
+        );
     };
 
     return (
@@ -59,8 +77,9 @@ export const HeroPreview = ({
                 >
                     <h1
                         className="text-3xl sm:text-5xl lg:text-5xl text-graphite font-light leading-[1.2] sm:leading-[1.15] tracking-wide"
-                        dangerouslySetInnerHTML={{ __html: parseTitle(title) }}
-                    />
+                    >
+                        {renderTitle(title)}
+                    </h1>
 
                     <p className="mt-4 sm:mt-6 text-base sm:text-lg text-graphite/90 font-light leading-relaxed">
                         {subtitle || "Tutaj pojawi się podtytuł..."}

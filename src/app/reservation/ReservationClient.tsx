@@ -3,6 +3,7 @@
 import React from "react";
 import {IReservationFormProps} from "@/types/reservation";
 import {useReservationClient} from "@/hooks/useReservationClient";
+import {TurnstileWidget, isTurnstileEnabled} from "@/components/ui/TurnstileWidget";
 
 
 export default function ReservationClient({ initialDate, initialTime, services }: IReservationFormProps) {
@@ -20,7 +21,10 @@ const {
     isLoading,
     errorMessage,
     formattedDate,
-    handleSubmit
+    handleSubmit,
+    turnstileToken,
+    setTurnstileToken,
+    turnstileKey
 } = useReservationClient({ initialDate, initialTime, services });
 
     return (
@@ -134,6 +138,7 @@ const {
                     </label>
                 </div>
             </div>
+            <TurnstileWidget key={turnstileKey} onToken={setTurnstileToken}/>
             {errorMessage && (
                 <div
                     className="p-4 bg-red-50 text-red-600 rounded-2xl border border-red-100 text-sm flex items-center gap-3 animate-fade-in shadow-sm">
@@ -147,7 +152,7 @@ const {
             <div className="flex justify-end">
                 <button
                     type="submit"
-                    disabled={isLoading || !initialDate || !initialTime || !serviceId || !termsAccepted}
+                    disabled={isLoading || !initialDate || !initialTime || !serviceId || !termsAccepted || (isTurnstileEnabled && !turnstileToken)}
                     className="w-full md:w-auto px-12 py-4 bg-sage text-white font-semibold text-lg rounded-xl shadow-xl shadow-sage/20 hover:bg-opacity-90 hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                 >
                     {isLoading ? (

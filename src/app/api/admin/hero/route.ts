@@ -2,6 +2,7 @@
 import prisma from "@/infrastructure/prisma";
 import {NextResponse} from "next/server";
 import {requireAdmin} from "@/lib/requireAdmin";
+import {heroTemplateSchema} from "@/schemas/hero";
 
 
 export async function GET() {
@@ -27,20 +28,18 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Brak autoryzacji" }, { status: 401 });
     }
     try {
-        const body = await req.json();
+        const body = await req.json().catch(() => null);
+        const validation = heroTemplateSchema.safeParse(body);
+        if (!validation.success) {
+            const message = validation.error.issues[0]?.message || "Nieprawidłowe dane szablonu";
+            return NextResponse.json({ error: message }, { status: 400 });
+        }
+
         const count = await prisma.heroTemplate.count();
         const makeActive = count === 0;
         const template = await prisma.heroTemplate.create({
             data: {
-                title: body.title,
-                subtitle: body.subtitle,
-                imageUrl: body.imageUrl,
-                imageStyle: body.imageStyle,
-                layout: body.layout,
-                showPrimaryButton: body.showPrimaryButton,
-                primaryButtonText: body.primaryButtonText,
-                primaryButtonLink: body.primaryButtonLink,
-                showZnanyLekarz: body.showZnanyLekarz,
+                ...validation.data,
                 isActive: makeActive
             }
     });

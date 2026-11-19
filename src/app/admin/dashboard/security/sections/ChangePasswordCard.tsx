@@ -16,8 +16,8 @@ export default function ChangePasswordCard() {
         e.preventDefault();
         setStatusMessage(null);
 
-        if (newPassword.length < 8) {
-            setStatusMessage({ text: "Nowe hasło musi zawierać minimum 8 znaków.", isError: true });
+        if (newPassword.length < 12) {
+            setStatusMessage({ text: "Nowe hasło musi zawierać minimum 12 znaków.", isError: true });
             return;
         }
 
@@ -68,7 +68,7 @@ export default function ChangePasswordCard() {
                         <h3 className="text-base sm:text-lg font-serif font-bold text-graphite dark:text-zinc-100">Zmiana Hasła</h3>
                         <InfoTooltip
                             title="Bezpieczeństwo logowania"
-                            description="Ustaw własne, unikalne hasło (minimum 8 znaków). Po zmianie hasła Twoja obecna sesja pozostanie aktywna."
+                            description="Ustaw własne, unikalne hasło (minimum 12 znaków). Po zmianie hasła Twoja obecna sesja pozostanie aktywna, a pozostałe urządzenia zostaną wylogowane."
                         />
                     </div>
                     <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-graphite/50 dark:text-zinc-400 mt-1">
@@ -112,10 +112,10 @@ export default function ChangePasswordCard() {
                         <input
                             type="password"
                             required
-                            minLength={8}
+                            minLength={12}
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
-                            placeholder="Min. 8 znaków"
+                            placeholder="Min. 12 znaków"
                             className="w-full px-4 py-3 rounded-xl border border-beige-dark/30 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-graphite dark:text-white text-sm focus:border-sage dark:focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-sage/20 transition-all"
                         />
                     </div>
@@ -126,7 +126,7 @@ export default function ChangePasswordCard() {
                         <input
                             type="password"
                             required
-                            minLength={8}
+                            minLength={12}
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             placeholder="Powtórz hasło"

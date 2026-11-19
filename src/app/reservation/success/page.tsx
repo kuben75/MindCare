@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import prisma from "@/infrastructure/prisma";
+import { parseMagicToken } from "@/lib/request-security";
 import Link from "next/link";
 import { formatDateTime } from "@/utils/calendar-utils";
 import PatientActions from "@/app/reservation/success/PatientActions";
@@ -8,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function SuccessReservationPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
     const resolvedParams = await searchParams;
-    const token = resolvedParams.token;
+    const token = parseMagicToken(resolvedParams.token);
 
     if (!token) {
         redirect("/");

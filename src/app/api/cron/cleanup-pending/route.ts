@@ -1,20 +1,6 @@
 import { NextResponse } from "next/server";
-import crypto from "crypto";
 import prisma from "@/infrastructure/prisma";
-
-function isAuthorizedCron(req: Request): boolean {
-    const cronSecret = process.env.CRON_SECRET;
-    if (!cronSecret) return false;
-
-    const authHeader = req.headers.get("authorization") || "";
-    const expected = `Bearer ${cronSecret}`;
-
-    if (authHeader.length !== expected.length) {
-        return false;
-    }
-
-    return crypto.timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected));
-}
+import { isAuthorizedCron } from "@/lib/request-security";
 
 export async function GET(req: Request) {
     if (!isAuthorizedCron(req)) {

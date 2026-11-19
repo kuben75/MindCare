@@ -9,12 +9,18 @@ export default async function proxy(req: NextRequest) {
         ? "__Secure-next-auth.session-token"
         : "next-auth.session-token";
 
-    const token = await getToken({
+    const rawToken = await getToken({
         req,
         secret: process.env.NEXTAUTH_SECRET,
         secureCookie: hasSecureToken,
         cookieName: cookieName,
-    });
+    }).catch(() => null);
+
+    // Revoked sessions are re-encoded by the jwt callback as `{ revoked: true }`,
+    // which is still a validly signed JWT — only a token with a live sessionId counts.
+    const token = rawToken && !rawToken.revoked && typeof rawToken.sessionId === "string"
+        ? rawToken
+        : null;
 
     if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
         console.log(`[AUTH PROXY] Ścieżka: ${pathname} | Zalogowany: ${Boolean(token)} | Ciasteczko: ${cookieName}`);

@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import prisma from "@/infrastructure/prisma";
-import { verify } from "otplib";
 import { requireAdmin } from "@/lib/requireAdmin";
+import { countRecentFailures, verifyAndConsumeTotp } from "@/lib/two-factor";
+
+const FAILED_ACTION = "FAILED_2FA_ENROLL";
+const MAX_FAILURES = 10;
 
 export async function POST(req: Request) {
     try {
@@ -29,12 +32,14 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "2FA jest już włączone" }, { status: 409 });
         }
 
-        const result = await verify({
-            token: code,
-            secret: admin.twoFactorSecret,
-        });
+        if (await countRecentFailures(FAILED_ACTION, admin.email) >= MAX_FAILURES) {
+            return NextResponse.json({ error: "Zbyt wiele nieudanych prób. Spróbuj ponownie za 15 minut." }, { status: 429 });
+        }
 
-        if (!result.valid) {
+        const isValid = await verifyAndConsumeTotp(admin, code);
+
+        if (!isValid) {
+            await prisma.systemLog.create({ data: { action: FAILED_ACTION, details: admin.email } });
             return NextResponse.json({ error: "Nieprawidłowy kod. Spróbuj ponownie" }, { status: 400 });
         }
 

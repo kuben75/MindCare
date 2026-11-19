@@ -15,6 +15,21 @@ const FALLBACK_SCHEDULES = [
     { dayOfWeek: 0, startTime: "00:00", endTime: "00:00", isActive: false },
 ];
 
+/** Unpaid reservations stop holding a slot after this long (matches the cleanup cron). */
+export const PENDING_HOLD_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Reservations that still occupy their slot: everything except CANCELLED, and except PENDING
+ * ones older than PENDING_HOLD_MS (so abandoned/spam bookings stop blocking the calendar even
+ * before the daily cleanup cron runs).
+ */
+export function slotBlockingReservationWhere(now: Date = new Date()): Prisma.ReservationWhereInput {
+    return {
+        status: { not: "CANCELLED" },
+        NOT: { status: "PENDING", createdAt: { lt: new Date(now.getTime() - PENDING_HOLD_MS) } },
+    };
+}
+
 export async function isSlotAvailable(
     date: Date | string,
     durationMinutes: number,
@@ -83,7 +98,7 @@ export async function isSlotAvailable(
     const existingReservations = await db.reservation.findMany({
         where: {
             date: { gte: dayStart, lte: dayEnd },
-            status: { not: "CANCELLED" },
+            ...slotBlockingReservationWhere(),
         },
         include: {
             service: { select: { duration: true } },

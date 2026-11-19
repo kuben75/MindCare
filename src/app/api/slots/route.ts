@@ -3,6 +3,7 @@ import prisma from "@/infrastructure/prisma";
 import {getDateKey} from "@/utils/calendar-utils";
 import {getWarsawStartOfDay, getWarsawNow} from "@/utils/warsaw-time"; // <-- IMPORTY
 import {DateTime} from "luxon";
+import {slotBlockingReservationWhere} from "@/services/availability.service";
 
 export async function GET(req: Request) {
     try{
@@ -27,7 +28,7 @@ export async function GET(req: Request) {
         const reservations = await prisma.reservation.findMany({
             where: {
                 date: {gte: jsStartDate, lte: jsEndDate},
-                status: {not: 'CANCELLED'}
+                ...slotBlockingReservationWhere()
             }
         });
 

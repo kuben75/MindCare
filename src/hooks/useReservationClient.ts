@@ -12,6 +12,8 @@ export const useReservationClient = ({ initialDate, initialTime, services }: IRe
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [turnstileToken, setTurnstileToken] = useState("");
+    const [turnstileKey, setTurnstileKey] = useState(0);
 
     const formattedDate = initialDate
         ? new Date(initialDate).toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
@@ -30,7 +32,7 @@ export const useReservationClient = ({ initialDate, initialTime, services }: IRe
             const response = await fetch('/api/reservations', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ patientName, email, phone, serviceId, date: finalDateObj.toISOString(), termsAccepted})
+                body: JSON.stringify({ patientName, email, phone, serviceId, date: finalDateObj.toISOString(), termsAccepted, turnstileToken})
             })
             if(response.ok) {
                 const data = await response.json();
@@ -42,6 +44,9 @@ export const useReservationClient = ({ initialDate, initialTime, services }: IRe
             } else {
                 const errorData = await response.json();
                 setErrorMessage(errorData.error || "Wystąpił błąd podczas rezerwacji.");
+                // Turnstile tokens are single-use — remount the widget for a fresh challenge.
+                setTurnstileToken("");
+                setTurnstileKey(k => k + 1);
             }
         }catch {
             setErrorMessage("Błąd połączenia z serwerem. Spróbuj ponownie.");
@@ -63,6 +68,9 @@ export const useReservationClient = ({ initialDate, initialTime, services }: IRe
         isLoading,
         errorMessage,
         formattedDate,
-        handleSubmit
+        handleSubmit,
+        turnstileToken,
+        setTurnstileToken,
+        turnstileKey
     }
 }

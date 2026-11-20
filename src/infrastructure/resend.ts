@@ -1,10 +1,15 @@
-import {Resend} from "resend";
+import { Resend } from "resend";
 
+let client: Resend | null = null;
 
-const resendApiKey = process.env.RESEND_API_KEY;
-
-if (!resendApiKey) {
-  console.warn('RESEND_API_KEY is not defined in environment variables');
+/**
+ * Lazily created Resend client. Creating it at import time threw "Missing API key" whenever
+ * RESEND_API_KEY was absent (CI, local builds), which broke `next build` while collecting page data.
+ * Returns null when no key is configured — callers skip sending in that case.
+ */
+export function getResend(): Resend | null {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) return null;
+    if (!client) client = new Resend(apiKey);
+    return client;
 }
-
-export const resend = new Resend(resendApiKey)

@@ -18,8 +18,33 @@ import NewDeviceAlertEmail from "@/emails/NewDeviceAlertEmail";
 import UniversalEmail from "@/emails/UniversalEmail";
 import { Reservation, ReservationStatus } from "@prisma/client";
 
-const DEFAULT_FROM = process.env.EMAIL_FROM || "Gabinet Paulina Kawka-Mirek <onboarding@resend.dev>";
-const SYSTEM_FROM = process.env.EMAIL_FROM || "System MindCare <onboarding@resend.dev>";
+/**
+ * Resend only delivers to other people when the sender is on a verified domain. Anything else
+ * (e.g. the default onboarding@resend.dev) works solely for the account owner's own address.
+ */
+export const SENDER_DOMAIN = (process.env.EMAIL_DOMAIN || "psychologiaodbicia.com").toLowerCase();
+
+export function resolveSender(configured: string | undefined, fallback: string): string {
+    const value = configured?.trim();
+    if (!value) return fallback;
+    const address = (value.match(/<([^>]+)>/)?.[1] ?? value).trim().toLowerCase();
+    if (address.endsWith(`@${SENDER_DOMAIN}`)) return value;
+    console.warn(`[E-mail] EMAIL_FROM (${address}) nie należy do zweryfikowanej domeny ${SENDER_DOMAIN} — używam ${fallback}.`);
+    return fallback;
+}
+
+const DEFAULT_FROM = resolveSender(process.env.EMAIL_FROM, `Psychologia Odbicia – Paulina Kawka-Mirek <kontakt@${SENDER_DOMAIN}>`);
+const SYSTEM_FROM = resolveSender(process.env.EMAIL_FROM_SYSTEM ?? process.env.EMAIL_FROM, `Psychologia Odbicia – powiadomienia <powiadomienia@${SENDER_DOMAIN}>`);
+
+/** Replies from patients go to the clinic's real inbox (ClinicSettings.email). */
+async function clinicReplyTo(): Promise<string | undefined> {
+    try {
+        const settings = await prisma.clinicSettings.findUnique({ where: { id: "global" }, select: { email: true } });
+        return settings?.email?.trim() || process.env.ADMIN_NOTIFICATION_EMAIL || undefined;
+    } catch {
+        return undefined;
+    }
+}
 
 async function sendEmailBase(
     to: string,
@@ -34,7 +59,8 @@ async function sendEmailBase(
 
     try {
         const html = await render(reactComponent);
-        const { error } = await resend.emails.send({ from, to, subject, html });
+        const replyTo = from === DEFAULT_FROM ? await clinicReplyTo() : undefined;
+        const { error } = await resend.emails.send({ from, to, subject, html, ...(replyTo ? { replyTo } : {}) });
 
         if (error) {
             console.error(`[Resend API Error] Błąd wysyłania do ${to}:`, error);

@@ -13,6 +13,29 @@ jobs:
   build-and-lint:
     runs-on: ubuntu-latest
 
+    # `next build` prerenders pages that read from the database (clinic settings, blog),
+    # so the build needs a real (empty) Postgres — like production, minus the data.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: mindcare
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/mindcare?sslmode=disable"
+      NEXTAUTH_SECRET: "ci-dummy-secret-at-least-32-chars-long"
+      NEXTAUTH_URL: "http://localhost:3000"
+      CRON_SECRET: "ci-dummy-cron-secret"
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -20,7 +43,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
 
       - name: Install dependencies
@@ -35,10 +58,8 @@ jobs:
       - name: Run Tests
         run: npm test
 
+      - name: Create database schema
+        run: npx prisma db push
+
       - name: Build Project
         run: npm run build
-        env:
-          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/mindcare"
-          NEXTAUTH_SECRET: "ci-dummy-secret-at-least-32-chars-long"
-          NEXTAUTH_URL: "http://localhost:3000"
-          CRON_SECRET: "ci-dummy-cron-secret"

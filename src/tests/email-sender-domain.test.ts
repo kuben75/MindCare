@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 
-vi.mock("@/infrastructure/resend", () => ({ resend: { emails: { send: vi.fn() } } }));
+vi.mock("@/infrastructure/resend", () => ({ getResend: () => ({ emails: { send: vi.fn() } }) }));
 vi.mock("@/infrastructure/prisma", () => ({ default: { clinicSettings: { findUnique: vi.fn() }, systemLog: { create: vi.fn() } } }));
 
 import { resolveSender, SENDER_DOMAIN } from "@/utils/email-sender";
@@ -18,5 +18,15 @@ describe("sender address", () => {
         expect(resolveSender("someone@gmail.com", fallback)).toBe(fallback);
         expect(resolveSender(undefined, fallback)).toBe(fallback);
         expect(resolveSender("  ", fallback)).toBe(fallback);
+    });
+});
+
+describe("database TLS", () => {
+    it("uses TLS for remote databases only", async () => {
+        const { shouldUseSsl } = await vi.importActual<typeof import("@/infrastructure/prisma")>("@/infrastructure/prisma");
+        expect(shouldUseSsl("postgresql://u:p@db.abc.supabase.co:5432/postgres")).toBe(true);
+        expect(shouldUseSsl("postgresql://u:p@localhost:5432/db")).toBe(false);
+        expect(shouldUseSsl("postgresql://u:p@db.example.com:5432/db?sslmode=disable")).toBe(false);
+        expect(shouldUseSsl(undefined)).toBe(false);
     });
 });

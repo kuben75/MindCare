@@ -1,4 +1,4 @@
-import { resend } from "@/infrastructure/resend";
+import { getResend } from "@/infrastructure/resend";
 import { realClinicPhone } from "@/constants/reservations";
 import { render } from "@react-email/render";
 import { formatDateTime, formatDateTimeAdmin } from "@/utils/calendar-utils";
@@ -52,7 +52,8 @@ async function sendEmailBase(
     reactComponent: React.ReactElement,
     from = DEFAULT_FROM
 ): Promise<boolean> {
-    if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY.startsWith("re_dummy")) {
+    const resend = getResend();
+    if (!resend || process.env.RESEND_API_KEY?.startsWith("re_dummy")) {
         console.warn(`[Resend Warn] Brak poprawnego RESEND_API_KEY - pomijam wysyłkę maila: "${subject}" do: ${to}`);
         return false;
     }

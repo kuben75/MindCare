@@ -57,7 +57,7 @@ export const Navbar = () => {
                                     {brandTitle}
                                 </span>
                                 {brandTagline && (
-                                    <span className="mt-0.5 text-[10px] sm:text-[11px] lg:text-xs tracking-[0.16em] text-graphite/60 uppercase font-medium group-hover:text-sage/80 transition-colors whitespace-nowrap truncate">
+                                    <span className="mt-0.5 text-[10px] sm:text-[11px] lg:text-xs tracking-[0.06em] min-[360px]:tracking-[0.16em] text-graphite/60 uppercase font-medium group-hover:text-sage/80 transition-colors whitespace-nowrap truncate">
                                         {brandTagline}
                                     </span>
                                 )}

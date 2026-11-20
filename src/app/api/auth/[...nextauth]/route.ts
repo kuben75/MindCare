@@ -196,11 +196,23 @@ export const authOptions: NextAuthOptions = {
         },
         async session({ session, token }) {
             if (token.revoked || !token.sessionId) {
-                return {} as any;
+                return {} as typeof session;
             }
             session.sessionId = token.sessionId;
             return session;
         }
+    },
+    events: {
+        // Logging out must also kill the server-side session, otherwise a copied cookie keeps
+        // working until the JWT expires.
+        async signOut({ token }) {
+            const sessionId = (token as { sessionId?: string } | null)?.sessionId;
+            if (!sessionId) return;
+            await prisma.deviceSession.updateMany({
+                where: { id: sessionId, isValid: true },
+                data: { isValid: false },
+            }).catch(() => {});
+        },
     },
     session: {
         strategy: "jwt",

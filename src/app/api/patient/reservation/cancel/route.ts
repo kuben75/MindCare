@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/infrastructure/prisma";
 import { parseMagicToken } from "@/lib/request-security";
-import { sendCancellationEmail } from "@/utils/email-sender";
+import { getClinicNotificationEmail, sendAdminCancellationAlert, sendCancellationEmail } from "@/utils/email-sender";
 
 export async function POST(req: Request) {
     try {
@@ -26,13 +26,27 @@ export async function POST(req: Request) {
         }
 
         const now = new Date();
-        const reservationDate = new Date(reservation.date);
-        const timeDiff = reservationDate.getTime() - now.getTime();
-        const hoursDiff = timeDiff / (1000 * 60 * 60);
+        const hoursDiff = (reservation.date.getTime() - now.getTime()) / (1000 * 60 * 60);
 
-        const isEligibleForRefund = hoursDiff >= 24;
-        let cancellationReason = "Odwołano przez pacjenta";
+        // A visit that already started can't be cancelled from the patient link (it would drop out
+        // of the clinic's revenue and CANCELLED can't be undone).
+        if (hoursDiff <= 0) {
+            return NextResponse.json({ message: "Ta wizyta już się odbyła lub właśnie trwa — nie można jej odwołać. Skontaktuj się z gabinetem." }, { status: 400 });
+        }
 
+        const amount = reservation.amountPaid ?? reservation.service.price;
+        const refundDue = reservation.status === 'PAID' && hoursDiff >= 24;
+
+        // Conditional on the status we read → if the clinic changed it in the meantime, we stop.
+        const result = await prisma.reservation.updateMany({
+            where: { id: reservation.id, status: reservation.status },
+            data: { status: 'CANCELLED' },
+        });
+        if (result.count === 0) {
+            return NextResponse.json({ message: "Status wizyty zmienił się w międzyczasie. Odśwież stronę i spróbuj ponownie." }, { status: 409 });
+        }
+
+        let cancellationReason: string;
         if (reservation.status === 'PENDING') {
             cancellationReason = "Odwołano rezerwację wstępną przez pacjenta.";
             await prisma.systemLog.create({
@@ -41,45 +55,42 @@ export async function POST(req: Request) {
                     details: `Pacjent odwołał nieopłaconą rezerwację: ${reservation.id} (${reservation.patientName})`
                 }
             });
-        }
-
-        if (reservation.status === 'PAID') {
-            if (!isEligibleForRefund) {
-                cancellationReason = "Odwołano przez pacjenta na mniej niż 24h przed terminem. Zgodnie z regulaminem opłata nie podlega zwrotowi.";
-                await prisma.systemLog.create({
-                    data: {
-                        action: "ANULOWANIE_BEZ_ZWROTU",
-                        details: `Pacjent odwołał rezerwację ${reservation.id} poniżej 24h (${hoursDiff.toFixed(1)}h). Środki zatrzymane.`
-                    }
-                });
-            } else {
-                cancellationReason = "Odwołano przez pacjenta z prawem do zwrotu (ponad 24h przed terminem). Gabinet skontaktuje się z Tobą w sprawie zwrotu opłaty.";
-                await prisma.systemLog.create({
-                    data: {
-                        action: "WYMAGANY_ZWROT_RĘCZNY",
-                        details: `Pacjent odwołał opłaconą rezerwację ${reservation.id} (${reservation.patientName}, ${reservation.email}) ponad 24h przed terminem. Wymagany ręczny zwrot ${reservation.service.price} zł.`
-                    }
-                });
-            }
-        }
-
-        const canceledRes = await prisma.reservation.update({
-            where: { id: reservation.id },
-            data: { status: 'CANCELLED' },
-            include: { service: true }
-        });
-
-        try {
-            await sendCancellationEmail({
-                email: canceledRes.email,
-                patientName: canceledRes.patientName,
-                date: canceledRes.date,
-                serviceName: canceledRes.service.name,
-                reason: cancellationReason
+        } else if (!refundDue) {
+            cancellationReason = "Odwołano przez pacjenta na mniej niż 24h przed terminem. Zgodnie z regulaminem opłata nie podlega zwrotowi.";
+            await prisma.systemLog.create({
+                data: {
+                    action: "ANULOWANIE_BEZ_ZWROTU",
+                    details: `Pacjent odwołał rezerwację ${reservation.id} poniżej 24h (${hoursDiff.toFixed(1)}h). Środki zatrzymane.`
+                }
             });
-        } catch (mailError) {
-            console.error("Błąd wysyłki e-maila o anulowaniu:", mailError);
+        } else {
+            cancellationReason = "Odwołano przez pacjenta z prawem do zwrotu (ponad 24h przed terminem). Gabinet skontaktuje się z Tobą w sprawie zwrotu opłaty.";
+            await prisma.systemLog.create({
+                data: {
+                    action: "WYMAGANY_ZWROT_RĘCZNY",
+                    details: `Pacjent odwołał opłaconą rezerwację ${reservation.id} (${reservation.patientName}, ${reservation.email}) ponad 24h przed terminem. Wymagany ręczny zwrot ${amount} zł.`
+                }
+            });
         }
+
+        await Promise.allSettled([
+            sendCancellationEmail({
+                email: reservation.email,
+                patientName: reservation.patientName,
+                date: reservation.date,
+                serviceName: reservation.service.name,
+                reason: cancellationReason
+            }),
+            getClinicNotificationEmail().then((adminEmail) => sendAdminCancellationAlert({
+                adminEmail,
+                patientName: reservation.patientName,
+                patientEmail: reservation.email,
+                date: reservation.date,
+                serviceName: reservation.service.name,
+                refundDue,
+                amount,
+            })),
+        ]);
 
         return NextResponse.json({ success: true }, { status: 200 });
 

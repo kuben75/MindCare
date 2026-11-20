@@ -17,6 +17,7 @@ export const usePatientActions = ({ token, reservationDate }: IPatientActionsPro
 
     const handleCancel = async () => {
         setIsLoading(true);
+        setMessage(null);
         try {
             const res = await fetch("/api/patient/reservation/cancel", {
                 method: "POST",
@@ -28,7 +29,7 @@ export const usePatientActions = ({ token, reservationDate }: IPatientActionsPro
                 setMessage("Rezerwacja została anulowana");
                 router.refresh();
             } else {
-                const data = await res.json();
+                const data = await res.json().catch(() => ({}));
                 setMessage(data.message || "Nie można anulować rezerwacji");
             }
         } catch {
@@ -40,6 +41,7 @@ export const usePatientActions = ({ token, reservationDate }: IPatientActionsPro
 
     const handleReschedule = async () => {
         setIsLoading(true);
+        setMessage(null);
         try {
             const res = await fetch("/api/patient/reservation/reschedule", {
                 method: "POST",
@@ -51,7 +53,7 @@ export const usePatientActions = ({ token, reservationDate }: IPatientActionsPro
                 setShowRescheduleConfirm(false);
                 router.refresh();
             } else {
-                const data = await res.json();
+                const data = await res.json().catch(() => ({}));
                 setMessage(data.message || "Nie można złożyć prośby o zmianę terminu");
             }
         } catch {

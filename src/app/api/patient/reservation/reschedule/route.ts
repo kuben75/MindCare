@@ -29,6 +29,10 @@ export async function POST(req: Request) {
             return NextResponse.json({message: "Nie można zmienić terminu tej rezerwacji"}, {status: 400});
         }
 
+        if (reservation.date.getTime() <= Date.now()) {
+            return NextResponse.json({message: "Ta wizyta już się odbyła — nie można zmienić jej terminu. Skontaktuj się z gabinetem."}, {status: 400});
+        }
+
         // Only the first request flips the flag and sends e-mails — repeated calls are no-ops,
         // so the endpoint cannot be used to spam the patient or the clinic.
         const flagged = await prisma.reservation.updateMany({

@@ -1,6 +1,7 @@
 import {NextResponse} from "next/server";
 import prisma from "@/infrastructure/prisma";
 import {requireAdmin} from "@/lib/requireAdmin";
+import {firstIssue, notesSchema} from "@/schemas/admin";
 
 
 export async function PATCH(req: Request, { params}: {params: Promise<{id: string}>})  {
@@ -10,8 +11,12 @@ export async function PATCH(req: Request, { params}: {params: Promise<{id: strin
         if (!admin) {
             return NextResponse.json({ error: "Brak autoryzacji" }, { status: 401 });
         }
-        const body = await req.json();
-        const {privateNotes} = body;
+        const body = await req.json().catch(() => null);
+        const validation = notesSchema.safeParse(body);
+        if (!validation.success) {
+            return NextResponse.json({error: firstIssue(validation.error)}, {status: 400});
+        }
+        const privateNotes = validation.data.privateNotes?.trim() || null;
 
         const resolvedParams = await params;
 

@@ -19,12 +19,19 @@ export const useLoginPage = () => {
         setIsLoading(true);
         setError("");
 
-        const res = await signIn("credentials", {
-            email,
-            password,
-            twoFactorCode: requires2FA ? twoFactorCode : undefined,
-            redirect: false,
-        });
+        let res: Awaited<ReturnType<typeof signIn>>;
+        try {
+            res = await signIn("credentials", {
+                email,
+                password,
+                twoFactorCode: requires2FA ? twoFactorCode : undefined,
+                redirect: false,
+            });
+        } catch {
+            setError("Brak połączenia z serwerem. Sprawdź internet i spróbuj ponownie.");
+            setIsLoading(false);
+            return;
+        }
 
         if (res?.error) {
             if (res.error === "2FA_REQUIRED") {

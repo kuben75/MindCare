@@ -1,9 +1,10 @@
 import prisma from "@/infrastructure/prisma";
-import {getWarsawStartOfDay} from "@/utils/warsaw-time";
+import {BUSINESS_TZ, nowIn} from "@/lib/time";
 
 
 export async function getDashboardDate() {
-    const luxonStartToday = getWarsawStartOfDay();
+    // "Today" / "tomorrow" in the clinic time zone.
+    const luxonStartToday = nowIn(BUSINESS_TZ).startOf('day');
 
     const startToday = luxonStartToday.toJSDate();
     const todayEnd = luxonStartToday.endOf('day').toJSDate();

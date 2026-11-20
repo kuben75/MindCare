@@ -1,3 +1,4 @@
+import {formatPatient} from "@/lib/time";
 import prisma from "@/infrastructure/prisma";
 import Link from "next/link";
 import { extractExcerpt, extractFirstImage } from "@/utils/editorUtils";
@@ -47,7 +48,7 @@ export default async function PublicBlogPage() {
                                 </div>
                                 <div className="p-8 flex flex-col flex-1">
                                     <div className="text-sage dark:text-emerald-400 text-[10px] font-bold uppercase tracking-widest mb-4">
-                                        {new Date(post.createdAt).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                        {formatPatient(post.createdAt, { day: 'numeric', month: 'long', year: 'numeric' })}
                                     </div>
                                     <h2 className="text-xl font-serif text-graphite dark:text-zinc-100 font-medium mb-4 leading-snug group-hover:text-sage dark:group-hover:text-emerald-400 transition-colors">
                                         {post.title}

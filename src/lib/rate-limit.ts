@@ -1,4 +1,7 @@
+import { Prisma } from "@prisma/client";
 import prisma from "@/infrastructure/prisma";
+
+type DbClient = Prisma.TransactionClient | typeof prisma;
 
 type RateLimitResult = {
     success: boolean;
@@ -16,12 +19,13 @@ async function checkLogBasedLimit(
     action: string,
     ip: string,
     maxPerWindow: number,
-    windowMs: number
+    windowMs: number,
+    db: DbClient = prisma
 ): Promise<RateLimitResult> {
     const bucket = ip || "unknown-ip";
     const limit = bucket === "unknown-ip" ? Math.max(1, Math.floor(maxPerWindow / 2)) : maxPerWindow;
 
-    const recentCount = await prisma.systemLog.count({
+    const recentCount = await db.systemLog.count({
         where: {
             action,
             ipAddress: bucket,
@@ -38,10 +42,16 @@ async function checkLogBasedLimit(
 const MAX_RESERVATIONS_PER_HOUR = 3;
 const MAX_RESERVATIONS_PER_DAY = 6;
 
-export async function checkReservationRateLimit(ip: string): Promise<RateLimitResult> {
-    const hourly = await checkLogBasedLimit("REZERWACJA_WSTĘPNA", ip, MAX_RESERVATIONS_PER_HOUR, HOUR_MS);
+export const RESERVATION_LOG_ACTION = "REZERWACJA_WSTĘPNA";
+
+/**
+ * Pass the transaction client when checking inside the booking transaction: together with the
+ * log row written in the same Serializable transaction this makes the limit race-free.
+ */
+export async function checkReservationRateLimit(ip: string, db: DbClient = prisma): Promise<RateLimitResult> {
+    const hourly = await checkLogBasedLimit(RESERVATION_LOG_ACTION, ip, MAX_RESERVATIONS_PER_HOUR, HOUR_MS, db);
     if (!hourly.success) return hourly;
-    const daily = await checkLogBasedLimit("REZERWACJA_WSTĘPNA", ip, MAX_RESERVATIONS_PER_DAY, 24 * HOUR_MS);
+    const daily = await checkLogBasedLimit(RESERVATION_LOG_ACTION, ip, MAX_RESERVATIONS_PER_DAY, 24 * HOUR_MS, db);
     return daily.success ? hourly : daily;
 }
 

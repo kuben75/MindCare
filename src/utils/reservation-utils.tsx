@@ -1,8 +1,9 @@
+import {BUSINESS_TZ} from "@/lib/time";
 import React from "react";
 
 export const formatDate = (date: Date | string) => {
     return new Date(date).toLocaleDateString('pl-PL', {
-        timeZone: 'Europe/Warsaw',
+        timeZone: BUSINESS_TZ,
         day: '2-digit',
         month: 'long',
         year: 'numeric'
@@ -11,7 +12,7 @@ export const formatDate = (date: Date | string) => {
 
 export const formatTime = (date: Date | string) => {
     return new Date(date).toLocaleTimeString('pl-PL', {
-        timeZone: 'Europe/Warsaw',
+        timeZone: BUSINESS_TZ,
         hour: '2-digit',
         minute: '2-digit'
     });

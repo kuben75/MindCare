@@ -1,9 +1,12 @@
+import { requireAdminPage } from "@/lib/requireAdmin";
 import prisma from "@/infrastructure/prisma";
 import {notFound} from "next/navigation";
 import HeroForm from "@/components/layout/HeroForm";
 
 
 export default async function EditLandingTemplatePage({params}: {params: Promise<{id: string}>}) {
+    await requireAdminPage();
+
 
     const {id} = await params;
 

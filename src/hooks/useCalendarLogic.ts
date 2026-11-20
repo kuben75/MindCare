@@ -1,19 +1,19 @@
 import {useState, useEffect, useRef} from "react";
 import {DAYS_PER_VIEW_DESKTOP, DAYS_PER_VIEW_MOBILE, MAX_DAYS_AHEAD} from "@/constants/calendar";
-import {IDaySchedule, TRawDaySchedule} from "@/types/calendar";
+import {IDaySchedule, TRawDaySchedule, TSelectedSlot} from "@/types/calendar";
 import {Service} from "@prisma/client";
-import {getWarsawStartOfDay} from "@/utils/warsaw-time";
+import {PATIENT_TZ, floatingFromKey, todayKeyIn} from "@/lib/time";
 
+// The public calendar always shows Polish time (PATIENT_TZ), wherever the visitor is.
+// Days are "floating" dates of the Polish calendar day, so local getters read the right day.
 export const useCalendarLogic = () => {
-    const luxonToday = getWarsawStartOfDay();
-    const today = luxonToday.toJSDate();
-
-
-    const maxDate = luxonToday.plus({ days: MAX_DAYS_AHEAD }).toJSDate();
+    const todayKey = todayKeyIn(PATIENT_TZ);
+    const today = floatingFromKey(todayKey);
+    const maxDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + MAX_DAYS_AHEAD);
 
     const [calendarData, setCalendarData] = useState<IDaySchedule[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [selectedSlot, setSelectedSlot] = useState<{date: Date, time: string} | null>(null);
+    const [selectedSlot, setSelectedSlot] = useState<TSelectedSlot | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<'calendar' | 'waitlist'>('calendar');
     const [services, setServices] = useState<Service[]>([]);
@@ -23,9 +23,9 @@ export const useCalendarLogic = () => {
     useEffect(() => {
         if(activeTab === 'waitlist' && services.length === 0) {
             fetch('/api/services')
-                .then(res => res.json())
-                .then(data => setServices(data))
-                .catch(() => console.error("Nie udało się wczytać usług:"));
+                .then(res => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
+                .then(data => { if (Array.isArray(data)) setServices(data); })
+                .catch(() => console.error("Nie udało się wczytać usług"));
         }
     }, [activeTab, services.length]);
 
@@ -36,15 +36,17 @@ export const useCalendarLogic = () => {
             setIsLoading(true);
             setError(null);
             try {
-                const response = await fetch(`/api/slots?startDate=${luxonToday.toISODate()}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    const parsedDays: IDaySchedule[] = data.days.map((day: TRawDaySchedule) => ({
-                        ...day,
-                        date: new Date(day.date)
-                    }));
-                    setCalendarData(parsedDays);
+                const response = await fetch(`/api/slots?startDate=${todayKey}`);
+                const data = response.ok ? await response.json().catch(() => null) : null;
+                if (!data || !Array.isArray(data.days)) {
+                    setError("Nie udało się wczytać dostępnych terminów. Spróbuj ponownie za chwilę.");
+                    return;
                 }
+                const parsedDays: IDaySchedule[] = data.days.map((day: TRawDaySchedule) => ({
+                    ...day,
+                    date: floatingFromKey(day.dateKey)
+                }));
+                setCalendarData(parsedDays);
             } catch{
                 setError("Nie udało się wczytać dostępnych terminów. Sprawdź połączenie z internetem.");
             } finally {
@@ -53,6 +55,8 @@ export const useCalendarLogic = () => {
         };
 
         fetchSlots();
+        // todayKey only changes at midnight; refetching then is not needed.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleMove = (direction: 1 | -1) => {
@@ -63,7 +67,7 @@ export const useCalendarLogic = () => {
     };
 
     const jumpToDate = (dateString: string) => {
-        const newDate = getWarsawStartOfDay(dateString).toJSDate();
+        const newDate = floatingFromKey(dateString);
 
         const element = document.getElementById(`day-${newDate.getTime()}`);
         if (element && carouselRef.current) {

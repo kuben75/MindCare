@@ -6,73 +6,83 @@ import EditorJS, { OutputData} from "@editorjs/editorjs";
 
 export default function BlockEditor({ data, onChange }: IBlockEditorProps) {
     const editorRef = useRef<EditorJS | null>(null);
-    const isReady = useRef(false);
+    // Latest props without re-initialising the editor on every keystroke.
+    const dataRef = useRef(data);
+    const onChangeRef = useRef(onChange);
 
     useEffect(() => {
-        if (!isReady.current) {
-            isReady.current = true;
-            initEditor();
-        }
+        onChangeRef.current = onChange;
+    }, [onChange]);
 
-        return () => {
-            if (editorRef.current && editorRef.current.destroy) {
-                editorRef.current.destroy();
-                editorRef.current = null;
-                isReady.current = false;
+    useEffect(() => {
+        // `cancelled` guards against the component unmounting while the dynamic imports load —
+        // otherwise an orphaned EditorJS instance would be created and never destroyed.
+        let cancelled = false;
+
+        const initEditor = async () => {
+            const EditorJSClass = (await import("@editorjs/editorjs")).default;
+            const Header = (await import("@editorjs/header")).default;
+            const List = (await import("@editorjs/list")).default;
+            const ImageTool = (await import("@editorjs/image")).default;
+            // @ts-expect-error  - no types for embed tool
+            const Embed = (await import("@editorjs/embed")).default;
+
+            if (cancelled) return;
+
+            const initial = dataRef.current;
+            let parsedData: OutputData = {blocks: []};
+            if (initial) {
+                try {
+                    parsedData = typeof initial === 'string' ? JSON.parse(initial) : initial;
+                } catch  {
+                    parsedData = { blocks: [{ type: "paragraph", data: { text: initial } }] };
+                }
             }
-        };
-    }, []);
 
-    const initEditor = async () => {
-        const EditorJS = (await import("@editorjs/editorjs")).default;
-        const Header = (await import("@editorjs/header")).default;
-        const List = (await import("@editorjs/list")).default;
-        const ImageTool = (await import("@editorjs/image")).default;
-        // @ts-expect-error  - no types for embed tool
-        const Embed = (await import("@editorjs/embed")).default;
-
-        let parsedData: OutputData = {blocks: []};
-        if (data) {
-            try {
-                parsedData = typeof data === 'string' ? JSON.parse(data) : data;
-            } catch  {
-                parsedData = { blocks: [{ type: "paragraph", data: { text: data } }] };
-            }
-        }
-
-        editorRef.current = new EditorJS({
-            holder: "editorjs-container",
-            data: parsedData,
-            placeholder: "Naciśnij TAB lub kliknij przycisk '+', aby dodać nowy nagłówek, obrazek lub tekst...",
-            tools: {
-                header: Header,
-                list: List,
-                image: {
-                    class: ImageTool,
-                    config: {
-                        endpoints: {
-                            byFile: "/api/admin/upload",
+            editorRef.current = new EditorJSClass({
+                holder: "editorjs-container",
+                data: parsedData,
+                placeholder: "Naciśnij TAB lub kliknij przycisk '+', aby dodać nowy nagłówek, obrazek lub tekst...",
+                tools: {
+                    header: Header,
+                    list: List,
+                    image: {
+                        class: ImageTool,
+                        config: {
+                            endpoints: {
+                                byFile: "/api/admin/upload",
+                            }
+                        }
+                    },
+                    embed: {
+                        class: Embed,
+                        config: {
+                            services: {
+                                youtube: true,
+                                vimeo: true,
+                            }
                         }
                     }
                 },
-                embed: {
-                    class: Embed,
-                    config: {
-                        services: {
-                            youtube: true,
-                            vimeo: true,
-                        }
+                onChange: async () => {
+                    if (editorRef.current) {
+                        const content = await editorRef.current.saver.save();
+                        onChangeRef.current(JSON.stringify(content));
                     }
-                }
-            },
-            onChange: async () => {
-                if (editorRef.current) {
-                    const content = await editorRef.current.saver.save();
-                    onChange(JSON.stringify(content));
-                }
-            },
-        });
-    };
+                },
+            });
+        };
+
+        void initEditor();
+
+        return () => {
+            cancelled = true;
+            if (editorRef.current && editorRef.current.destroy) {
+                editorRef.current.destroy();
+                editorRef.current = null;
+            }
+        };
+    }, []);
 
     return (
         <div className="w-full min-h-[400px] cursor-text">

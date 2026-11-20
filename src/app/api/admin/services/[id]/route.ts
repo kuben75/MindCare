@@ -1,6 +1,7 @@
 import {NextResponse} from "next/server";
 import prisma from "@/infrastructure/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
+import { firstIssue, serviceUpdateSchema } from "@/schemas/admin";
 
 
 export async function PATCH(req: Request, {params}: {params: Promise<{id: string}>}) {
@@ -11,17 +12,15 @@ export async function PATCH(req: Request, {params}: {params: Promise<{id: string
         }
 
         const resolvedParams = await params;
-        const body = await req.json();
-        const {name, duration, price, isActive} = body;
+        const body = await req.json().catch(() => null);
+        const validation = serviceUpdateSchema.safeParse(body);
+        if (!validation.success) {
+            return NextResponse.json({error: firstIssue(validation.error)}, {status: 400});
+        }
 
         const updatedService = await prisma.service.update({
             where: {id: resolvedParams.id},
-            data: {
-                ...(name && {name: name.trim()}),
-                ...(duration && {duration: parseInt(duration)}),
-                ...(price !== undefined && {price: parseFloat(price)}),
-                ...(isActive !== undefined && {isActive})
-            }
+            data: validation.data
         });
         return NextResponse.json(updatedService, {status: 200});
     }catch  {

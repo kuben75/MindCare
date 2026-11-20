@@ -1,8 +1,15 @@
 import { resend } from "@/infrastructure/resend";
 import { realClinicPhone } from "@/constants/reservations";
 import { render } from "@react-email/render";
-import { formatDateTime } from "@/utils/calendar-utils";
+import { formatDateTime, formatDateTimeAdmin } from "@/utils/calendar-utils";
 import { ISendMagicLinkParams } from "@/types/email";
+
+/** Admin e-mails show the clinic time (UK) and, next to it, what the patient sees (PL). */
+function adminWhen(date: Date) {
+    const admin = formatDateTimeAdmin(date);
+    const patient = formatDateTime(date);
+    return { ...admin, both: `${admin.formattedDate}, ${admin.formattedTime} (czas UK) / ${patient.formattedTime} (czas PL)` };
+}
 import prisma from "@/infrastructure/prisma";
 
 import MagicLinkEmail from "@/emails/MagicLink";
@@ -27,7 +34,7 @@ async function sendEmailBase(
 
     try {
         const html = await render(reactComponent);
-        const { data, error } = await resend.emails.send({ from, to, subject, html });
+        const { error } = await resend.emails.send({ from, to, subject, html });
 
         if (error) {
             console.error(`[Resend API Error] Błąd wysyłania do ${to}:`, error);
@@ -151,7 +158,7 @@ export async function sendNewDeviceAlertEmail({
                                               }: {
     adminEmail: string; adminName: string; deviceInfo: string; ipAddress: string
 }) {
-    const { formattedDate, formattedTime } = formatDateTime(new Date());
+    const { formattedDate, formattedTime } = formatDateTimeAdmin(new Date());
 
     return sendEmailBase(
         adminEmail,
@@ -216,7 +223,8 @@ export async function sendNewReservationAdminAlert({
     serviceName: string;
     status?: string;
 }) {
-    const { formattedDate, formattedTime } = formatDateTime(date);
+    const { formattedDate, both } = adminWhen(date);
+    const statusLabel = status === "PAID" ? "Opłacona" : "Oczekuje na płatność";
 
     return sendEmailBase(
         adminEmail,
@@ -225,7 +233,7 @@ export async function sendNewReservationAdminAlert({
             title: "Masz nową rezerwację!",
             previewText: `Nowy pacjent: ${patientName} zapisał się na ${formattedDate}`,
             greeting: `Cześć Paulina,`,
-            message: `W Twoim kalendarzu pojawiła się nowa wizyta.\n\nSzczegóły spotkania:\n• Pacjent: ${patientName}\n• Email: ${patientEmail || 'brak'}\n• Telefon: ${patientPhone || 'brak'}\n• Usługa: ${serviceName}\n• Termin: ${formattedDate} o godz. ${formattedTime}\n• Status: ${status || 'PENDING'}\n\nZaloguj się do panelu, aby zarządzać wizytą i zweryfikować płatność.`,
+            message: `W Twoim kalendarzu pojawiła się nowa wizyta.\n\nSzczegóły spotkania:\n• Pacjent: ${patientName}\n• Email: ${patientEmail || 'brak'}\n• Telefon: ${patientPhone || 'brak'}\n• Usługa: ${serviceName}\n• Termin: ${both}\n• Status: ${statusLabel}\n\nZaloguj się do panelu, aby zarządzać wizytą i zweryfikować płatność.`,
             actionLabel: "Przejdź do kalendarza",
             actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/dashboard/calendar`
         }),
@@ -238,7 +246,7 @@ export async function sendAdminRescheduleAlert({
                                                }: {
     adminEmail: string; patientName: string; date: Date
 }) {
-    const { formattedDate, formattedTime } = formatDateTime(date);
+    const { both } = adminWhen(date);
 
     return sendEmailBase(
         adminEmail,
@@ -247,7 +255,7 @@ export async function sendAdminRescheduleAlert({
             title: "Prośba o zmianę terminu",
             previewText: `${patientName} prosi o zmianę daty wizyty.`,
             greeting: `Cześć,`,
-            message: `Pacjent ${patientName} poprosił przed chwilą o zmianę terminu wizyty zaplanowanej na ${formattedDate} o godzinie ${formattedTime}.\n\nSkontaktuj się z pacjentem, aby ustalić nowy termin i zaktualizować wizytę w kalendarzu.`,
+            message: `Pacjent ${patientName} poprosił przed chwilą o zmianę terminu wizyty zaplanowanej na ${both}.\n\nSkontaktuj się z pacjentem, aby ustalić nowy termin i zaktualizować wizytę w kalendarzu.`,
             actionLabel: "Przejdź do panelu",
             actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/dashboard/calendar`
         }),
@@ -270,7 +278,7 @@ export async function sendPatientReminderEmail({
             title: "Przypomnienie o wizycie",
             previewText: "Jutro odbędzie się Twoja wizyta w gabinecie.",
             greeting: `Cześć ${firstName},`,
-            message: `Przypominam o jutrzejszej wizycie w moim gabinecie:\n\nUsługa: ${serviceName}\nData: ${formattedDate}\nGodzina: ${formattedTime}\n\nJeśli nie będziesz w stanie dotrzeć, bardzo proszę o jak najszybszą informację (możesz po prostu odpisać na tego e-maila), abym mogła zaproponować ten termin komuś z listy rezerwowej.\n\nDo zobaczenia!`
+            message: `Przypominam o jutrzejszej wizycie w moim gabinecie:\n\nUsługa: ${serviceName}\nData: ${formattedDate}\nGodzina: ${formattedTime} (czas polski)\n\nJeśli nie będziesz w stanie dotrzeć, bardzo proszę o jak najszybszą informację (możesz po prostu odpisać na tego e-maila), abym mogła zaproponować ten termin komuś z listy rezerwowej.\n\nDo zobaczenia!`
         })
     );
 }
@@ -280,12 +288,12 @@ export async function sendAdminDailyReportEmail({
                                                 }: {
     adminEmail: string; appointmentsCount: number; firstAppointment?: Reservation; date: Date
 }) {
-    const { formattedDate } = formatDateTime(date);
+    const { formattedDate } = formatDateTimeAdmin(date);
 
     let message = `Masz dzisiaj zaplanowanych wizyt: ${appointmentsCount}.\n\n`;
     if (firstAppointment) {
-        const { formattedTime } = formatDateTime(firstAppointment.date);
-        message += `Pierwszy pacjent: ${firstAppointment.patientName} o godzinie ${formattedTime}.\n\n`;
+        const { formattedTime } = formatDateTimeAdmin(firstAppointment.date);
+        message += `Pierwszy pacjent: ${firstAppointment.patientName} o godzinie ${formattedTime} (czas UK).\n\n`;
     }
     message += `Miłego i spokojnego dnia!`;
 
@@ -299,6 +307,31 @@ export async function sendAdminDailyReportEmail({
             message: message,
             actionLabel: "Otwórz kalendarz",
             actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/dashboard/calendar`
+        }),
+        SYSTEM_FROM
+    );
+}
+/** Tells the clinic that a patient cancelled a visit themself (and whether a refund is due). */
+export async function sendAdminCancellationAlert({
+                                                     adminEmail, patientName, patientEmail, date, serviceName, refundDue, amount
+                                                 }: {
+    adminEmail: string; patientName: string; patientEmail: string; date: Date; serviceName: string; refundDue: boolean; amount?: number
+}) {
+    const { both } = adminWhen(date);
+    const refundLine = refundDue
+        ? `\n\nWizyta była opłacona i odwołano ją ponad 24h przed terminem — należy zwrócić pacjentowi ${amount ?? ""} zł.`
+        : "";
+
+    return sendEmailBase(
+        adminEmail,
+        `Odwołana wizyta: ${patientName}`,
+        UniversalEmail({
+            title: "Pacjent odwołał wizytę",
+            previewText: `${patientName} odwołał(a) wizytę.`,
+            greeting: "Cześć,",
+            message: `Pacjent ${patientName} (${patientEmail}) odwołał wizytę „${serviceName}” zaplanowaną na ${both}. Termin jest już wolny w kalendarzu.${refundLine}`,
+            actionLabel: "Przejdź do panelu",
+            actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/admin/dashboard/reservations`
         }),
         SYSTEM_FROM
     );

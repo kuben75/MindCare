@@ -23,7 +23,8 @@ export default function PatientActions({ token, status, isRescheduleRequested, r
 
     return (
         <div className="pt-2 pb-6 min-h-[150px] flex flex-col items-center justify-center">
-            {message && !isReservationCancelled && !showRescheduleConfirm && (
+            {/* Shown also while a confirmation panel is open, so server errors are never swallowed. */}
+            {message && (
                 <div className="mb-4 text-amber-600 bg-amber-50 px-4 py-2 rounded-lg text-sm font-medium animate-fade-in border border-amber-200">
                     {message}
                 </div>

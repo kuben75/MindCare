@@ -1,3 +1,4 @@
+import {formatAdmin} from "@/lib/time";
 import {AnimatePresence, motion} from "framer-motion";
 import {containerVariants, itemVariants} from "@/framer-motion/animation-landing";
 import {Toast} from "@/components/ui/Toast";
@@ -112,7 +113,7 @@ export default function LandingPageCreator({ templates, isLoading, actionLoading
                                                 {template.title.replace(/<[^>]*>?/gm, '').replace(/\n/g, ' ')}
                                             </h3>
                                             <p className="text-graphite/40 dark:text-zinc-500 text-[11px] font-semibold mt-3 uppercase tracking-widest">
-                                                Utworzono: {new Date(template.createdAt).toLocaleDateString('pl-PL')}
+                                                Utworzono: {formatAdmin(template.createdAt, { dateStyle: 'short' })}
                                             </p>
                                         </div>
 

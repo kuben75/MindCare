@@ -2,14 +2,15 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { POST } from "@/app/api/reservations/route";
 import prisma from "@/infrastructure/prisma";
 import { checkReservationRateLimit } from "@/lib/rate-limit";
-import { isSlotAvailable } from "@/services/availability.service";
+import { checkSlot } from "@/services/availability.service";
 
 vi.mock("@/lib/rate-limit", () => ({
     checkReservationRateLimit: vi.fn(),
 }));
 
-vi.mock("@/services/availability.service", () => ({
-    isSlotAvailable: vi.fn(),
+vi.mock("@/services/availability.service", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("@/services/availability.service")>()),
+    checkSlot: vi.fn(),
 }));
 
 vi.mock("@/utils/email-sender", () => ({
@@ -64,7 +65,7 @@ describe("Public Reservations Security", () => {
     });
 
     it("zwraca 409, gdy termin jest poza grafikiem, zablokowany lub zajęty", async () => {
-        vi.mocked(isSlotAvailable).mockResolvedValue(false);
+        vi.mocked(checkSlot).mockResolvedValue({ ok: false, reason: "OUTSIDE_HOURS" });
         vi.mocked(prisma.$transaction).mockImplementation(async (fn: any) => {
             const tx = {
                 reservation: {

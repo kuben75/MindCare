@@ -30,7 +30,7 @@ export default function ScheduleForm({ initialSchedules }: { initialSchedules: W
                 <p className="text-sm text-graphite/60 dark:text-zinc-400 mt-2 font-medium">Ustal w jakich godzinach jesteś dostępna dla pacjentów w poszczególne dni.</p>
                     <InfoTooltip
                         title="Czas obowiązujący w gabinecie"
-                        description="Twój grafik jest synchronizowany w czasie polskim (Europe/Warsaw). Niezależnie od Twojej bieżącej lokalizacji, ustawiaj godziny zgodnie z czasem obowiązującym w Polsce."
+                        description="Godziny grafiku ustawiasz w czasie Londynu (Europe/London, zmiana czasu letniego jest uwzględniana automatycznie). Pacjenci widzą te terminy przeliczone na czas polski — np. 17:00 w grafiku to 18:00 w kalendarzu pacjenta."
                     />
                 </div>
             </motion.div>

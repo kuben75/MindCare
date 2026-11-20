@@ -3,7 +3,7 @@ import {ReservationStatus, Service} from "@prisma/client";
 import {useRouter} from "next/navigation";
 import {TReservationWithService} from "@/types/reservation";
 import { useToast } from "@/hooks/useToast";
-import {buildWarsawDateObj, getWarsawNow} from "@/utils/warsaw-time";
+import {BUSINESS_TZ, zonedInstant} from "@/lib/time";
 import {DateTime} from "luxon";
 
 export const useReservationManager = ({ initialReservations, services }: { initialReservations: TReservationWithService[], services: Service[] }) => {
@@ -30,11 +30,11 @@ export const useReservationManager = ({ initialReservations, services }: { initi
     });
 
     const router = useRouter();
-    const warsawNow = getWarsawNow();
+    const now = DateTime.now();
     const { toast, showToast, hideToast } = useToast();
 
     const filteredReservations = initialReservations.filter((res) => {
-        const resDate = DateTime.fromJSDate(new Date(res.date)).setZone('Europe/Warsaw');
+        const resDate = DateTime.fromJSDate(new Date(res.date));
 
         const matchesSearch =
             res.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -44,10 +44,10 @@ export const useReservationManager = ({ initialReservations, services }: { initi
         if (!matchesSearch) return false;
 
         if (activeTab === 'upcoming') {
-            return res.status !== 'CANCELLED' && resDate >= warsawNow;
+            return res.status !== 'CANCELLED' && res.status !== 'COMPLETED' && resDate >= now;
         }
         if (activeTab === 'history') {
-            return res.status !== 'CANCELLED' && (resDate < warsawNow || res.status === 'COMPLETED');
+            return res.status !== 'CANCELLED' && (resDate < now || res.status === 'COMPLETED');
         }
         if (activeTab === 'cancelled') {
             return res.status === 'CANCELLED';
@@ -60,7 +60,13 @@ export const useReservationManager = ({ initialReservations, services }: { initi
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            const finalDateObj = buildWarsawDateObj(formData.date, formData.time);
+            // The admin enters the visit in clinic time (BUSINESS_TZ).
+            const finalDateObj = zonedInstant(formData.date, formData.time, BUSINESS_TZ);
+            if (!finalDateObj) {
+                showToast("Podaj poprawną datę i godzinę wizyty.", "error");
+                setIsSubmitting(false);
+                return;
+            }
 
             const res = await fetch("/api/admin/reservations", {
                 method: "POST",

@@ -20,6 +20,16 @@ export const usePostForm = ({ initialData }: { initialData?: TInitialData }) => 
 
     const prevTitle = useRef(title);
     const prevContent = useRef(content);
+    // Autosave and manual save must never both create a post: the id lives in a ref (always
+    // current), manual save waits for an in-flight autosave, and autosave skips while a manual
+    // save runs.
+    const postIdRef = useRef<string | undefined>(initialData?.id);
+    const autosaveInFlight = useRef<Promise<void> | null>(null);
+    const manualSaving = useRef(false);
+    const rememberPostId = (id: string) => {
+        postIdRef.current = id;
+        setPostId(id);
+    };
 
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -39,9 +49,12 @@ export const usePostForm = ({ initialData }: { initialData?: TInitialData }) => 
 
         setSaveStatus("saving");
         const timer = setTimeout(async () => {
+            if (manualSaving.current || autosaveInFlight.current) return;
+            const run = (async () => {
             try {
-                const isNew = !postId;
-                const endpoint = isNew ? "/api/admin/posts" : `/api/admin/posts/${postId}`;
+                const currentId = postIdRef.current;
+                const isNew = !currentId;
+                const endpoint = isNew ? "/api/admin/posts" : `/api/admin/posts/${currentId}`;
                 const method = isNew ? "POST" : "PUT";
 
                 const safeContent = content || '{"blocks":[]}';
@@ -59,7 +72,7 @@ export const usePostForm = ({ initialData }: { initialData?: TInitialData }) => 
                 if (response.ok) {
                     const data = await response.json();
                     if (isNew && data.id) {
-                        setPostId(data.id);
+                        rememberPostId(data.id);
                     }
                     prevTitle.current = title;
                     prevContent.current = content;
@@ -71,6 +84,10 @@ export const usePostForm = ({ initialData }: { initialData?: TInitialData }) => 
             } catch {
                 setSaveStatus("error");
             }
+            })();
+            autosaveInFlight.current = run;
+            await run;
+            autosaveInFlight.current = null;
         }, 3000);
 
         return () => clearTimeout(timer);
@@ -82,9 +99,12 @@ export const usePostForm = ({ initialData }: { initialData?: TInitialData }) => 
             return;
         }
         setIsLoading(true);
+        manualSaving.current = true;
         try {
-            const isNew = !postId;
-            const endpoint = isNew ? "/api/admin/posts" : `/api/admin/posts/${postId}`;
+            if (autosaveInFlight.current) await autosaveInFlight.current.catch(() => {});
+            const currentId = postIdRef.current;
+            const isNew = !currentId;
+            const endpoint = isNew ? "/api/admin/posts" : `/api/admin/posts/${currentId}`;
             const method = isNew ? "POST" : "PUT";
 
             const safeContent = content || '{"blocks":[]}';
@@ -102,7 +122,7 @@ export const usePostForm = ({ initialData }: { initialData?: TInitialData }) => 
             if (response.ok) {
                 const data = await response.json();
                 if (isNew && data.id) {
-                    setPostId(data.id);
+                    rememberPostId(data.id);
                 }
                 setIsPublished(publishStatus);
                 prevTitle.current = title;
@@ -115,12 +135,13 @@ export const usePostForm = ({ initialData }: { initialData?: TInitialData }) => 
                     router.refresh();
                 }, 1000);
             } else {
-                const errorData = await response.json();
+                const errorData = await response.json().catch(() => ({}));
                 showToast(errorData.message || errorData.error || "Wystąpił błąd podczas zapisywania.", "error");
             }
         } catch {
             showToast("Wystąpił błąd połączenia z serwerem.", "error");
         } finally {
+            manualSaving.current = false;
             setIsLoading(false);
         }
     };

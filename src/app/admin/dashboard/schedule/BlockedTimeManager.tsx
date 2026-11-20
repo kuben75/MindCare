@@ -1,5 +1,6 @@
 "use client";
 
+import {formatAdmin} from "@/lib/time";
 import React from "react";
 import { useBlockedTimeManager } from "@/hooks/useBlockedTimeManager";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,7 +29,7 @@ export default function BlockedTimeManager() {
                     <p className="text-sm text-graphite/60 dark:text-zinc-400 mt-1 font-medium">Zablokuj wybrane dni lub godziny, aby pacjenci nie mogli się zapisać.</p>
                     <InfoTooltip
                         title="Szybkie blokowanie terminów"
-                        description="Wprowadź jednorazowe wyjątki lub urlopy (np. nagły wyjazd czy święta). Podobnie jak stały grafik, te blokady działają w strefie czasowej Polski (Europe/Warsaw) i natychmiastowo zamykają wybrane godziny przed pacjentami."
+                        description="Wprowadź jednorazowe wyjątki lub urlopy (np. nagły wyjazd czy święta). Podobnie jak stały grafik, te blokady działają w czasie Londynu (Europe/London) i natychmiastowo zamykają wybrane godziny przed pacjentami (pacjenci widzą je w czasie polskim, czyli godzinę później)."
                         images={["/screenshots/blocked-time.png", "/screenshots/blocked-time-1.png"]}
                     />
                     </div>
@@ -77,15 +78,15 @@ export default function BlockedTimeManager() {
                             <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} key={block.id} className="group flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-white dark:bg-zinc-800/80 border border-beige-dark/20 dark:border-zinc-700 rounded-2xl shadow-sm hover:border-red-200 dark:hover:border-red-900/50 transition-colors">
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 rounded-xl bg-red-50 text-red-500 dark:bg-red-950/30 dark:text-red-400 border border-red-100 dark:border-red-900/50 flex flex-col items-center justify-center shrink-0">
-                                        <span className="text-[9px] font-bold uppercase tracking-widest opacity-80">{new Date(block.startDate).toLocaleString('pl-PL', { month: 'short' })}</span>
-                                        <span className="text-lg font-serif leading-none font-bold">{new Date(block.startDate).getDate()}</span>
+                                        <span className="text-[9px] font-bold uppercase tracking-widest opacity-80">{formatAdmin(block.startDate, { month: 'short' })}</span>
+                                        <span className="text-lg font-serif leading-none font-bold">{formatAdmin(block.startDate, { day: 'numeric' })}</span>
                                     </div>
                                     <div>
                                         <p className="font-mono font-bold text-graphite dark:text-zinc-200 text-sm flex items-center gap-2">
                                             <svg className="w-3.5 h-3.5 text-graphite/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                            {new Date(block.startDate).toLocaleTimeString("pl-PL", { hour: '2-digit', minute: '2-digit' })}
+                                            {formatAdmin(block.startDate, { hour: '2-digit', minute: '2-digit' })}
                                             <span className="text-graphite/30">-</span>
-                                            {new Date(block.endDate).toLocaleTimeString("pl-PL", { hour: '2-digit', minute: '2-digit' })}
+                                            {formatAdmin(block.endDate, { hour: '2-digit', minute: '2-digit' })}
                                         </p>
                                         {block.reason && <p className="text-xs font-medium text-graphite/60 dark:text-zinc-400 mt-1 uppercase tracking-widest">{block.reason}</p>}
                                     </div>

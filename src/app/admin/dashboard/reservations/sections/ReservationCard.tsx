@@ -1,3 +1,4 @@
+import {formatAdmin} from "@/lib/time";
 import { STATUS_BADGE } from "@/constants/ActionBadges";
 import { ReservationStatus } from "@prisma/client";
 import ReservationActionMenu from "@/app/admin/dashboard/reservations/ReservationActionMenu";
@@ -9,11 +10,11 @@ export const ReservationCard = ({ reservation, isExpanded, onToggleDrawer }: IRe
     const isCompleted = reservation.status === 'COMPLETED';
     const style = STATUS_BADGE[reservation.status as ReservationStatus];
 
-    const dateObj = new Date(reservation.date);
-    const day = dateObj.getDate().toString().padStart(2, '0');
-    const month = dateObj.toLocaleString('pl-PL', { month: 'short' }).replace('.', '');
-    const weekday = dateObj.toLocaleString('pl-PL', { weekday: 'long' });
-    const time = dateObj.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+    // Clinic time zone (BUSINESS_TZ), identical on the server and in every browser.
+    const day = formatAdmin(reservation.date, { day: '2-digit' });
+    const month = formatAdmin(reservation.date, { month: 'short' }).replace('.', '');
+    const weekday = formatAdmin(reservation.date, { weekday: 'long' });
+    const time = formatAdmin(reservation.date, { hour: '2-digit', minute: '2-digit' });
 
     return (
         <div className={`group flex flex-col p-4 sm:p-5 bg-white dark:bg-[#262626] border transition-all duration-300 ${

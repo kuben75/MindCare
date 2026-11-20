@@ -1,3 +1,4 @@
+import {formatAdmin, formatPatient} from "@/lib/time";
 import { STATUS_STYLES } from "@/constants/calendar";
 import { ReservationStatus } from "@prisma/client";
 import { AnimatePresence, motion } from "framer-motion";
@@ -56,8 +57,8 @@ export const ReservationModal = ({ selectedRes, setSelectedRes }: IReservationMo
                                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                     Czas i Data
                                 </span>
-                                <p className="text-graphite dark:text-zinc-200 font-semibold">{new Date(selectedRes.date).toLocaleString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-                                <p className="text-graphite/60 dark:text-zinc-400 font-mono mt-0.5">{new Date(selectedRes.date).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}</p>
+                                <p className="text-graphite dark:text-zinc-200 font-semibold">{formatAdmin(selectedRes.date, { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+                                <p className="text-graphite/60 dark:text-zinc-400 font-mono mt-0.5">{formatAdmin(selectedRes.date, { hour: '2-digit', minute: '2-digit' })} <span className="text-[10px] opacity-60">(UK) · {formatPatient(selectedRes.date, { hour: '2-digit', minute: '2-digit' })} (PL)</span></p>
                             </div>
                             <div>
                                 <span className="block text-[10px] font-bold text-graphite/40 dark:text-zinc-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">

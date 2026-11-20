@@ -103,7 +103,7 @@ describe("Patient endpoints", () => {
     });
 
     it("reschedule sends e-mails only on the first request", async () => {
-        vi.mocked(prisma.reservation.findUnique).mockResolvedValue({ id: "r1", status: "PAID", email: "p@x.pl", patientName: "Jan", date: new Date() } as never);
+        vi.mocked(prisma.reservation.findUnique).mockResolvedValue({ id: "r1", status: "PAID", email: "p@x.pl", patientName: "Jan", date: new Date(Date.now() + 3 * 86400000) } as never);
         vi.mocked(prisma.reservation.updateMany).mockResolvedValueOnce({ count: 1 }).mockResolvedValueOnce({ count: 0 });
 
         await reschedulePost(post({ token: TOKEN }));

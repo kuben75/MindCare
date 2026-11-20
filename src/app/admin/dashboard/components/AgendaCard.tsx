@@ -1,8 +1,9 @@
+import {formatAdmin} from "@/lib/time";
 import React from "react";
 import {TReservationWithService} from "@/types/reservation";
 
 export const AgendaCard = ({ appointment }: { appointment: TReservationWithService }) => {
-    const time = new Date(appointment.date).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+    const time = formatAdmin(appointment.date, { hour: '2-digit', minute: '2-digit' });
     const isCompleted = appointment.status === 'COMPLETED';
 
     return (

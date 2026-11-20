@@ -1,3 +1,4 @@
+import { requireAdminPage } from "@/lib/requireAdmin";
 import prisma from "@/infrastructure/prisma";
 import Link from "next/link";
 import BlogListClient from "./BlogListClient";
@@ -5,6 +6,8 @@ import BlogListClient from "./BlogListClient";
 export const dynamic = 'force-dynamic';
 
 export default async function AdminBlogPage() {
+    await requireAdminPage();
+
     const posts = await prisma.post.findMany({
         orderBy: [
             { order: "asc" },

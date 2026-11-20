@@ -1,5 +1,6 @@
 "use client";
 
+import {formatAdmin} from "@/lib/time";
 import { getActionBadge } from "@/constants/ActionBadges";
 import { motion, AnimatePresence } from "framer-motion";
 import { containerVariants, itemVariants } from "@/framer-motion/animation-logs";
@@ -57,14 +58,14 @@ export default function SystemLogsViewer({ logs, currentPage, totalPages, totalC
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-xl bg-beige-light dark:bg-zinc-800 flex flex-col items-center justify-center shrink-0 border border-beige-dark/10 dark:border-zinc-700/50 transition-transform group-hover:scale-105 duration-300">
                                                     <span className="text-[9px] font-bold text-graphite/40 dark:text-zinc-500 leading-none uppercase tracking-wider">
-                                                        {dateObj.toLocaleString("pl-PL", { month: "short" }).replace(".", "")}
+                                                        {formatAdmin(dateObj, { month: "short" }).replace(".", "")}
                                                     </span>
                                                     <span className="text-[15px] font-serif font-bold text-graphite dark:text-zinc-200 leading-none mt-0.5">
-                                                        {dateObj.getDate()}
+                                                        {formatAdmin(dateObj, { day: "numeric" })}
                                                     </span>
                                                 </div>
                                                 <span className="text-[11px] font-mono font-medium text-graphite/50 dark:text-zinc-500">
-                                                    {dateObj.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                                                    {formatAdmin(dateObj, { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                                                 </span>
                                             </div>
 

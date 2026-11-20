@@ -1,5 +1,6 @@
 "use client";
 
+import {formatAdmin} from "@/lib/time";
 import { TWaitlistWithService } from "@/types/waitlist";
 import { Toast } from "@/components/ui/Toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -59,16 +60,10 @@ const  {
                                         </div>
                                         <div>
                                             <p className="font-mono text-sm font-bold text-graphite dark:text-zinc-200">
-                                                {new Date(entry.createdAt).toLocaleDateString('pl-PL', {
-                                                    day: '2-digit',
-                                                    month: '2-digit'
-                                                })}
+                                                {formatAdmin(entry.createdAt, { day: '2-digit', month: '2-digit' })}
                                             </p>
                                             <p className="text-[10px] font-bold text-graphite/40 dark:text-zinc-500 uppercase tracking-widest mt-0.5">
-                                                {new Date(entry.createdAt).toLocaleTimeString('pl-PL', {
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })}
+                                                {formatAdmin(entry.createdAt, { hour: '2-digit', minute: '2-digit' })}
                                             </p>
                                         </div>
                                     </div>

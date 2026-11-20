@@ -1,3 +1,4 @@
+import {PATIENT_TZ} from "@/lib/time";
 import edjsHTML from "editorjs-html";
 import prisma from "@/infrastructure/prisma";
 import { notFound } from "next/navigation";
@@ -118,7 +119,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                 <header className="mb-12 sm:mb-16">
                     <p className="text-sage dark:text-emerald-400 font-bold text-[10px] mb-4 sm:mb-6 uppercase tracking-widest">
                         {new Date(post.createdAt).toLocaleDateString("pl-PL", {
-                            timeZone: "Europe/Warsaw",
+                            timeZone: PATIENT_TZ,
                             day: "numeric",
                             month: "long",
                             year: "numeric"

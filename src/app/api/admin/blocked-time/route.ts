@@ -1,3 +1,4 @@
+import {BUSINESS_TZ} from "@/lib/time";
 import { NextResponse } from "next/server";
 import prisma from "@/infrastructure/prisma";
 import { DateTime } from "luxon";
@@ -12,7 +13,7 @@ export async function GET() {
     }
 
     try {
-        const todayWarsaw = DateTime.now().setZone("Europe/Warsaw").startOf("day").toJSDate();
+        const todayWarsaw = DateTime.now().setZone(BUSINESS_TZ).startOf("day").toJSDate();
 
         const blockedTimes = await prisma.blockedTime.findMany({
             where: {
@@ -47,15 +48,15 @@ export async function POST(req: Request) {
         let endDateTime: Date;
 
         if (isFullDay) {
-            startDateTime = DateTime.fromISO(date, { zone: "Europe/Warsaw" }).startOf("day").toJSDate();
-            endDateTime = DateTime.fromISO(date, { zone: "Europe/Warsaw" }).endOf("day").toJSDate();
+            startDateTime = DateTime.fromISO(date, { zone: BUSINESS_TZ }).startOf("day").toJSDate();
+            endDateTime = DateTime.fromISO(date, { zone: BUSINESS_TZ }).endOf("day").toJSDate();
         } else {
             if (!startTime || !endTime) {
                 return NextResponse.json({ error: "Podaj godzinę rozpoczęcia i zakończenia" }, { status: 400 });
             }
 
-            const parsedStart = DateTime.fromISO(`${date}T${startTime}`, { zone: "Europe/Warsaw" });
-            const parsedEnd = DateTime.fromISO(`${date}T${endTime}`, { zone: "Europe/Warsaw" });
+            const parsedStart = DateTime.fromISO(`${date}T${startTime}`, { zone: BUSINESS_TZ });
+            const parsedEnd = DateTime.fromISO(`${date}T${endTime}`, { zone: BUSINESS_TZ });
 
             if (!parsedStart.isValid || !parsedEnd.isValid) {
                 return NextResponse.json({ error: "Nieprawidłowy format daty lub godziny" }, { status: 400 });

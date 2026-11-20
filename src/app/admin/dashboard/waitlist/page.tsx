@@ -1,9 +1,12 @@
+import { requireAdminPage } from "@/lib/requireAdmin";
 import prisma from "@/infrastructure/prisma";
 import WaitlistManager from "@/app/admin/dashboard/waitlist/WaitlistManager";
 import InfoTooltip from "@/components/ui/InfoTooltip";
 export const dynamic = "force-dynamic";
 
 export default async function WaitlistPage() {
+    await requireAdminPage();
+
 
 
     const waitlist = await prisma.waitlist.findMany({

@@ -1,9 +1,12 @@
+import { requireAdminPage } from "@/lib/requireAdmin";
 import FinancesClient from "./FinancesClient";
 import {getFinancesData} from "@/services/fincences.service";
 
 export const dynamic = 'force-dynamic';
 
 export default async function FinancesPage() {
+    await requireAdminPage();
+
 
 
     const {

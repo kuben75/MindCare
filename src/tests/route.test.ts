@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import prisma from '@/infrastructure/prisma';
 import { GET } from "@/app/api/slots/route";
-import { Reservation, BlockedTime } from "@prisma/client";
-import {ITestSlot} from "@/types/test";
+import { ITestSlot } from "@/types/test";
 
 vi.mock('@/infrastructure/prisma', () => ({
     default: {
@@ -12,89 +11,117 @@ vi.mock('@/infrastructure/prisma', () => ({
     }
 }));
 
+const get = async (startDate?: string) => {
+    const url = startDate ? `http://localhost/api/slots?startDate=${startDate}` : 'http://localhost/api/slots';
+    const res = await GET(new Request(url));
+    return { res, data: await res.json() };
+};
 
+/**
+ * Schedule is in London time, labels are Polish time. Default schedule: Monday 17:00–20:00 London.
+ *  - summer (BST/CEST): 17:00 London = 16:00 UTC = 18:00 Warsaw
+ *  - winter (GMT/CET):  17:00 London = 17:00 UTC = 18:00 Warsaw
+ */
 describe('Calendar Engine (GET /api/slots)', () => {
-    const MOCK_TODAY = new Date(2026, 5, 1, 10, 0, 0);
-
     beforeEach(() => {
         vi.clearAllMocks();
         vi.useFakeTimers();
-        vi.setSystemTime(MOCK_TODAY);
+        vi.setSystemTime(new Date('2026-06-01T08:00:00Z')); // Monday morning
+        vi.mocked(prisma.reservation.findMany).mockResolvedValue([]);
+        vi.mocked(prisma.blockedTime.findMany).mockResolvedValue([]);
+        vi.mocked(prisma.weeklySchedule.findMany).mockResolvedValue([]);
     });
 
     afterEach(() => {
         vi.useRealTimers();
     });
 
-    it('Should return a 400 Bad Request error if the start date is not provided.', async () => {
-        const req = new Request('http://localhost/api/slots');
-        const res = await GET(req);
-        const data = await res.json();
-
-        expect(res.status).toBe(400);
-        expect(data.error).toBe('Brak daty startowej');
+    it('returns 400 when the start date is missing or malformed', async () => {
+        expect((await get()).res.status).toBe(400);
+        expect((await get()).data.error).toBe('Brak daty startowej');
+        expect((await get('abc')).res.status).toBe(400);
+        expect((await get('2026-13-45')).res.status).toBe(400);
     });
 
-    it('Should generate valid slots based on the default schedule when the database is empty.', async () => {
-
-        vi.mocked(prisma.reservation.findMany).mockResolvedValue([]);
-        vi.mocked(prisma.blockedTime.findMany).mockResolvedValue([]);
-        vi.mocked(prisma.weeklySchedule.findMany).mockResolvedValue([]);
-
-        const req = new Request('http://localhost/api/slots?startDate=2026-06-01');
-        const res = await GET(req);
-        const data = await res.json();
+    it('generates London-schedule slots labelled in Polish time (summer)', async () => {
+        const { res, data } = await get('2026-06-01');
 
         expect(res.status).toBe(200);
         expect(data.days).toHaveLength(30);
 
-        const firstDay = data.days[0];
-        expect(firstDay.slots).toHaveLength(3);
-
-        const slot17 = firstDay.slots.find((s: ITestSlot) => s.time === '17:00');
-        expect(slot17?.available).toBe(true);
+        const monday = data.days[0];
+        expect(monday.dateKey).toBe('2026-06-01');
+        expect(monday.isToday).toBe(true);
+        expect(monday.slots.map((s: ITestSlot) => s.time)).toEqual(['18:00', '19:00', '20:00']);
+        expect(monday.slots[0].startsAt).toBe('2026-06-01T16:00:00.000Z');
+        expect(monday.slots.every((s: ITestSlot) => s.available)).toBe(true);
     });
 
-    it('Overbooking protection: should block a slot if an already paid reservation exists.', async () => {
-        const bookedDate = new Date(2026, 5, 1, 18, 0, 0);
+    it('keeps the same Polish labels in winter (both zones shift together)', async () => {
+        vi.setSystemTime(new Date('2026-12-07T08:00:00Z')); // Monday
+        const { data } = await get('2026-12-07');
+
+        const monday = data.days[0];
+        expect(monday.slots.map((s: ITestSlot) => s.time)).toEqual(['18:00', '19:00', '20:00']);
+        expect(monday.slots[0].startsAt).toBe('2026-12-07T17:00:00.000Z');
+    });
+
+    it('blocks a slot that overlaps an existing visit (duration-aware)', async () => {
         vi.mocked(prisma.reservation.findMany).mockResolvedValue([
-            { date: bookedDate, status: 'PAID' } as unknown as Reservation
-        ]);
-        vi.mocked(prisma.blockedTime.findMany).mockResolvedValue([]);
-        vi.mocked(prisma.weeklySchedule.findMany).mockResolvedValue([]);
+            { date: new Date('2026-06-01T17:00:00Z'), service: { duration: 50 } },
+        ] as never);
 
-        const req = new Request('http://localhost/api/slots?startDate=2026-06-01');
-        const res = await GET(req);
-        const data = await res.json();
+        const { data } = await get('2026-06-01');
+        const slots = data.days[0].slots;
 
-        const firstDay = data.days[0];
-
-        const slot17 = firstDay.slots.find((s: ITestSlot) => s.time === '17:00');
-        const slot18 = firstDay.slots.find((s: ITestSlot) => s.time === '18:00');
-
-        expect(slot17?.available).toBe(true);
-        expect(slot18?.available).toBe(false);
+        expect(slots.find((s: ITestSlot) => s.time === '18:00')?.available).toBe(true);
+        expect(slots.find((s: ITestSlot) => s.time === '19:00')?.available).toBe(false);
+        expect(slots.find((s: ITestSlot) => s.time === '20:00')?.available).toBe(true);
     });
 
-    it('Overbooking protection: should block slots that overlap with vacation blocks (BlockedTime).', async () => {
-        vi.mocked(prisma.reservation.findMany).mockResolvedValue([]);
-        vi.mocked(prisma.weeklySchedule.findMany).mockResolvedValue([]);
+    it('blocks both slots touched by a visit at an odd time (e.g. moved to half past)', async () => {
+        vi.mocked(prisma.reservation.findMany).mockResolvedValue([
+            { date: new Date('2026-06-01T16:30:00Z'), service: { duration: 50 } },
+        ] as never);
 
-        const blockStart = new Date(2026, 5, 1, 16, 30, 0);
-        const blockEnd = new Date(2026, 5, 1, 18, 30, 0);
+        const { data } = await get('2026-06-01');
+        const slots = data.days[0].slots;
 
+        expect(slots.find((s: ITestSlot) => s.time === '18:00')?.available).toBe(false);
+        expect(slots.find((s: ITestSlot) => s.time === '19:00')?.available).toBe(false);
+        expect(slots.find((s: ITestSlot) => s.time === '20:00')?.available).toBe(true);
+    });
+
+    it('blocks slots overlapping blocked time', async () => {
         vi.mocked(prisma.blockedTime.findMany).mockResolvedValue([
-            { startDate: blockStart, endDate: blockEnd } as unknown as BlockedTime
-        ]);
+            { startDate: new Date('2026-06-01T15:30:00Z'), endDate: new Date('2026-06-01T17:30:00Z') },
+        ] as never);
 
-        const req = new Request('http://localhost/api/slots?startDate=2026-06-01');
-        const res = await GET(req);
-        const data = await res.json();
+        const { data } = await get('2026-06-01');
+        const slots = data.days[0].slots;
 
-        const firstDay = data.days[0];
+        expect(slots.find((s: ITestSlot) => s.time === '18:00')?.available).toBe(false);
+        expect(slots.find((s: ITestSlot) => s.time === '19:00')?.available).toBe(false);
+        expect(slots.find((s: ITestSlot) => s.time === '20:00')?.available).toBe(true);
+    });
 
-        expect(firstDay.slots.find((s: ITestSlot) => s.time === '17:00')?.available).toBe(false);
-        expect(firstDay.slots.find((s: ITestSlot) => s.time === '18:00')?.available).toBe(false);
-        expect(firstDay.slots.find((s: ITestSlot) => s.time === '19:00')?.available).toBe(true);
+    it('marks slots that already started as unavailable', async () => {
+        vi.setSystemTime(new Date('2026-06-01T16:30:00Z')); // during the first slot
+        const { data } = await get('2026-06-01');
+        const slots = data.days[0].slots;
+
+        expect(slots.find((s: ITestSlot) => s.time === '18:00')?.available).toBe(false);
+        expect(slots.find((s: ITestSlot) => s.time === '19:00')?.available).toBe(true);
+    });
+
+    it('treats malformed schedule rows as days off instead of opening every hour', async () => {
+        vi.mocked(prisma.weeklySchedule.findMany).mockResolvedValue([
+            { id: 'a', dayOfWeek: 1, startTime: 'abc', endTime: '20:00', isActive: true },
+            { id: 'b', dayOfWeek: 2, startTime: '', endTime: '', isActive: true },
+        ] as never);
+
+        const { data } = await get('2026-06-01');
+        expect(data.days[0].slots).toHaveLength(0); // Monday
+        expect(data.days[1].slots).toHaveLength(0); // Tuesday
     });
 });

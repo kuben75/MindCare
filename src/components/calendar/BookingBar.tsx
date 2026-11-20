@@ -9,7 +9,7 @@ export default function BookingBar({ selectedSlot }: IBookingBarProps) {
 
     const handleProceed = () => {
         if (!selectedSlot) return;
-        router.push(`/reservation?date=${selectedSlot.date.toISOString()}&time=${selectedSlot.time}`);
+        router.push(`/reservation?date=${selectedSlot.dateKey}&time=${selectedSlot.time}`);
     };
 
     return (

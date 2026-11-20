@@ -1,6 +1,6 @@
 import {NextResponse} from "next/server";
 import prisma from "@/infrastructure/prisma";
-import {ISchedulePayload} from "@/types/reservation";
+import {firstIssue, scheduleSchema} from "@/schemas/admin";
 import { requireAdmin } from "@/lib/requireAdmin";
 
 export async function PUT(req: Request) {
@@ -9,15 +9,15 @@ export async function PUT(req: Request) {
         if (!admin) {
             return NextResponse.json({error: "Invalid credentials"}, {status: 401});
         }
-        const body = await req.json();
-        const {schedules} = body;
-
-        if(!Array.isArray(schedules) || schedules.length !== 7) {
-            return NextResponse.json({error: "Invalid schedules format"}, {status: 400});
+        const body = await req.json().catch(() => null);
+        const validation = scheduleSchema.safeParse(body);
+        if (!validation.success) {
+            return NextResponse.json({error: firstIssue(validation.error)}, {status: 400});
         }
+        const {schedules} = validation.data;
 
         await prisma.$transaction(
-            schedules.map((schedule: ISchedulePayload) =>
+            schedules.map((schedule) =>
             prisma.weeklySchedule.upsert({
                 where: {dayOfWeek: schedule.dayOfWeek},
                 update: {

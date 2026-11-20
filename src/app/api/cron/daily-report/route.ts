@@ -2,7 +2,7 @@ import prisma from "@/infrastructure/prisma";
 import {getClinicNotificationEmail, sendAdminDailyReportEmail} from "@/utils/email-sender";
 import {isAuthorizedCron} from "@/lib/request-security";
 import {NextResponse} from "next/server";
-import {getWarsawStartOfDay} from "@/utils/warsaw-time";
+import {BUSINESS_TZ, nowIn} from "@/lib/time";
 
 
 export async function GET(req: Request) {
@@ -10,7 +10,8 @@ export async function GET(req: Request) {
         return new Response('Unauthorized', { status: 401 });
     }
     try{
-        const luxonToday = getWarsawStartOfDay();
+        // The clinic's day (BUSINESS_TZ).
+        const luxonToday = nowIn(BUSINESS_TZ).startOf('day');
         const today = luxonToday.toJSDate();
 
         const endOfToday = luxonToday.endOf('day').toJSDate();

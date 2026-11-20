@@ -1,26 +1,19 @@
 import {POLISH_MONTHS} from "@/constants/calendar";
-import {DateTime} from "luxon";
+import {BUSINESS_TZ, PATIENT_TZ, dateKeyIn, formatDateTimeIn} from "@/lib/time";
 
+/** "20 lis" — expects a floating date (see lib/time `toFloating` / `floatingFromKey`). */
 export const formatDateShort = (date: Date): string => {
     return `${date.getDate()} ${POLISH_MONTHS[date.getMonth()].slice(0, 3)}`;
 };
 
-export const getDateKey = (date: Date | string): string => {
-   return DateTime.fromJSDate(new Date(date)).setZone("Europe/Warsaw").toFormat("yyyy-MM-dd");
-};
+/** Patient-facing calendar day ("yyyy-MM-dd", Polish time) of an instant. */
+export const getDateKey = (date: Date | string): string => dateKeyIn(date, PATIENT_TZ);
 
+/** Patient-facing date/time (Polish time) — used on reservation pages and in patient e-mails. */
+export const formatDateTime = (date: string | Date) => formatDateTimeIn(date, PATIENT_TZ);
 
-export const formatDateTime = (date: string | Date) => {
-
-    const dt = DateTime.fromJSDate(new Date(date)).setZone("Europe/Warsaw");
-    const monthName = POLISH_MONTHS[dt.month - 1]
-        ? POLISH_MONTHS[dt.month - 1].toLowerCase()
-        : String(dt.month);
-
-    const formattedDate = `${dt.day} ${monthName} ${dt.year}`;
-    const formattedTime = dt.toFormat("HH:mm");
-    return { formattedDate, formattedTime };
-};
+/** Clinic-facing date/time (business time zone) — used in the admin panel and admin e-mails. */
+export const formatDateTimeAdmin = (date: string | Date) => formatDateTimeIn(date, BUSINESS_TZ);
 
 export function formatPLN(value: number) {
     return value.toLocaleString("pl-PL", { minimumFractionDigits: 0, maximumFractionDigits: 0 });

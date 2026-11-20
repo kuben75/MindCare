@@ -2,25 +2,32 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import prisma from "@/infrastructure/prisma";
 import { reservationSchema } from "@/schemas/reservation";
-import { isSlotAvailable } from "@/services/availability.service";
-import { checkReservationRateLimit } from "@/lib/rate-limit";
+import { checkSlot, SLOT_CHECK_MESSAGES, type SlotCheckReason } from "@/services/availability.service";
+import { checkReservationRateLimit, RESERVATION_LOG_ACTION } from "@/lib/rate-limit";
 import { getClientIp, verifyTurnstile } from "@/lib/request-security";
+import { PENDING_HOLD_MS } from "@/constants/reservations";
 import {
     sendMagicLinkEmail,
     sendNewReservationAdminAlert,
     getAdminNotificationEmail,
 } from "@/utils/email-sender";
 
+class BookingError extends Error {
+    constructor(public code: "RATE_LIMIT" | "TOO_MANY_PENDING" | SlotCheckReason) {
+        super(code);
+    }
+}
+
+const RATE_LIMIT_MESSAGE = "Zbyt wiele prób rezerwacji. Spróbuj ponownie za godzinę.";
+
 export async function POST(req: Request) {
     try {
         const clientIp = getClientIp(req.headers);
 
+        // Cheap early exit; the authoritative check runs inside the transaction below.
         const rateLimit = await checkReservationRateLimit(clientIp);
         if (!rateLimit.success) {
-            return NextResponse.json(
-                { error: "Zbyt wiele prób rezerwacji. Spróbuj ponownie za godzinę." },
-                { status: 429 }
-            );
+            return NextResponse.json({ error: RATE_LIMIT_MESSAGE }, { status: 429 });
         }
 
         const body = await req.json().catch(() => ({}));
@@ -59,23 +66,24 @@ export async function POST(req: Request) {
 
         const newReservation = await prisma.$transaction(
             async (tx) => {
+                // Count + log row in the same Serializable transaction → parallel requests cannot
+                // all pass the limit (Postgres aborts the conflicting ones with P2034).
+                const limit = await checkReservationRateLimit(clientIp, tx);
+                if (!limit.success) throw new BookingError("RATE_LIMIT");
+
                 const activePendingCount = await tx.reservation.count({
                     where: {
                         email: normalizedEmail,
                         status: "PENDING",
+                        createdAt: { gte: new Date(Date.now() - PENDING_HOLD_MS) },
                     },
                 });
+                if (activePendingCount >= 2) throw new BookingError("TOO_MANY_PENDING");
 
-                if (activePendingCount >= 2) {
-                    throw new Error("TOO_MANY_PENDING");
-                }
+                const slot = await checkSlot(date, service.duration, tx, { mode: "public" });
+                if (!slot.ok) throw new BookingError(slot.reason);
 
-                const isFree = await isSlotAvailable(date, service.duration, tx);
-                if (!isFree) {
-                    throw new Error("SLOT_UNAVAILABLE");
-                }
-
-                return tx.reservation.create({
+                const created = await tx.reservation.create({
                     data: {
                         patientName: patientName.trim(),
                         email: normalizedEmail,
@@ -92,6 +100,16 @@ export async function POST(req: Request) {
                         service: true,
                     },
                 });
+
+                await tx.systemLog.create({
+                    data: {
+                        action: RESERVATION_LOG_ACTION,
+                        details: `Utworzono rezerwację wstępną: ${created.id} | Pacjent: ${created.patientName} (${created.email}) | Usługa: ${created.service.name}`,
+                        ipAddress: clientIp,
+                    },
+                });
+
+                return created;
             },
             {
                 isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
@@ -125,14 +143,6 @@ export async function POST(req: Request) {
             console.error("Błąd wysyłki e-mail po rezerwacji:", emailError);
         }
 
-        await prisma.systemLog.create({
-            data: {
-                action: "REZERWACJA_WSTĘPNA",
-                details: `Utworzono rezerwację wstępną: ${newReservation.id} | Pacjent: ${newReservation.patientName} (${newReservation.email}) | Usługa: ${newReservation.service.name}`,
-                ipAddress: clientIp,
-            },
-        });
-
         return NextResponse.json(
             {
                 url: `${baseUrl}/reservation/success?token=${newReservation.magicToken}`,
@@ -140,19 +150,20 @@ export async function POST(req: Request) {
             { status: 201 }
         );
     } catch (error) {
-        if (error instanceof Error) {
-            if (error.message === "TOO_MANY_PENDING") {
+        if (error instanceof BookingError) {
+            if (error.code === "RATE_LIMIT") {
+                return NextResponse.json({ error: RATE_LIMIT_MESSAGE }, { status: 429 });
+            }
+            if (error.code === "TOO_MANY_PENDING") {
                 return NextResponse.json(
                     { error: "Masz już nieopłacone rezerwacje. Skontaktuj się z gabinetem w sprawie płatności lub poczekaj na ich rozliczenie." },
                     { status: 429 }
                 );
             }
-            if (error.message === "SLOT_UNAVAILABLE") {
-                return NextResponse.json(
-                    { error: "Przepraszamy, ten termin jest niedostępny lub został właśnie zajęty." },
-                    { status: 409 }
-                );
-            }
+            const message = error.code === "BUSY"
+                ? "Przepraszamy, ten termin jest niedostępny lub został właśnie zajęty."
+                : SLOT_CHECK_MESSAGES[error.code];
+            return NextResponse.json({ error: message }, { status: 409 });
         }
 
         if (
@@ -162,7 +173,7 @@ export async function POST(req: Request) {
             (error as { code: string }).code === "P2034"
         ) {
             return NextResponse.json(
-                { error: "Przepraszamy, ten termin został właśnie zajęty przez inną osobę." },
+                { error: "Ten termin został właśnie zajęty lub system jest chwilowo obciążony. Odśwież kalendarz i spróbuj ponownie." },
                 { status: 409 }
             );
         }

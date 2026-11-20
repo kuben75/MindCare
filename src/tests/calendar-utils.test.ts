@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getDateKey, formatDateTime } from '@/utils/calendar-utils';
+import { getDateKey, formatDateTime, formatDateTimeAdmin } from '@/utils/calendar-utils';
 
 describe('Calendar utils tests (calendar-utils.ts) ', () => {
 
@@ -17,14 +17,21 @@ describe('Calendar utils tests (calendar-utils.ts) ', () => {
         expect(result).toBe('2026-01-05');
     });
 
-    it('formatDateTime - should return a formatted date and time', () => {
-        const testDate = new Date(2026, 10, 12, 14, 30);
-        const result = formatDateTime(testDate);
+    it('formatDateTime - patient view is Polish time with a grammatical month name', () => {
+        const instant = new Date('2026-11-12T13:30:00Z'); // 14:30 in Warsaw (CET)
+        const result = formatDateTime(instant);
 
-        expect(result).toHaveProperty('formattedDate');
-        expect(result).toHaveProperty('formattedTime');
-
-        expect(result.formattedDate).toBe('12 listopad 2026');
+        expect(result.formattedDate).toBe('12 listopada 2026');
         expect(result.formattedTime).toBe('14:30');
+    });
+
+    it('formatDateTimeAdmin - clinic view is London time (one hour behind Poland)', () => {
+        const winter = new Date('2026-11-12T13:30:00Z');
+        const summer = new Date('2026-06-12T13:30:00Z');
+
+        expect(formatDateTimeAdmin(winter).formattedTime).toBe('13:30'); // GMT
+        expect(formatDateTime(winter).formattedTime).toBe('14:30');      // CET
+        expect(formatDateTimeAdmin(summer).formattedTime).toBe('14:30'); // BST
+        expect(formatDateTime(summer).formattedTime).toBe('15:30');      // CEST
     });
 });

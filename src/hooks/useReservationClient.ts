@@ -1,6 +1,15 @@
 import React, {useState} from "react";
 import {IReservationFormProps} from "@/types/reservation";
-import {buildWarsawDateObj} from "@/utils/warsaw-time";
+import {DateTime} from "luxon";
+import {PATIENT_TZ, dateKeyIn, zonedInstant} from "@/lib/time";
+
+/** Accepts "yyyy-MM-dd" (current links) or a full ISO instant (older links). */
+const toPatientDateKey = (value?: string): string | null => {
+    if (!value) return null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : dateKeyIn(parsed, PATIENT_TZ);
+};
 
 
 export const useReservationClient = ({ initialDate, initialTime, services }: IReservationFormProps) => {
@@ -15,19 +24,23 @@ export const useReservationClient = ({ initialDate, initialTime, services }: IRe
     const [turnstileToken, setTurnstileToken] = useState("");
     const [turnstileKey, setTurnstileKey] = useState(0);
 
-    const formattedDate = initialDate
-        ? new Date(initialDate).toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    // Dates on this page are always Polish time (PATIENT_TZ), independent of the browser zone.
+    const dateKey = toPatientDateKey(initialDate);
+    const formattedDate = dateKey
+        ? DateTime.fromISO(dateKey).setLocale("pl").toFormat("cccc, d MMMM yyyy")
         : "Nie wybrano daty";
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!initialDate || !initialTime || !serviceId) {
-            setErrorMessage("Błąd połączenia z serwerem. Spróbuj ponownie.");
+        if (isLoading) return;
+        const finalDateObj = zonedInstant(dateKey, initialTime, PATIENT_TZ);
+        if (!finalDateObj || !serviceId) {
+            setErrorMessage("Nie wybrano poprawnego terminu. Wróć do kalendarza i wybierz termin ponownie.");
             return;
         }
         setIsLoading(true);
+        let redirecting = false;
         try{
-            const finalDateObj = buildWarsawDateObj(initialDate, initialTime);
 
             const response = await fetch('/api/reservations', {
                 method: 'POST',
@@ -37,12 +50,13 @@ export const useReservationClient = ({ initialDate, initialTime, services }: IRe
             if(response.ok) {
                 const data = await response.json();
                 if (data.url) {
+                    redirecting = true;
                     window.location.href = data.url;
                 } else {
                     setErrorMessage("Nie udało się dokończyć rezerwacji. Spróbuj ponownie.");
                 }
             } else {
-                const errorData = await response.json();
+                const errorData = await response.json().catch(() => ({}));
                 setErrorMessage(errorData.error || "Wystąpił błąd podczas rezerwacji.");
                 // Turnstile tokens are single-use — remount the widget for a fresh challenge.
                 setTurnstileToken("");
@@ -51,7 +65,8 @@ export const useReservationClient = ({ initialDate, initialTime, services }: IRe
         }catch {
             setErrorMessage("Błąd połączenia z serwerem. Spróbuj ponownie.");
         }finally{
-            setIsLoading(false);
+            // Keep the button disabled while the browser navigates away (no double booking).
+            if (!redirecting) setIsLoading(false);
         }
     };
     return {

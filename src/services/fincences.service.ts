@@ -1,13 +1,15 @@
 import prisma from "@/infrastructure/prisma";
 import {ITransaction} from "@/types/transaction";
-import { getWarsawNow } from "@/utils/warsaw-time";
+import { BUSINESS_TZ, nowIn } from "@/lib/time";
 import { DateTime } from "luxon";
 
 export async function getFinancesData() {
 
-    const warsawNow = getWarsawNow();
+    // Month boundaries follow the clinic time zone.
+    const businessNow = nowIn(BUSINESS_TZ);
 
-   const firstDayOfCurrentMonth = warsawNow.startOf('month');
+    const firstDayOfCurrentMonth = businessNow.startOf('month');
+    const firstDayOfNextMonth = firstDayOfCurrentMonth.plus({ months: 1 });
     const firstDayOfPrevMonth = firstDayOfCurrentMonth.minus({ months: 1 });
     const sixMonthsAgo = firstDayOfCurrentMonth.minus({ months: 5 });
 
@@ -24,12 +26,12 @@ export async function getFinancesData() {
 
         prisma.reservation.findMany({
             where: { status: { in: ['PAID', 'COMPLETED'] } },
-            select: { service: { select: { price: true } } }
+            select: { amountPaid: true, service: { select: { price: true } } }
         }),
 
         prisma.reservation.findMany({
             where: {
-                date: { gte: sixMonthsAgo.toJSDate() },
+                date: { gte: sixMonthsAgo.toJSDate(), lt: firstDayOfNextMonth.toJSDate() },
                 status: { in: ['PAID', 'COMPLETED'] }
             },
             include: { service: true },
@@ -46,7 +48,8 @@ export async function getFinancesData() {
     const pendingCount = getCount('PENDING');
     const paidCount = getCount('PAID');
 
-    const totalRevenue = allPaidRevenues.reduce((sum: number, res: PaidRevenue) => sum + res.service.price, 0);
+    // Revenue uses the amount recorded on the booking, so later price changes don't rewrite history.
+    const totalRevenue = allPaidRevenues.reduce((sum: number, res: PaidRevenue) => sum + (res.amountPaid ?? res.service.price), 0);
 
     let currentMonthRevenue = 0;
     let prevMonthRevenue = 0;
@@ -61,8 +64,8 @@ export async function getFinancesData() {
     }
 
     for (const res of recentPaidReservations) {
-        const price = res.service.price;
-        const resDate = DateTime.fromJSDate(new Date(res.date)).setZone("Europe/Warsaw");
+        const price = res.amountPaid ?? res.service.price;
+        const resDate = DateTime.fromJSDate(new Date(res.date)).setZone(BUSINESS_TZ);
         const key = resDate.toFormat("MMM yyyy", { locale: 'pl-PL' });
 
         if (key in monthlyRevenue) monthlyRevenue[key] += price;
@@ -73,7 +76,7 @@ export async function getFinancesData() {
         serviceStats[res.service.name].count += 1;
         serviceStats[res.service.name].revenue += price;
 
-        if (resDate >= firstDayOfCurrentMonth) {
+        if (resDate >= firstDayOfCurrentMonth && resDate < firstDayOfNextMonth) {
             currentMonthRevenue += price;
             currentMonthTransactions.push({
                 id: res.id,

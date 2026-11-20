@@ -1,11 +1,15 @@
+import { requireAdminPage } from "@/lib/requireAdmin";
 import prisma from "@/infrastructure/prisma";
 import SystemLogsViewer from "@/app/admin/dashboard/logs/SystemLogsViewer";
 export const dynamic = 'force-dynamic';
 
 export default async function LogsPage({searchParams}: {searchParams: Promise<{page?: string}>}) {
+    await requireAdminPage();
+
 
     const resolvedParams = await searchParams;
-    const currentPage = Number(resolvedParams.page) || 1;
+    const parsedPage = Math.floor(Number(resolvedParams.page));
+    const currentPage = Number.isFinite(parsedPage) && parsedPage >= 1 ? Math.min(parsedPage, 10000) : 1;
     const pageSize = 20;
 
     const [logs, totalCount] = await Promise.all([

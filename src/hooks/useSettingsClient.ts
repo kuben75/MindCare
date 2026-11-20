@@ -40,7 +40,7 @@ export const useSettingsClient = (initialSettings: ClinicSettings) => {
                 showToast("Ustawienia zostały pomyślnie zapisane.", "success");
                 router.refresh();
             } else {
-                const errorData = await res.json();
+                const errorData = await res.json().catch(() => ({}));
                 showToast(errorData.message || errorData.error || "Wystąpił błąd podczas zapisywania.", "error");
             }
         } catch  {

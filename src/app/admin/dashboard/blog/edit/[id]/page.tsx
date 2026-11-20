@@ -1,8 +1,11 @@
+import { requireAdminPage } from "@/lib/requireAdmin";
 import prisma from "@/infrastructure/prisma";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import PostForm from "@/components/layout/PostForm";
 
 export default async function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
+    await requireAdminPage();
+
     const { id } = await params;
 
     const post = await prisma.post.findUnique({

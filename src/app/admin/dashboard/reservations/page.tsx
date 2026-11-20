@@ -1,9 +1,12 @@
+import { requireAdminPage } from "@/lib/requireAdmin";
 import prisma from "@/infrastructure/prisma";
 import ReservationsManager from "./ReservationsManager";
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminReservationsPage() {
+    await requireAdminPage();
+
 
     const reservations = await prisma.reservation.findMany({
         include: { service: true },

@@ -1,3 +1,4 @@
+import type {TCalendarReservation} from "@/types/calendar";
 import {TReservationWithService} from "@/types/reservation";
 import React from "react";
 import {THeroTemplate} from "@/types/hero";
@@ -15,7 +16,7 @@ export interface IDashboardData {
 export interface IWeekViewDesktopProps {
     currentDate: Date;
     getDaysOfWeek: (date: Date) => Date[];
-    visibleReservations: TReservationWithService[];
+    visibleReservations: TCalendarReservation[];
     setSelectedRes: React.Dispatch<React.SetStateAction<TReservationWithService | null>>;
 }
 

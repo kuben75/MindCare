@@ -1,6 +1,7 @@
 import prisma from "@/infrastructure/prisma";
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/requireAdmin";
+import { firstIssue, settingsSchema } from "@/schemas/admin";
 
 export async function GET() {
     const admin = await requireAdmin();
@@ -41,27 +42,16 @@ export async function PUT(req: Request) {
     }
 
     try {
-        const body = await req.json();
+        const body = await req.json().catch(() => null);
+        const validation = settingsSchema.safeParse(body);
+        if (!validation.success) {
+            return NextResponse.json({ message: firstIssue(validation.error), error: firstIssue(validation.error) }, { status: 400 });
+        }
 
-        const {
-            clinicName, email, phone, address, bankAccount,
-            instagramUrl, facebookUrl, linkedinUrl, znanyLekarzUrl, nipNumber
-        } = body;
-
+        // Social links are rendered as href on every public page — only http(s) is accepted.
         const updatedSettings = await prisma.clinicSettings.update({
             where: { id: "global" },
-            data: {
-                clinicName: clinicName?.trim(),
-                email: email?.trim().toLowerCase(),
-                phone: phone?.trim(),
-                address: address?.trim(),
-                bankAccount: bankAccount?.trim(),
-                instagramUrl: instagramUrl?.trim(),
-                facebookUrl: facebookUrl?.trim(),
-                linkedinUrl: linkedinUrl?.trim(),
-                znanyLekarzUrl: znanyLekarzUrl?.trim(),
-                nipNumber: nipNumber?.trim()
-            }
+            data: validation.data
         });
 
         await prisma.systemLog.create({

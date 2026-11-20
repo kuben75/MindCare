@@ -34,12 +34,12 @@ export default function DaysCarousel({ calendarData, selectedSlot, setSelectedSl
                             <div className="p-3 lg:p-4 flex flex-col gap-3 max-h-[380px] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-beige-dark/30 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-sage/30 transition-colors pr-2">
                                 {day.slots.length > 0 && !isDayPast ? (
                                     day.slots.map((slot) => {
-                                        const isSelected = selectedSlot?.time === slot.time && selectedSlot?.date.getTime() === day.date.getTime();
+                                        const isSelected = selectedSlot?.startsAt === slot.startsAt;
                                         return (
                                             <button
                                                 key={slot.id}
                                                 disabled={!slot.available}
-                                                onClick={() => isSelected ? setSelectedSlot(null) : setSelectedSlot({ date: day.date, time: slot.time })}
+                                                onClick={() => isSelected ? setSelectedSlot(null) : setSelectedSlot({ date: day.date, dateKey: day.dateKey, time: slot.time, startsAt: slot.startsAt })}
                                                 className={`py-3 px-1 rounded-xl text-sm font-semibold transition-all duration-200 border-2
                                                     ${!slot.available
                                                     ? "bg-gray-50/50 text-gray-300 border-transparent cursor-not-allowed line-through decoration-gray-300/50"

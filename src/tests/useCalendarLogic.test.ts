@@ -14,7 +14,7 @@ describe('useCalendarLogic hook', () => {
 
     it('should initialize with correct default states and fetch slots on mount', async () => {
         const mockDays = [
-            { date: new Date('2026-06-03T00:00:00.000Z').toISOString(), slots: [] }
+            { dateKey: '2026-06-03', date: '2026-06-02T22:00:00.000Z', isToday: false, slots: [] }
         ];
 
         vi.mocked(fetch).mockResolvedValueOnce({
@@ -35,6 +35,18 @@ describe('useCalendarLogic hook', () => {
         expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/api/slots?startDate='));
         expect(result.current.calendarData).toHaveLength(1);
         expect(result.current.calendarData[0].date).toBeInstanceOf(Date);
+        // Floating Polish calendar day: local getters read 3 June regardless of the test machine zone.
+        expect(result.current.calendarData[0].date.getDate()).toBe(3);
+        expect(result.current.calendarData[0].date.getMonth()).toBe(5);
+    });
+
+    it('shows an error when the slots endpoint answers with an error status', async () => {
+        vi.mocked(fetch).mockResolvedValueOnce({ ok: false, json: async () => ({ error: 'x' }) } as unknown as Response);
+
+        const { result } = renderHook(() => useCalendarLogic());
+
+        await waitFor(() => expect(result.current.isLoading).toBe(false));
+        expect(result.current.error).toMatch(/Nie udało się wczytać dostępnych terminów/);
     });
 
     it('should handle fetch errors gracefully', async () => {
@@ -106,9 +118,8 @@ describe('useCalendarLogic hook', () => {
     it('should jump to a specific date and update headerDate', () => {
         const { result } = renderHook(() => useCalendarLogic());
 
-        const mockDateString = '2026-06-10T00:00:00.000Z';
-        const expectedDate = new Date(mockDateString);
-        expectedDate.setHours(0, 0, 0, 0);
+        const mockDateString = '2026-06-10';
+        const expectedDate = new Date(2026, 5, 10);
 
         const mockElement = document.createElement('div');
         const getElementByIdSpy = vi.spyOn(document, 'getElementById').mockReturnValue(mockElement);

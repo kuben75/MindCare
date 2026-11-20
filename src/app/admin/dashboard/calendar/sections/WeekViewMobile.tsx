@@ -2,16 +2,17 @@ import {motion} from "framer-motion";
 import {STATUS_STYLES, WEEKDAYS} from "@/constants/calendar";
 import {ReservationStatus} from "@prisma/client";
 import React from "react";
-import {TReservationWithService} from "@/types/reservation";
-import {IWeekViewMobileProps} from "@/types/calendar";
+import {IWeekViewMobileProps, TCalendarReservation} from "@/types/calendar";
+import {adminToday, formatFloatingTime, isSameFloatingDay} from "@/hooks/useAdminCalendarLogic";
 
 export const WeekViewMobile = ({ currentDate, getDaysOfWeek, visibleReservations, setSelectedRes }: IWeekViewMobileProps) => {
     const days = getDaysOfWeek(currentDate);
+    const today = adminToday();
     return (
         <div className="lg:hidden space-y-6">
             {days.map((day: Date, idx: number) => {
-                const dayReservations = visibleReservations.filter((res: TReservationWithService) => new Date(res.date).toDateString() === day.toDateString());
-                const isToday = day.toDateString() === new Date().toDateString();
+                const dayReservations = visibleReservations.filter((res: TCalendarReservation) => isSameFloatingDay(res.displayDate, day));
+                const isToday = isSameFloatingDay(day, today);
                 if (dayReservations.length === 0 && !isToday) return null;
 
                 return (
@@ -28,14 +29,14 @@ export const WeekViewMobile = ({ currentDate, getDaysOfWeek, visibleReservations
                             {dayReservations.length === 0 ? (
                                 <p className="text-sm font-medium text-graphite/30 dark:text-zinc-600 text-center py-6">Masz wolne</p>
                             ) : (
-                                dayReservations.map((res: TReservationWithService) => (
+                                dayReservations.map((res: TCalendarReservation) => (
                                     <div key={res.id} onClick={() => setSelectedRes(res)} className={`p-4 rounded-2xl border flex items-center justify-between cursor-pointer active:scale-95 transition-transform ${STATUS_STYLES[res.status as ReservationStatus].bg} ${STATUS_STYLES[res.status as ReservationStatus].border}`}>
                                         <div>
                                             <div className={`font-bold text-sm ${STATUS_STYLES[res.status as ReservationStatus].text}`}>{res.patientName}</div>
                                             <div className={`text-xs font-medium mt-1 opacity-70 ${STATUS_STYLES[res.status as ReservationStatus].text}`}>{res.service.name}</div>
                                         </div>
                                         <div className={`font-mono font-bold text-sm px-3 py-1.5 rounded-xl bg-white/50 dark:bg-black/20 ${STATUS_STYLES[res.status as ReservationStatus].text}`}>
-                                            {new Date(res.date).toLocaleTimeString('pl-PL', {hour: '2-digit', minute:'2-digit'})}
+                                            {formatFloatingTime(res.displayDate)}
                                         </div>
                                     </div>
                                 ))

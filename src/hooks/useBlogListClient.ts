@@ -38,8 +38,9 @@ export const useBlogListClient = ({ initialPosts }: { initialPosts: TPost[] }) =
                 showToast("Kolejność wpisów została zapisana.", "success");
                 router.refresh();
             }else {
-                const errorData = await response.json();
+                const errorData = await response.json().catch(() => ({}));
                 showToast(errorData.message || errorData.error || "Nie udało się zapisać kolejności. Spróbuj ponownie.", "error");
+                setPosts(posts); // roll back the optimistic reorder
             }
         } catch  {
             showToast("Nie udało się zapisać kolejności. Spróbuj ponownie.", "error");

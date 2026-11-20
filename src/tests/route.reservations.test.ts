@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import prisma from '@/infrastructure/prisma';
 import { POST } from "@/app/api/reservations/route";
-import { isSlotAvailable } from '@/services/availability.service';
+import { checkSlot } from '@/services/availability.service';
 import { Reservation, Service } from "@prisma/client";
 
 vi.mock('@/infrastructure/prisma', () => {
@@ -15,8 +15,9 @@ vi.mock('@/infrastructure/prisma', () => {
     return { default: mockPrisma };
 });
 
-vi.mock('@/services/availability.service', () => ({
-    isSlotAvailable: vi.fn()
+vi.mock('@/services/availability.service', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('@/services/availability.service')>()),
+    checkSlot: vi.fn()
 }));
 
 vi.mock('@/utils/email-sender', () => ({
@@ -50,7 +51,7 @@ describe('Endpoint POST /api/reservations', () => {
         } as Service);
 
         // Symulacja: slot jest zajęty
-        vi.mocked(isSlotAvailable).mockResolvedValue(false);
+        vi.mocked(checkSlot).mockResolvedValue({ ok: false, reason: 'BUSY' });
 
         const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
@@ -82,7 +83,7 @@ describe('Endpoint POST /api/reservations', () => {
             isActive: true
         } as Service);
 
-        vi.mocked(isSlotAvailable).mockResolvedValue(true);
+        vi.mocked(checkSlot).mockResolvedValue({ ok: true });
 
         const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 

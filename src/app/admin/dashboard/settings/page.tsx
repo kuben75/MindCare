@@ -1,8 +1,11 @@
+import { requireAdminPage } from "@/lib/requireAdmin";
 import prisma from "@/infrastructure/prisma";
 import SettingsClient from "@/app/admin/dashboard/settings/SettingsClient";
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
+    await requireAdminPage();
+
 
     const settings = await prisma.clinicSettings.upsert({
         where: { id: "global" },

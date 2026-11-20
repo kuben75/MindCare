@@ -1,6 +1,7 @@
 import {NextResponse} from "next/server";
 import prisma from "@/infrastructure/prisma";
 import {requireAdmin} from "@/lib/requireAdmin";
+import {firstIssue, serviceCreateSchema} from "@/schemas/admin";
 
 export async function GET() {
     try{
@@ -24,19 +25,14 @@ export async function POST(req:Request) {
         if (!admin) {
             return NextResponse.json({message: "Invalid credentials"}, {status: 401});
         }
-        const body = await req.json();
-        const {name, duration, price} = body;
-        if(!name || !duration || price === undefined) {
-            return NextResponse.json({error: "Wszystkie pola są wymagane"}, {status: 400});
+        const body = await req.json().catch(() => null);
+        const validation = serviceCreateSchema.safeParse(body);
+        if (!validation.success) {
+            return NextResponse.json({error: firstIssue(validation.error)}, {status: 400});
         }
 
         const newService = await prisma.service.create({
-            data: {
-                name: name.trim(),
-                duration: parseInt(duration),
-                price: parseFloat(price),
-                isActive: true,
-            }
+            data: { ...validation.data, isActive: true }
         });
         return NextResponse.json(newService, {status: 201});
     }catch  {

@@ -1,5 +1,6 @@
 "use client";
 
+import {formatAdmin} from "@/lib/time";
 import Link from "next/link";
 import {TPost} from "@/types/post";
 import {Toast} from "@/components/ui/Toast";
@@ -105,11 +106,7 @@ export default function BlogListClient({initialPosts}: { initialPosts: TPost[] }
                                         className="col-span-2 sm:text-center text-sm font-medium text-graphite/60 dark:text-zinc-400 flex items-center gap-2 sm:justify-center">
                                         <span
                                             className="sm:hidden text-[10px] font-bold text-graphite/40 uppercase tracking-widest">Utworzono:</span>
-                                        {new Date(post.createdAt).toLocaleDateString('pl-PL', {
-                                            day: '2-digit',
-                                            month: '2-digit',
-                                            year: 'numeric'
-                                        })}
+                                        {formatAdmin(post.createdAt, { day: '2-digit', month: '2-digit', year: 'numeric' })}
                                     </div>
 
                                     <div className="col-span-2 sm:text-center flex sm:justify-center">

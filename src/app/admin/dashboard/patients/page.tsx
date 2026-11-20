@@ -1,9 +1,12 @@
+import { requireAdminPage } from "@/lib/requireAdmin";
 import PatientsClient from "@/app/admin/dashboard/patients/PatientsClient";
 import InfoTooltip from "@/components/ui/InfoTooltip";
 import {GetPatientsService} from "@/services/patients.service";
 export const dynamic = 'force-dynamic';
 
 export default async function PatientsPage() {
+    await requireAdminPage();
+
 
     const { patientList } = await GetPatientsService();
 

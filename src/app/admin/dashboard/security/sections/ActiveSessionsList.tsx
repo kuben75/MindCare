@@ -1,5 +1,6 @@
 "use client";
 
+import {formatAdmin} from "@/lib/time";
 import React from "react";
 import { motion } from "framer-motion";
 import { IActiveSessionsListProps } from "@/types/security";
@@ -82,7 +83,7 @@ export default function ActiveSessionsList({
                                         <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                         </svg>
-                                        {new Date(session.createdAt).toLocaleDateString('pl-PL')} o {new Date(session.createdAt).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}
+                                        {formatAdmin(session.createdAt, { dateStyle: 'short' })} o {formatAdmin(session.createdAt, { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                 </div>
                             </div>

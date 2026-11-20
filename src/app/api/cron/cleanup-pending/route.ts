@@ -13,51 +13,56 @@ export async function GET(req: Request) {
         const now = new Date();
         const holdCutoff = new Date(now.getTime() - PENDING_HOLD_MS);
 
-        const expiredWhere = {
-            status: "PENDING" as const,
-            OR: [
-                { createdAt: { lt: holdCutoff } },
-                { date: { lt: now } },
-            ],
-        };
-
+        // Online bookings unpaid past the hold, plus any unpaid booking whose date has passed.
+        // Manual (admin-created) bookings are never auto-cancelled before their date — payment for
+        // those is arranged individually.
         const expiredReservations = await prisma.reservation.findMany({
-            where: expiredWhere,
+            where: {
+                status: "PENDING",
+                OR: [
+                    { isManual: false, createdAt: { lt: holdCutoff } },
+                    { date: { lt: now } },
+                ],
+            },
             include: { service: { select: { name: true } } },
         });
 
-        if (expiredReservations.length === 0) {
-            return NextResponse.json({ success: true, cancelledCount: 0 });
+        // Cancel one by one, conditional on still being PENDING, so a booking marked as paid in
+        // the meantime is left alone and its patient gets no "slot released" e-mail.
+        const cancelled: typeof expiredReservations = [];
+        for (const reservation of expiredReservations) {
+            const result = await prisma.reservation.updateMany({
+                where: { id: reservation.id, status: "PENDING" },
+                data: { status: "CANCELLED" },
+            });
+            if (result.count === 1) cancelled.push(reservation);
         }
 
-        // Conditional on status=PENDING, so a reservation marked as paid in the meantime is left alone.
-        const expired = await prisma.reservation.updateMany({
-            where: { id: { in: expiredReservations.map((r) => r.id) }, status: "PENDING" },
-            data: { status: "CANCELLED" },
-        });
-
-        await prisma.systemLog.create({
-            data: {
-                action: "CRON_CLEANUP_PENDING",
-                details: `Automatycznie anulowano nieopłacone rezerwacje (brak płatności w ciągu ${PENDING_HOLD_HOURS}h lub termin minął): ${expired.count}`,
-            },
-        });
+        if (cancelled.length > 0) {
+            await prisma.systemLog.create({
+                data: {
+                    action: "CRON_CLEANUP_PENDING",
+                    details: `Automatycznie anulowano nieopłacone rezerwacje (brak płatności w ciągu ${PENDING_HOLD_HOURS}h lub termin minął): ${cancelled.length}`,
+                },
+            });
+        }
 
         // Tell patients whose (still upcoming) slot was released; past-dated ones are just closed.
-        const upcoming = expiredReservations.filter((r) => r.date > now);
         await Promise.allSettled(
-            upcoming.map((r) =>
-                sendCancellationEmail({
-                    email: r.email,
-                    patientName: r.patientName,
-                    date: r.date,
-                    serviceName: r.service.name,
-                    reason: `Rezerwacja nie została opłacona w ciągu ${PENDING_HOLD_HOURS} godzin, dlatego termin został zwolniony. Jeśli nadal chcesz się umówić, zarezerwuj nowy termin lub skontaktuj się z gabinetem.`,
-                })
-            )
+            cancelled
+                .filter((r) => r.date > now)
+                .map((r) =>
+                    sendCancellationEmail({
+                        email: r.email,
+                        patientName: r.patientName,
+                        date: r.date,
+                        serviceName: r.service.name,
+                        reason: `Rezerwacja nie została opłacona w ciągu ${PENDING_HOLD_HOURS} godzin, dlatego termin został zwolniony. Jeśli nadal chcesz się umówić, zarezerwuj nowy termin lub skontaktuj się z gabinetem.`,
+                    })
+                )
         );
 
-        return NextResponse.json({ success: true, cancelledCount: expired.count });
+        return NextResponse.json({ success: true, cancelledCount: cancelled.length });
     } catch (error) {
         console.error("Błąd crona cleanup-pending:", error);
         return NextResponse.json({ error: "Błąd serwera" }, { status: 500 });

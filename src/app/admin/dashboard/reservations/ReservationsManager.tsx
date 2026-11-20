@@ -169,7 +169,7 @@ export default function ReservationsManager({ initialReservations, services }: {
                                             <input type="date" required value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})} className="w-full px-4 py-3 rounded-xl sm:rounded-2xl border border-beige-dark/30 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-medium focus:ring-2 focus:ring-sage/50 focus:border-sage focus:outline-none"/>
                                         </div>
                                         <div>
-                                            <label className="block text-[10px] font-bold uppercase tracking-widest text-graphite/40 dark:text-zinc-500 mb-1.5 pl-1">Godzina</label>
+                                            <label className="block text-[10px] font-bold uppercase tracking-widest text-graphite/40 dark:text-zinc-500 mb-1.5 pl-1">Godzina (czas UK)</label>
                                             <input type="time" required value={formData.time} onChange={(e) => setFormData({...formData, time: e.target.value})} className="w-full px-4 py-3 rounded-xl sm:rounded-2xl border border-beige-dark/30 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-medium focus:ring-2 focus:ring-sage/50 focus:border-sage focus:outline-none"/>
                                         </div>
                                     </div>

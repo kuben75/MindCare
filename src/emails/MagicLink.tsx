@@ -59,7 +59,7 @@ export const MagicLinkEmail = ({
                         <Section style={emailTheme.detailsBox}>
                             <Text style={emailTheme.detailsText}><strong>Usługa:</strong> {serviceName}</Text>
                             <Text style={emailTheme.detailsText}><strong>Data:</strong> {date}</Text>
-                            <Text style={emailTheme.detailsText}><strong>Godzina:</strong> {time}</Text>
+                            <Text style={emailTheme.detailsText}><strong>Godzina:</strong> {time} (czas polski)</Text>
                         </Section>
 
                         {isPending && (

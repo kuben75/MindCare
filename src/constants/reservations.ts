@@ -10,3 +10,26 @@ export function realClinicPhone(phone: string | null | undefined): string | null
     const trimmed = phone?.trim();
     return trimmed && trimmed !== PLACEHOLDER_CLINIC_PHONE ? trimmed : null;
 }
+
+/**
+ * Allowed admin status changes. CANCELLED and COMPLETED are final; a paid visit can't go back to
+ * PENDING (the cleanup cron would cancel it and tell the patient it was unpaid) and an unpaid one
+ * can't jump to COMPLETED (it would count as revenue).
+ */
+export const STATUS_TRANSITIONS: Record<string, readonly string[]> = {
+    PENDING: ["PAID", "CANCELLED"],
+    PAID: ["COMPLETED", "CANCELLED"],
+    COMPLETED: [],
+    CANCELLED: [],
+};
+
+export const STATUS_LABELS: Record<string, string> = {
+    PENDING: "Oczekująca",
+    PAID: "Opłacona",
+    COMPLETED: "Zakończona",
+    CANCELLED: "Anulowana",
+};
+
+export function canTransition(from: string, to: string): boolean {
+    return STATUS_TRANSITIONS[from]?.includes(to) ?? false;
+}

@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/infrastructure/prisma";
@@ -31,4 +32,13 @@ export async function requireAdmin(): Promise<AuthenticatedAdmin | null> {
         email: session.user.email,
         sessionId: session.sessionId,
     };
+}
+/**
+ * For admin server components: every page checks the session itself instead of relying on the
+ * layout (layouts are not re-run on client-side navigation / partial RSC requests).
+ */
+export async function requireAdminPage(): Promise<AuthenticatedAdmin> {
+    const admin = await requireAdmin();
+    if (!admin) redirect("/admin/login");
+    return admin;
 }

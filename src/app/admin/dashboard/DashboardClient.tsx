@@ -1,5 +1,6 @@
 "use client";
 
+import {formatAdmin} from "@/lib/time";
 import React from "react";
 import Link from "next/link";
 import {motion} from "framer-motion";
@@ -13,9 +14,7 @@ import {getPlural} from "@/utils/pluralize";
 
 
 export default function DashboardClient({ data }: { data: IDashboardData }) {
-    const todayFormatted = new Intl.DateTimeFormat('pl-PL', {
-        weekday: 'long', day: 'numeric', month: 'long'
-    }).format(new Date());
+    const todayFormatted = formatAdmin(new Date(), { weekday: 'long', day: 'numeric', month: 'long' });
 
     return (
         <motion.div

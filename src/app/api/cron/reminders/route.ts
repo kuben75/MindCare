@@ -2,7 +2,7 @@ import prisma from "@/infrastructure/prisma";
 import {sendPatientReminderEmail} from "@/utils/email-sender";
 import {isAuthorizedCron} from "@/lib/request-security";
 import {NextResponse} from "next/server";
-import {getWarsawStartOfDay} from "@/utils/warsaw-time";
+import {PATIENT_TZ, nowIn} from "@/lib/time";
 
 
 export async function GET(req:Request) {
@@ -10,7 +10,8 @@ export async function GET(req:Request) {
         return new Response('Unauthorized', { status: 401 });
     }
     try {
-        const luxonTomorrow = getWarsawStartOfDay().plus({ days: 1 });
+        // "Tomorrow" as the patient sees it (Polish time).
+        const luxonTomorrow = nowIn(PATIENT_TZ).startOf('day').plus({ days: 1 });
         const startOfTomorrow = luxonTomorrow.toJSDate();
         const endOfTomorrow = luxonTomorrow.endOf('day').toJSDate();
 
@@ -20,9 +21,9 @@ export async function GET(req:Request) {
                     gte: startOfTomorrow,
                     lte: endOfTomorrow
                 },
-                status: {
-                in: ["PAID", "PENDING"]
-                }
+                // Only confirmed (paid) visits get a reminder — an unpaid booking may already have
+                // lost its slot, and the patient was asked to arrange payment instead.
+                status: "PAID"
             },
             include: {
                 service: true

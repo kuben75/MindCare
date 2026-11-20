@@ -1,3 +1,4 @@
+import {formatAdmin} from "@/lib/time";
 import {useMemo, useState} from "react";
 import {TFinancesCardProps} from "@/types/finances";
 
@@ -6,7 +7,7 @@ export const useFinanceClient = ({chartData, currentMonthTransactions}: TFinance
     const [txSearch, setTxSearch] = useState("");
 
     const maxRevenue = Math.max(...chartData.map(d => d.revenue), 1);
-    const currentMonthName = new Date().toLocaleString("pl-PL", { month: "long", year: "numeric" });
+    const currentMonthName = formatAdmin(new Date(), { month: "long", year: "numeric" });
 
     const filteredTx = useMemo(() =>
             currentMonthTransactions.filter(t =>
@@ -21,7 +22,7 @@ export const useFinanceClient = ({chartData, currentMonthTransactions}: TFinance
         const headers = ["ID Rezerwacji", "Data i Godzina", "Pacjent", "Usługa", "Kwota (PLN)", "Status"];
         const rows = currentMonthTransactions.map(t => [
             t.id,
-            new Date(t.date).toLocaleString("pl-PL"),
+            formatAdmin(t.date, { dateStyle: "short", timeStyle: "short" }),
             t.patientName,
             t.serviceName,
             t.price.toString(),

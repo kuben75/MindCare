@@ -4,6 +4,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { useNavbar } from "@/hooks/useNavbar";
 
+/**
+ * Splits a long clinic name into a headline + tagline so it never gets cut off,
+ * e.g. "Psychologia Odbicia Konsultacje psychologiczne" →
+ * "Psychologia Odbicia" / "Konsultacje psychologiczne". Short names stay on one line.
+ */
+export function splitBrandName(name: string): [string, string | null] {
+    const words = name.trim().split(/\s+/);
+    if (words.length <= 2) return [words.join(" "), null];
+    return [words.slice(0, 2).join(" "), words.slice(2).join(" ")];
+}
+
 export const Navbar = () => {
     const {
         isOpen,
@@ -17,6 +28,8 @@ export const Navbar = () => {
         return null;
     }
 
+    const [brandTitle, brandTagline] = splitBrandName(settings?.clinicName || "Paulina Kawka-Mirek");
+
     return (
         <>
             <nav className={`w-full fixed top-0 left-0 right-0 z-[120] transition-all duration-300 ${
@@ -26,7 +39,7 @@ export const Navbar = () => {
             }`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 flex justify-between items-center transition-all duration-300">
 
-                    <div className="flex-1 flex justify-start items-center min-w-0 pr-2">
+                    <div className="flex-1 flex justify-start items-center min-w-0 pr-2 lg:flex-none xl:flex-1">
                         <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group min-w-0">
                             <div className="relative w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 shrink-0 transition-transform duration-300 group-hover:scale-105">
                                 <Image
@@ -39,30 +52,37 @@ export const Navbar = () => {
                                 />
                             </div>
 
-                            <span className="text-xs sm:text-sm md:text-xl tracking-wider md:tracking-widest text-graphite uppercase font-semibold group-hover:text-sage transition-colors truncate">
-                                {settings?.clinicName || "Paulina Kawka-Mirek"}
+                            <span className="flex flex-col min-w-0 leading-tight">
+                                <span className="text-sm sm:text-base lg:text-lg xl:text-xl tracking-wider lg:tracking-widest text-graphite uppercase font-semibold group-hover:text-sage transition-colors whitespace-nowrap truncate">
+                                    {brandTitle}
+                                </span>
+                                {brandTagline && (
+                                    <span className="mt-0.5 text-[10px] sm:text-[11px] lg:text-xs tracking-[0.06em] min-[360px]:tracking-[0.16em] text-graphite/60 uppercase font-medium group-hover:text-sage/80 transition-colors whitespace-nowrap truncate">
+                                        {brandTagline}
+                                    </span>
+                                )}
                             </span>
                         </Link>
                     </div>
 
-                    <div className="hidden md:flex flex-1 justify-center gap-8 items-center text-graphite font-medium">
+                    <div className="hidden lg:flex flex-1 justify-center gap-6 xl:gap-8 items-center text-graphite font-medium whitespace-nowrap">
                         <Link href="/#o-mnie" className="hover:text-sage transition-colors">O mnie</Link>
                         <Link href="/#specjalizacja" className="hover:text-sage transition-colors">Specjalizacja</Link>
                         <Link href="/blog" className="hover:text-sage transition-colors">Blog</Link>
                         <Link href="/#kontakt" className="hover:text-sage transition-colors">Kontakt</Link>
                     </div>
 
-                    <div className="hidden md:flex flex-1 justify-end">
+                    <div className="hidden lg:flex lg:flex-none xl:flex-1 justify-end">
                         <Link
                             href="#kalendarz"
-                            className="bg-sage text-white px-6 py-2.5 rounded-xl hover:bg-[#8ea38a] transition-all text-sm tracking-wide font-semibold shadow-sm active:scale-95"
+                            className="bg-sage text-white px-6 py-2.5 rounded-xl hover:bg-[#8ea38a] transition-all text-sm tracking-wide font-semibold shadow-sm active:scale-95 whitespace-nowrap"
                         >
                             Umów wizytę
                         </Link>
                     </div>
 
                     <button
-                        className="md:hidden text-graphite p-2 -mr-1 focus:outline-none shrink-0"
+                        className="lg:hidden text-graphite p-2 -mr-1 focus:outline-none shrink-0"
                         onClick={() => setIsOpen(true)}
                         aria-label="Otwórz menu"
                     >
@@ -74,13 +94,13 @@ export const Navbar = () => {
             </nav>
 
             <div
-                className={`md:hidden fixed inset-0 bg-graphite/50 backdrop-blur-sm transition-opacity duration-300 z-[130] ${
+                className={`lg:hidden fixed inset-0 bg-graphite/50 backdrop-blur-sm transition-opacity duration-300 z-[130] ${
                     isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
                 }`}
                 onClick={() => setIsOpen(false)}
             />
 
-            <aside className={`md:hidden fixed top-0 right-0 h-screen w-[80%] max-w-[320px] bg-beige-light shadow-2xl z-[140] transform transition-transform duration-300 ease-in-out flex flex-col p-6 border-l border-beige-dark/30 ${
+            <aside className={`lg:hidden fixed top-0 right-0 h-screen w-[80%] max-w-[320px] bg-beige-light shadow-2xl z-[140] transform transition-transform duration-300 ease-in-out flex flex-col p-6 border-l border-beige-dark/30 ${
                 isOpen ? "translate-x-0" : "translate-x-full"
             }`}>
                 <div className="flex items-center justify-between pb-5 border-b border-beige-dark/30 shrink-0">

@@ -8,6 +8,8 @@ import {Toast} from "@/components/ui/Toast";
 import React from "react";
 import {containerVariants, itemVariants} from "@/framer-motion/animation-logs";
 import InfoTooltip from "@/components/ui/InfoTooltip";
+import { PatientTimePreview } from "@/components/ui/PatientTimePreview";
+import { nextBusinessDateForWeekday } from "@/lib/time";
 
 export default function ScheduleForm({ initialSchedules }: { initialSchedules: WeeklySchedule[] }) {
     const { schedules, isLoading, handleToggleDay, handleTimeChange, handleSave, toast, hideToast } = useScheduleForm({ initialSchedules });
@@ -27,7 +29,7 @@ export default function ScheduleForm({ initialSchedules }: { initialSchedules: W
                     </div>
                 </h2>
                 <div className="flex items-center gap-1 justify-between">
-                <p className="text-sm text-graphite/60 dark:text-zinc-400 mt-2 font-medium">Ustal w jakich godzinach jesteś dostępna dla pacjentów w poszczególne dni.</p>
+                <p className="text-sm text-graphite/60 dark:text-zinc-400 mt-2 font-medium">Ustal w jakich godzinach jesteś dostępna dla pacjentów w poszczególne dni. Godziny wpisujesz w <strong className="text-graphite dark:text-zinc-200">czasie brytyjskim (Londyn)</strong> — pod każdym dniem zobaczysz, jak wyświetlą się pacjentom w Polsce.</p>
                     <InfoTooltip
                         title="Czas obowiązujący w gabinecie"
                         description="Godziny grafiku ustawiasz w czasie Londynu (Europe/London, zmiana czasu letniego jest uwzględniana automatycznie). Pacjenci widzą te terminy przeliczone na czas polski — np. 17:00 w grafiku to 18:00 w kalendarzu pacjenta."
@@ -63,9 +65,10 @@ export default function ScheduleForm({ initialSchedules }: { initialSchedules: W
                             </span>
                         </div>
 
-                        <div className={`flex items-center gap-3 w-full sm:w-auto transition-opacity ${schedule.isActive ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+                        <div className={`flex flex-col gap-2 w-full sm:w-auto transition-opacity ${schedule.isActive ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+                        <div className="flex items-center gap-3 w-full sm:w-auto">
                             <div className="relative group flex-1 sm:flex-none">
-                                <label className="absolute -top-2.5 left-3 bg-white dark:bg-zinc-800 px-1 text-[9px] font-bold uppercase tracking-widest text-sage dark:text-emerald-400 z-10">Od</label>
+                                <label className="absolute -top-2.5 left-3 bg-white dark:bg-zinc-800 px-1 text-[9px] font-bold uppercase tracking-widest text-sage dark:text-emerald-400 z-10">Od (UK)</label>
                                 <input
                                     type="time" disabled={!schedule.isActive} value={schedule.startTime} onChange={(e) => handleTimeChange(schedule.dayOfWeek, 'startTime', e.target.value)}
                                     className="w-full sm:w-32 px-4 py-3 bg-transparent border border-beige-dark/30 dark:border-zinc-700 rounded-xl text-sm font-mono font-bold text-graphite dark:text-zinc-200 focus:ring-2 focus:ring-sage/50 focus:border-sage outline-none transition-all"
@@ -73,12 +76,22 @@ export default function ScheduleForm({ initialSchedules }: { initialSchedules: W
                             </div>
                             <span className="text-graphite/30 dark:text-zinc-600 font-bold">-</span>
                             <div className="relative group flex-1 sm:flex-none">
-                                <label className="absolute -top-2.5 left-3 bg-white dark:bg-zinc-800 px-1 text-[9px] font-bold uppercase tracking-widest text-sage dark:text-emerald-400 z-10">Do</label>
+                                <label className="absolute -top-2.5 left-3 bg-white dark:bg-zinc-800 px-1 text-[9px] font-bold uppercase tracking-widest text-sage dark:text-emerald-400 z-10">Do (UK)</label>
                                 <input
                                     type="time" disabled={!schedule.isActive} value={schedule.endTime} onChange={(e) => handleTimeChange(schedule.dayOfWeek, 'endTime', e.target.value)}
                                     className="w-full sm:w-32 px-4 py-3 bg-transparent border border-beige-dark/30 dark:border-zinc-700 rounded-xl text-sm font-mono font-bold text-graphite dark:text-zinc-200 focus:ring-2 focus:ring-sage/50 focus:border-sage outline-none transition-all"
                                 />
                             </div>
+                        </div>
+                        {schedule.isActive && (
+                            <PatientTimePreview
+                                dateKey={nextBusinessDateForWeekday(schedule.dayOfWeek)}
+                                startTime={schedule.startTime}
+                                endTime={schedule.endTime}
+                                showSlots
+                                className="sm:text-right"
+                            />
+                        )}
                         </div>
                     </motion.div>
                 ))}

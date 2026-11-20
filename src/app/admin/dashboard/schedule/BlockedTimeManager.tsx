@@ -1,6 +1,7 @@
 "use client";
 
 import {formatAdmin} from "@/lib/time";
+import { PatientTimePreview } from "@/components/ui/PatientTimePreview";
 import React from "react";
 import { useBlockedTimeManager } from "@/hooks/useBlockedTimeManager";
 import { motion, AnimatePresence } from "framer-motion";
@@ -44,11 +45,11 @@ export default function BlockedTimeManager() {
 
                 <div className="flex gap-4 lg:w-64 shrink-0">
                     <div className="flex-1 relative">
-                        <label className="absolute -top-2.5 left-3 bg-red-50 dark:bg-[#2b1f1f] px-1 text-[9px] font-bold uppercase tracking-widest text-red-600 dark:text-red-400 z-10">Od</label>
+                        <label className="absolute -top-2.5 left-3 bg-red-50 dark:bg-[#2b1f1f] px-1 text-[9px] font-bold uppercase tracking-widest text-red-600 dark:text-red-400 z-10">Od (UK)</label>
                         <input type="time" required value={startTime} onChange={(e) => setStartTime(e.target.value)} className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-red-200/50 dark:border-red-900/50 rounded-xl text-sm font-mono font-bold text-graphite dark:text-zinc-200 focus:ring-2 focus:ring-red-400 outline-none transition-all"/>
                     </div>
                     <div className="flex-1 relative">
-                        <label className="absolute -top-2.5 left-3 bg-red-50 dark:bg-[#2b1f1f] px-1 text-[9px] font-bold uppercase tracking-widest text-red-600 dark:text-red-400 z-10">Do</label>
+                        <label className="absolute -top-2.5 left-3 bg-red-50 dark:bg-[#2b1f1f] px-1 text-[9px] font-bold uppercase tracking-widest text-red-600 dark:text-red-400 z-10">Do (UK)</label>
                         <input type="time" required value={endTime} onChange={(e) => setEndTime(e.target.value)} className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-red-200/50 dark:border-red-900/50 rounded-xl text-sm font-mono font-bold text-graphite dark:text-zinc-200 focus:ring-2 focus:ring-red-400 outline-none transition-all"/>
                     </div>
                 </div>
@@ -64,6 +65,9 @@ export default function BlockedTimeManager() {
                     </button>
                 </div>
             </form>
+            {date && startTime && endTime && (
+                <PatientTimePreview dateKey={date} startTime={startTime} endTime={endTime} className="relative z-10 -mt-5 mb-8 px-2" />
+            )}
 
             <div className="space-y-3 relative">
                 {isLoading && <div className="absolute inset-0 z-10 bg-white/50 dark:bg-black/50 backdrop-blur-sm rounded-2xl flex items-center justify-center"><span className="animate-spin w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full"/></div>}

@@ -97,3 +97,24 @@ export function formatDateTimeIn(date: Date | string, zone: string) {
         formattedTime: dt.toFormat("HH:mm"),
     };
 }
+
+/** Next calendar day ("yyyy-MM-dd", BUSINESS_TZ) falling on `dayOfWeek` (0 = Sunday … 6 = Saturday). */
+export function nextBusinessDateForWeekday(dayOfWeek: number, from: Date = new Date()): string {
+    const today = toZone(from, BUSINESS_TZ).startOf("day");
+    const current = today.weekday % 7; // luxon: 1 = Mon … 7 = Sun → 0 = Sun
+    const diff = (dayOfWeek - current + 7) % 7;
+    return today.plus({ days: diff }).toISODate()!;
+}
+
+/**
+ * Wall-clock time in the clinic zone → what patients see, for a given clinic date.
+ * Returns null for invalid input. `dayShift` is +1/-1 when the patient's date differs.
+ */
+export function businessTimeToPatient(dateKey: string, time: string): { time: string; dayShift: number } | null {
+    const instant = zonedInstant(dateKey, time, BUSINESS_TZ);
+    if (!instant) return null;
+    const patient = toZone(instant, PATIENT_TZ);
+    const patientKey = patient.toISODate()!;
+    const dayShift = patientKey === dateKey ? 0 : patientKey > dateKey ? 1 : -1;
+    return { time: patient.toFormat("HH:mm"), dayShift };
+}

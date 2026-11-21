@@ -3,6 +3,7 @@
 import React, { useEffect, useRef } from "react";
 import { IBlockEditorProps } from "@/types/editor";
 import EditorJS, { OutputData} from "@editorjs/editorjs";
+import { uploadImage } from "@/lib/image-upload";
 
 export default function BlockEditor({ data, onChange }: IBlockEditorProps) {
     const editorRef = useRef<EditorJS | null>(null);
@@ -49,9 +50,18 @@ export default function BlockEditor({ data, onChange }: IBlockEditorProps) {
                     image: {
                         class: ImageTool,
                         config: {
-                            endpoints: {
-                                byFile: "/api/admin/upload",
-                            }
+                            // Custom uploader: downscales the photo in the browser first (Vercel
+                            // rejects bodies over ~4.5 MB with 413) and shows a readable error.
+                            uploader: {
+                                uploadByFile: async (file: File) => {
+                                    try {
+                                        return { success: 1, file: { url: await uploadImage(file) } };
+                                    } catch (error) {
+                                        window.alert(error instanceof Error ? error.message : "Nie udało się wgrać zdjęcia.");
+                                        return { success: 0 };
+                                    }
+                                },
+                            },
                         }
                     },
                     embed: {

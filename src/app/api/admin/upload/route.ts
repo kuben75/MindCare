@@ -4,9 +4,11 @@ import { put } from "@vercel/blob";
 import path from "node:path";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { detectImageType } from "@/lib/image-type";
+import { MAX_UPLOAD_BYTES } from "@/lib/image-upload";
 
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+// Below Vercel's ~4.5 MB request body limit; the editors downscale images before upload.
+const MAX_FILE_SIZE = MAX_UPLOAD_BYTES;
 
 export async function POST(req: Request) {
     const admin = await requireAdmin();
@@ -32,7 +34,7 @@ export async function POST(req: Request) {
         if (file.size > MAX_FILE_SIZE) {
             return NextResponse.json({
                 success: 0,
-                error: "Plik jest zbyt duży. Maksymalny rozmiar to 5 MB."
+                error: "Plik jest zbyt duży. Maksymalny rozmiar to 4 MB."
             }, { status: 400 });
         }
         // The browser-supplied MIME type and file name are attacker-controlled: detect the real

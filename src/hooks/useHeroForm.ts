@@ -1,3 +1,4 @@
+import { ImageUploadError, uploadImage } from "@/lib/image-upload";
 import {useRouter} from "next/navigation";
 import {useToast} from "@/hooks/useToast";
 import React, {useState} from "react";
@@ -38,20 +39,8 @@ export const useHeroForm = ({ initialData }: { initialData?: THeroProps }) => {
             let finalImageUrl = initialData?.imageUrl || "/photo-horizontal.jpg";
 
             if (imageFile) {
-                const formData = new FormData();
-                formData.append("image", imageFile);
-
-                const uploadRes = await fetch("/api/admin/upload", {
-                    method: "POST",
-                    body: formData,
-                });
-
-                if (uploadRes.ok) {
-                    const uploadData = await uploadRes.json();
-                    finalImageUrl = uploadData.file.url;
-                } else {
-                    throw new Error("Nie udało się wgrać zdjęcia na serwer");
-                }
+                // Downscaled in the browser first — large phone photos used to fail with HTTP 413.
+                finalImageUrl = await uploadImage(imageFile);
             }
 
             const endpoint = isEditMode ? `/api/admin/hero/${initialData.id}` : "/api/admin/hero";
@@ -76,8 +65,8 @@ export const useHeroForm = ({ initialData }: { initialData?: THeroProps }) => {
                 const data = await response.json().catch(() => null);
                 showToast(data?.error || "Błąd podczas zapisywania szablonu do bazy.", "error");
             }
-        } catch  {
-            showToast("Wystąpił błąd wgrywania zdjęcia lub zapisu.", "error");
+        } catch (error) {
+            showToast(error instanceof ImageUploadError ? error.message : "Wystąpił błąd wgrywania zdjęcia lub zapisu.", "error");
         } finally {
             setIsLoading(false);
         }
